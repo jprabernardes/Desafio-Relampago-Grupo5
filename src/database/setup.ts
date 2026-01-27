@@ -101,24 +101,70 @@ export const createTables = (): Promise<void> => {
 /**
  * Cria usuário administrador padrão caso não exista.
  */
-export const createDefaultAdmin = async (): Promise<void> => {
+export const createDefaultUsers = async (): Promise<void> => {
   return new Promise(async (resolve, reject) => {
-     // Idealmente, a senha deve ser forte e gerenciada via variáveis de ambiente em produção
-    const hashedPassword = await bcrypt.hash('admin123', 10);
-    
-    db.run(`
-      INSERT OR IGNORE INTO users (nome, email, senha, role, cpf)
-      VALUES (?, ?, ?, ?, ?)
-    `, ['Administrador', 'admin@academia.com', hashedPassword, 'administrador', '00000000000'], (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        console.log('✅ Usuário administrador verificado/criado (email: admin@academia.com, senha: admin123)');
-        resolve();
+    try {
+      // Lista de usuários padrão
+      const defaultUsers = [
+        {
+          nome: 'Administrador',
+          email: 'admin@academia.com',
+          senha: 'admin123',
+          role: 'administrador',
+          cpf: '00000000000',
+        },
+        {
+          nome: 'Recepcionista',
+          email: 'maria@academia.com',
+          senha: 'senha123',
+          role: 'recepcionista',
+          cpf: '11111111111',
+        },
+        {
+          nome: 'Instrutor',
+          email: 'carlos@academia.com',
+          senha: 'senha123',
+          role: 'instrutor',
+          cpf: '22222222222',
+        },
+        {
+          nome: 'Aluno',
+          email: 'joao@academia.com',
+          senha: 'senha123',
+          role: 'aluno',
+          cpf: '33333333333',
+        },
+      ];
+
+      for (const user of defaultUsers) {
+        const hashedPassword = await bcrypt.hash(user.senha, 10);
+
+        await new Promise<void>((res, rej) => {
+          db.run(
+            `
+            INSERT OR IGNORE INTO users (nome, email, senha, role, cpf)
+            VALUES (?, ?, ?, ?, ?)
+          `,
+            [user.nome, user.email, hashedPassword, user.role, user.cpf],
+            (err) => {
+              if (err) {
+                rej(err);
+              } else {
+                console.log(`✅ Usuário ${user.role} verificado/criado (email: ${user.email}, senha: ${user.senha})`);
+                res();
+              }
+            }
+          );
+        });
       }
-    });
+
+      resolve();
+    } catch (error) {
+      reject(error);
+    }
   });
 };
+
 
 /**
  * Inicializa a conexão com o banco de dados e configura o esquema inicial.
@@ -126,7 +172,7 @@ export const createDefaultAdmin = async (): Promise<void> => {
 export const initializeDatabase = async (): Promise<void> => {
   try {
     await createTables();
-    await createDefaultAdmin();
+    await createDefaultUsers();
     console.log('✅ Banco de dados inicializado com sucesso!');
   } catch (error) {
     console.error('❌ Erro ao inicializar banco de dados:', error);
