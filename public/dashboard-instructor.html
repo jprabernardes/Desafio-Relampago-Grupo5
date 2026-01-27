@@ -1,0 +1,909 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Instrutor</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f7fa;
+      }
+      .container {
+        display: flex;
+        min-height: 100vh;
+      }
+      .sidebar {
+        width: 250px;
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 1rem;
+      }
+      .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 3rem;
+      }
+      .nav-item {
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .nav-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .nav-item.active {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      .logout-btn {
+        margin-top: auto;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 2rem;
+      }
+      .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      .main-content {
+        flex: 1;
+        padding: 2rem;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .header h1 {
+        font-size: 2rem;
+        color: #333;
+      }
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+      }
+      .section {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        display: none;
+      }
+      .section.active {
+        display: block;
+      }
+      .section h2 {
+        margin-bottom: 1.5rem;
+        color: #333;
+      }
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #333;
+        font-weight: 500;
+      }
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: inherit;
+      }
+      .form-group textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+      .btn-secondary {
+        background: #f0f0f0;
+        color: #333;
+      }
+      .btn-secondary:hover {
+        background: #e0e0e0;
+      }
+      .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        display: none;
+      }
+      .alert.show {
+        display: block;
+      }
+      .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .templates-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      .template-card {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #eee;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+      }
+      .template-card:hover {
+        border-color: #667eea;
+        background: #fff;
+      }
+      .template-card.selected {
+        border-color: #667eea;
+        background: #eef2ff;
+      }
+      .template-card h4 {
+        margin-bottom: 0.5rem;
+        color: #333;
+        padding-right: 40px;
+      }
+      .template-card p {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.25rem;
+      }
+      .template-actions {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        display: flex;
+        gap: 0.5rem;
+      }
+      .template-action-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+        padding: 2px;
+      }
+      .template-action-btn:hover {
+        opacity: 1;
+        transform: scale(1.1);
+      }
+
+      /* Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal.active {
+        display: flex;
+      }
+      .modal-content {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        width: 90%;
+        max-width: 500px;
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+      .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <aside class="sidebar">
+        <div class="logo">FitManager</div>
+        <nav>
+          <div class="nav-item active" data-section="create-exercise">
+            🏋️ Criar Exercício
+          </div>
+          <div class="nav-item" data-section="assign-workout">
+            📝 Atribuir Treino
+          </div>
+          <div class="nav-item" data-section="create-class">➕ Criar Aula</div>
+          <div class="nav-item" data-section="classes">📅 Minhas Aulas</div>
+        </nav>
+        <button class="logout-btn" onclick="logout()">🚪 Sair</button>
+      </aside>
+
+      <main class="main-content">
+        <div class="header">
+          <h1>Dashboard Instrutor</h1>
+          <div class="user-info">
+            <div class="user-avatar" id="userAvatar">I</div>
+            <span id="userName">Carregando...</span>
+          </div>
+        </div>
+        <div class="alert" id="alert"></div>
+
+        <!-- Create Exercise Template -->
+        <section class="section active" id="create-exercise">
+          <h2 id="formTitle">Criar Template de Exercício</h2>
+          <form id="createExerciseForm">
+            <input type="hidden" id="exId" />
+            <div class="form-group">
+              <label for="exName">Nome do Exercício</label>
+              <input
+                type="text"
+                id="exName"
+                placeholder="Ex: Supino Reto"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="exSeries">Série (Ex: 3x12)</label>
+              <input type="text" id="exSeries" placeholder="3x12" required />
+            </div>
+            <div class="form-group">
+              <label for="exWeight">Carga (Ex: 20kg)</label>
+              <input type="text" id="exWeight" placeholder="20kg" required />
+            </div>
+            <button type="submit" class="btn btn-primary" id="saveBtn">
+              Salvar Template
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="cancelEditBtn"
+              style="display: none"
+              onclick="cancelEdit()"
+            >
+              Cancelar Edição
+            </button>
+          </form>
+
+          <h3 style="margin-top: 2rem">Templates Cadastrados</h3>
+          <div id="templatesList" class="templates-grid">
+            <p>Carregando...</p>
+          </div>
+        </section>
+
+        <!-- Assign Workout -->
+        <section class="section" id="assign-workout">
+          <h2>Atribuir Treino ao Aluno</h2>
+          <form id="assignWorkoutForm">
+            <div class="form-group">
+              <label for="studentSearch">Buscar Aluno (Nome ou CPF)</label>
+              <input
+                type="text"
+                id="studentSearch"
+                placeholder="Digite para buscar..."
+              />
+              <select
+                id="studentSelect"
+                style="margin-top: 0.5rem; display: none"
+                required
+                size="5"
+              ></select>
+            </div>
+
+            <div class="form-group">
+              <label for="trainingType">Tipo de Treino</label>
+              <select id="trainingType" required>
+                <option value="">Selecione o tipo</option>
+                <option value="A">Treino A</option>
+                <option value="B">Treino B</option>
+                <option value="C">Treino C</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Selecione os Exercícios (Templates)</label>
+              <div id="assignTemplatesList" class="templates-grid">
+                <p>Carregando templates...</p>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Salvar Treino</button>
+          </form>
+        </section>
+
+        <!-- Create Class -->
+        <section class="section" id="create-class">
+          <h2 id="classFormTitle">Criar Nova Aula</h2>
+          <form id="createClassForm">
+            <input type="hidden" id="classId" />
+            <!-- Used for editing -->
+            <div class="form-group">
+              <label for="className">Nome da Aula</label>
+              <input
+                type="text"
+                id="className"
+                placeholder="Ex: Yoga Matinal"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="classDate">Data</label>
+              <input type="date" id="classDate" required />
+            </div>
+            <div class="form-group">
+              <label for="classTime">Hora</label>
+              <input type="time" id="classTime" required />
+            </div>
+            <div class="form-group">
+              <label for="classLimit">Limite de Vagas</label>
+              <input
+                type="number"
+                id="classLimit"
+                placeholder="Ex: 20"
+                required
+                min="1"
+              />
+            </div>
+            <button type="submit" class="btn btn-primary" id="saveClassBtn">
+              Agendar Aula
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="cancelClassEditBtn"
+              style="display: none"
+              onclick="cancelClassEdit()"
+            >
+              Cancelar Edição
+            </button>
+          </form>
+        </section>
+
+        <!-- My Classes -->
+        <section class="section" id="classes">
+          <h2>Minhas Aulas Agendadas</h2>
+          <div id="classesContainer">
+            <p>Carregando aulas...</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal" id="confirmModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Confirmação</h2>
+          <button class="close-btn" onclick="closeConfirmModal()">
+            &times;
+          </button>
+        </div>
+        <p id="confirmMessage" style="margin-bottom: 2rem; color: #666">
+          Tem certeza?
+        </p>
+        <div class="form-actions">
+          <button class="btn" onclick="closeConfirmModal()">Não</button>
+          <button class="btn btn-danger" onclick="confirmAction()">
+            Sim, tenho certeza
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:3000/api";
+      let token = localStorage.getItem("token");
+
+      // Lógica do Modal de Confirmação
+      let pendingConfirmAction = null;
+
+      function showConfirmModal(message, action) {
+        document.getElementById("confirmMessage").textContent = message;
+        pendingConfirmAction = action;
+        document.getElementById("confirmModal").classList.add("active");
+      }
+
+      function closeConfirmModal() {
+        document.getElementById("confirmModal").classList.remove("active");
+        pendingConfirmAction = null;
+      }
+
+      function confirmAction() {
+        if (pendingConfirmAction) {
+          pendingConfirmAction();
+        }
+        closeConfirmModal();
+      }
+
+      if (!token) window.location.href = "/";
+
+      // Navegação
+      document.querySelectorAll(".nav-item").forEach((item) => {
+        item.addEventListener("click", () => {
+          document
+            .querySelectorAll(".nav-item")
+            .forEach((i) => i.classList.remove("active"));
+          document
+            .querySelectorAll(".section")
+            .forEach((s) => s.classList.remove("active"));
+          item.classList.add("active");
+          const sectionId = item.getAttribute("data-section");
+          document.getElementById(sectionId).classList.add("active");
+
+          if (sectionId === "create-exercise" || sectionId === "assign-workout")
+            loadTemplates();
+          if (sectionId === "classes") loadClasses();
+
+          // Reset edits when switching tabs
+          if (sectionId !== "create-exercise") cancelEdit();
+          if (sectionId !== "create-class") cancelClassEdit();
+        });
+      });
+
+      function showAlert(msg, type = "success") {
+        const el = document.getElementById("alert");
+        el.className = `alert alert-${type} show`;
+        el.textContent = msg;
+        setTimeout(() => el.classList.remove("show"), 3000);
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/";
+      }
+
+      async function loadUserInfo() {
+        const res = await fetch(`${API_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        document.getElementById("userName").textContent = data.nome;
+      }
+
+      // --- Templates ---
+      let templates = [];
+
+      async function loadTemplates() {
+        try {
+          const res = await fetch(`${API_URL}/instructor/exercises`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          templates = await res.json();
+          renderTemplates();
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      function renderTemplates() {
+        const list = document.getElementById("templatesList");
+        const assignList = document.getElementById("assignTemplatesList");
+
+        // Renderizar para Gerenciamento (Editar/Excluir)
+        list.innerHTML = templates
+          .map(
+            (t) => `
+          <div class="template-card" onclick="toggleSelection(this, ${t.id})">
+            <h4>${t.name}</h4>
+            <p>${t.series} - ${t.weight}</p>
+            <div class="template-actions" onclick="event.stopPropagation()">
+                <button class="template-action-btn" title="Editar" onclick="editTemplate(${t.id})">✏️</button>
+                <button class="template-action-btn" title="Excluir" onclick="deleteTemplate(${t.id})">🗑️</button>
+            </div>
+          </div>
+        `,
+          )
+          .join("");
+
+        // Renderizar para Atribuição (Apenas Seleção)
+        assignList.innerHTML = templates
+          .map(
+            (t) => `
+          <div class="template-card" onclick="toggleSelection(this, ${t.id})">
+            <h4>${t.name}</h4>
+            <p>${t.series} - ${t.weight}</p>
+          </div>
+        `,
+          )
+          .join("");
+      }
+
+      // Lógica de Edição/Exclusão
+      window.editTemplate = (id) => {
+        const t = templates.find((x) => x.id === id);
+        if (!t) return;
+
+        document.getElementById("exId").value = t.id;
+        document.getElementById("exName").value = t.name;
+        document.getElementById("exSeries").value = t.series;
+        document.getElementById("exWeight").value = t.weight;
+
+        document.getElementById("formTitle").textContent = "Editar Template";
+        document.getElementById("saveBtn").textContent = "Atualizar Template";
+        document.getElementById("cancelEditBtn").style.display = "inline-block";
+
+        document.querySelector(".main-content").scrollTop = 0; // Scroll to top
+      };
+
+      window.cancelEdit = () => {
+        document.getElementById("createExerciseForm").reset();
+        document.getElementById("exId").value = "";
+        document.getElementById("formTitle").textContent =
+          "Criar Template de Exercício";
+        document.getElementById("saveBtn").textContent = "Salvar Template";
+        document.getElementById("cancelEditBtn").style.display = "none";
+      };
+
+      window.deleteTemplate = async (id) => {
+        showConfirmModal(
+          "Tem certeza que deseja excluir este template?",
+          async () => {
+            try {
+              const res = await fetch(`${API_URL}/instructor/exercises/${id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (res.ok) {
+                showAlert("Template excluído!");
+                loadTemplates();
+              } else {
+                showAlert("Erro ao excluir", "error");
+              }
+            } catch (e) {
+              console.error(e);
+            }
+          },
+        );
+      };
+
+      document
+        .getElementById("createExerciseForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const id = document.getElementById("exId").value;
+          const data = {
+            name: document.getElementById("exName").value,
+            series: document.getElementById("exSeries").value,
+            weight: document.getElementById("exWeight").value,
+          };
+
+          try {
+            const url = id
+              ? `${API_URL}/instructor/exercises/${id}`
+              : `${API_URL}/instructor/exercises`;
+            const method = id ? "PUT" : "POST";
+
+            const res = await fetch(url, {
+              method: method,
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            });
+
+            if (res.ok) {
+              showAlert(id ? "Template atualizado!" : "Template criado!");
+              loadTemplates();
+              cancelEdit(); // Reset form
+            } else {
+              const err = await res.json();
+              showAlert(err.error || "Erro ao salvar", "error");
+            }
+          } catch (e) {
+            showAlert("Erro de conexão", "error");
+          }
+        });
+
+      // --- Atribuição ---
+      let selectedTemplateIds = [];
+
+      window.toggleSelection = (el, id) => {
+        el.classList.toggle("selected");
+        if (el.classList.contains("selected")) {
+          selectedTemplateIds.push(id);
+        } else {
+          selectedTemplateIds = selectedTemplateIds.filter((tid) => tid !== id);
+        }
+      };
+
+      // Buscar Aluno
+      document
+        .getElementById("studentSearch")
+        .addEventListener("input", async (e) => {
+          const term = e.target.value;
+          if (term.length < 3) {
+            document.getElementById("studentSelect").style.display = "none";
+            return;
+          }
+
+          try {
+            const res = await fetch(`${API_URL}/instructor/students`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!res.ok) throw new Error("Erro");
+
+            const allStudents = await res.json();
+            const filtered = allStudents.filter(
+              (s) =>
+                s.nome.toLowerCase().includes(term.toLowerCase()) ||
+                s.email.includes(term),
+            );
+
+            const select = document.getElementById("studentSelect");
+            select.innerHTML = filtered
+              .map(
+                (s) =>
+                  `<option value="${s.id}">${s.nome} (${s.email})</option>`,
+              )
+              .join("");
+            select.style.display = "block";
+          } catch (e) {
+            console.error(e);
+          }
+        });
+
+      document
+        .getElementById("assignWorkoutForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const studentId = document.getElementById("studentSelect").value;
+          const type = document.getElementById("trainingType").value;
+
+          if (!studentId) return showAlert("Selecione um aluno", "error");
+          if (selectedTemplateIds.length === 0)
+            return showAlert("Selecione exercícios", "error");
+
+          const selectedExercises = templates
+            .filter((t) => selectedTemplateIds.includes(t.id))
+            .map((t) => ({
+              nomeExercicio: t.name,
+              series: 0,
+              repeticoes: 0,
+              carga: t.weight,
+              descanso: "60s",
+              ...parseSeries(t.series),
+            }));
+
+          function parseSeries(str) {
+            const parts = str.toLowerCase().split("x");
+            return {
+              series: parseInt(parts[0]) || 3,
+              repeticoes: parseInt(parts[1]) || 12,
+            };
+          }
+
+          try {
+            const res = await fetch(`${API_URL}/instructor/training/assign`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                studentId,
+                type,
+                exercises: selectedExercises,
+              }),
+            });
+            if (res.ok) {
+              showAlert("Treino atribuído com sucesso!");
+              selectedTemplateIds = [];
+              document
+                .querySelectorAll(".template-card.selected")
+                .forEach((el) => el.classList.remove("selected"));
+              document.getElementById("assignWorkoutForm").reset();
+            } else {
+              showAlert("Erro ao atribuir", "error");
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        });
+
+      // --- Gerenciamento de Aulas (Criar/Editar/Excluir) ---
+      let myClasses = [];
+
+      async function loadClasses() {
+        try {
+          const res = await fetch(`${API_URL}/instructor/classes`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          myClasses = await res.json();
+          renderClasses();
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      function renderClasses() {
+        const container = document.getElementById("classesContainer");
+        if (myClasses.length === 0) {
+          container.innerHTML = "<p>Nenhuma aula agendada.</p>";
+          return;
+        }
+
+        container.innerHTML = myClasses
+          .map(
+            (c) => `
+            <div style="background:#fff; padding:1.5rem; margin-bottom:1rem; border-radius:8px; border:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h3 style="color:#333; margin-bottom:0.5rem;">${c.nome_aula}</h3>
+                    <p style="color:#666;">📅 ${new Date(c.data).toLocaleDateString()} &nbsp; ⏰ ${c.hora} </p>
+                    <p style="color:#666; font-size:0.9rem;">👥 ${c.limite_vagas} vagas</p>
+                </div>
+                <div class="template-actions" style="position:static;">
+                     <button class="template-action-btn" title="Editar" onclick="editClass(${c.id})">✏️</button>
+                     <button class="template-action-btn" title="Cancelar Aula" onclick="deleteClass(${c.id})" style="color:#e53e3e;">🗑️</button>
+                </div>
+            </div>
+        `,
+          )
+          .join("");
+      }
+
+      // Create/Edit Class Form
+      document
+        .getElementById("createClassForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const id = document.getElementById("classId").value;
+          const data = {
+            nome_aula: document.getElementById("className").value,
+            data: document.getElementById("classDate").value,
+            hora: document.getElementById("classTime").value,
+            limite_vagas: parseInt(document.getElementById("classLimit").value),
+          };
+
+          try {
+            const url = id
+              ? `${API_URL}/instructor/classes/${id}`
+              : `${API_URL}/instructor/classes`;
+            const method = id ? "PUT" : "POST";
+
+            const res = await fetch(url, {
+              method: method,
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            });
+
+            if (res.ok) {
+              showAlert(id ? "Aula atualizada!" : "Aula agendada com sucesso!");
+              if (id) {
+                cancelClassEdit();
+              } else {
+                document.getElementById("createClassForm").reset();
+              }
+            } else {
+              const err = await res.json();
+              showAlert(err.error || "Erro ao salvar", "error");
+            }
+          } catch (e) {
+            showAlert("Erro de conexão", "error");
+          }
+        });
+
+      window.editClass = (id) => {
+        const c = myClasses.find((x) => x.id === id);
+        if (!c) return;
+
+        // Populate Create Tab
+        document.getElementById("classId").value = c.id;
+        document.getElementById("className").value = c.nome_aula;
+        document.getElementById("classDate").value = c.data;
+        document.getElementById("classTime").value = c.hora;
+        document.getElementById("classLimit").value = c.limite_vagas;
+
+        // Switch to Create Tab
+        document.querySelector('[data-section="create-class"]').click();
+
+        // Modify UI for Edit
+        document.getElementById("classFormTitle").textContent = "Editar Aula";
+        document.getElementById("saveClassBtn").textContent =
+          "Salvar Alterações";
+        document.getElementById("cancelClassEditBtn").style.display =
+          "inline-block";
+
+        document.querySelector(".main-content").scrollTop = 0;
+      };
+
+      window.cancelClassEdit = () => {
+        document.getElementById("createClassForm").reset();
+        document.getElementById("classId").value = "";
+        document.getElementById("classFormTitle").textContent =
+          "Criar Nova Aula";
+        document.getElementById("saveClassBtn").textContent = "Agendar Aula";
+        document.getElementById("cancelClassEditBtn").style.display = "none";
+      };
+
+      window.deleteClass = async (id) => {
+        showConfirmModal(
+          "Tem certeza que deseja cancelar esta aula?",
+          async () => {
+            try {
+              const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (res.ok) {
+                showAlert("Aula cancelada!");
+                loadClasses();
+              } else {
+                const err = await res.json();
+                showAlert(err.error || "Erro ao cancelar", "error");
+              }
+            } catch (e) {
+              console.error(e);
+              showAlert("Erro de conexão", "error");
+            }
+          },
+        );
+      };
+
+      loadUserInfo();
+      loadTemplates();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Aluno</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f7fa;
+      }
+
+      .container {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 250px;
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 1rem;
+      }
+      .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 3rem;
+      }
+      .nav-item {
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .nav-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .nav-item.active {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      .logout-btn {
+        margin-top: auto;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 2rem;
+      }
+      .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      /* Main Content */
+      .main-content {
+        flex: 1;
+        padding: 2rem;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .header h1 {
+        font-size: 2rem;
+        color: #333;
+      }
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+      }
+
+      /* Section */
+      .section {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        display: none;
+      }
+      .section.active {
+        display: block;
+      }
+      .section h2 {
+        margin-bottom: 1.5rem;
+        color: #333;
+      }
+
+      /* Buttons */
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+      .btn-secondary {
+        background: #f0f0f0;
+        color: #333;
+      }
+      .btn-secondary:hover {
+        background: #e0e0e0;
+      }
+      .btn-danger {
+        background: #dc3545;
+        color: white;
+      }
+      .btn-danger:hover {
+        background: #c82333;
+      }
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+      .btn-success:hover {
+        background: #218838;
+      }
+
+      /* Alert */
+      .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        display: none;
+      }
+      .alert.show {
+        display: block;
+      }
+      .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      /* Workout Card */
+      .workout-card {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        border-left: 4px solid #667eea;
+      }
+      .workout-card h3 {
+        margin-bottom: 0.5rem;
+        color: #333;
+      }
+      .workout-card pre {
+        white-space: pre-wrap;
+        font-family: inherit;
+        color: #666;
+        margin-top: 1rem;
+      }
+      .workout-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      /* Class Card */
+      .class-card {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        border-left: 4px solid #28a745;
+      }
+      .class-card h3 {
+        margin-bottom: 0.5rem;
+        color: #333;
+      }
+      .class-card p {
+        color: #666;
+        margin-bottom: 0.5rem;
+      }
+      .class-card .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+      }
+      .badge-success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .badge-warning {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .badge-danger {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      /* Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal.active {
+        display: flex;
+      }
+      .modal-content {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        width: 90%;
+        max-width: 500px;
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+      .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+      }
+
+      /* Print styles */
+      @media print {
+        /* ... */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="logo">FitManager</div>
+        <nav>
+          <div class="nav-item active" data-section="workouts">
+            💪 Meus Treinos
+          </div>
+          <div class="nav-item" data-section="classes">
+            🏋️ Aulas Disponíveis
+          </div>
+          <div class="nav-item" data-section="my-classes">
+            📅 Minhas Inscrições
+          </div>
+        </nav>
+        <button class="logout-btn" onclick="logout()">🚪 Sair</button>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="header">
+          <h1>Dashboard Aluno</h1>
+          <div class="user-info">
+            <div class="user-avatar" id="userAvatar">A</div>
+            <span id="userName">Carregando...</span>
+          </div>
+        </div>
+
+        <!-- Alert -->
+        <div class="alert" id="alert"></div>
+
+        <!-- Workouts Section -->
+        <section class="section active" id="workouts">
+          <h2>Meus Treinos</h2>
+          <div id="workoutsList">
+            <p>Carregando...</p>
+          </div>
+        </section>
+
+        <!-- Available Classes Section -->
+        <section class="section" id="classes">
+          <h2>Aulas Disponíveis</h2>
+          <div id="classesList">
+            <p>Carregando...</p>
+          </div>
+        </section>
+
+        <!-- My Classes Section -->
+        <section class="section" id="my-classes">
+          <h2>Minhas Inscrições</h2>
+          <div id="myClassesList">
+            <p>Carregando...</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal" id="confirmModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Confirmação</h2>
+          <button class="close-btn" onclick="closeConfirmModal()">
+            &times;
+          </button>
+        </div>
+        <p id="confirmMessage" style="margin-bottom: 2rem; color: #666">
+          Tem certeza?
+        </p>
+        <div class="form-actions">
+          <button class="btn" onclick="closeConfirmModal()">Não</button>
+          <button class="btn btn-danger" onclick="confirmAction()">
+            Sim, tenho certeza
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:3000/api";
+      // ...
+
+      // Lógica do Modal de Confirmação
+      let pendingConfirmAction = null;
+
+      function showConfirmModal(message, action) {
+        document.getElementById("confirmMessage").textContent = message;
+        pendingConfirmAction = action;
+        document.getElementById("confirmModal").classList.add("active");
+      }
+
+      function closeConfirmModal() {
+        document.getElementById("confirmModal").classList.remove("active");
+        pendingConfirmAction = null;
+      }
+
+      function confirmAction() {
+        if (pendingConfirmAction) {
+          pendingConfirmAction();
+        }
+        closeConfirmModal();
+      }
+
+      // ... (existing code)
+
+      // Cancelar inscrição
+      async function cancelEnrollment(classId) {
+        showConfirmModal(
+          "Tem certeza que deseja cancelar sua inscrição?",
+          async () => {
+            console.log("Usuário confirmou cancelamento.");
+
+            try {
+              const response = await fetch(
+                `${API_URL}/student/classes/${classId}/cancel`,
+                {
+                  method: "DELETE",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                },
+              );
+
+              if (!response.ok) {
+                const error = await response.json();
+                throw new Error(
+                  error.error || error.message || "Erro ao cancelar inscrição",
+                );
+              }
+
+              showAlert("Inscrição cancelada com sucesso!", "success");
+              loadAvailableClasses();
+              loadMyClasses();
+            } catch (error) {
+              console.error("Erro:", error);
+              showAlert(error.message, "error");
+            }
+          },
+        );
+      }
+      let token = localStorage.getItem("token");
+      let currentUserId = null;
+
+      // Verificar autenticação
+      if (!token) {
+        window.location.href = "/";
+      }
+
+      // Navegação
+      document.querySelectorAll(".nav-item").forEach((item) => {
+        item.addEventListener("click", () => {
+          // Remover active de todos
+          document
+            .querySelectorAll(".nav-item")
+            .forEach((i) => i.classList.remove("active"));
+          document
+            .querySelectorAll(".section")
+            .forEach((s) => s.classList.remove("active"));
+
+          // Adicionar active no clicado
+          item.classList.add("active");
+          const sectionId = item.getAttribute("data-section");
+          document.getElementById(sectionId).classList.add("active");
+
+          // Carregar dados se necessário
+          if (sectionId === "workouts") loadWorkouts();
+          if (sectionId === "classes") loadAvailableClasses();
+          if (sectionId === "my-classes") loadMyClasses();
+        });
+      });
+
+      // Função para mostrar alerta
+      function showAlert(message, type = "success") {
+        const alert = document.getElementById("alert");
+        alert.textContent = message;
+        alert.className = `alert alert-${type} show`;
+        setTimeout(() => {
+          alert.classList.remove("show");
+        }, 10000);
+      }
+
+      // Carregar informações do usuário
+      async function loadUserInfo() {
+        try {
+          const response = await fetch(`${API_URL}/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) throw new Error("Não autorizado");
+
+          const data = await response.json();
+          currentUserId = data.id;
+          document.getElementById("userName").textContent = data.nome;
+          document.getElementById("userAvatar").textContent = data.nome
+            .charAt(0)
+            .toUpperCase();
+
+          // Verificar se é aluno
+          if (data.role !== "aluno") {
+            showAlert("Acesso negado. Você não é aluno.", "error");
+            setTimeout(() => logout(), 2000);
+          }
+        } catch (error) {
+          console.error("Erro ao carregar usuário:", error);
+          logout();
+        }
+      }
+
+      // Carregar treinos do aluno
+      async function loadWorkouts() {
+        try {
+          const response = await fetch(`${API_URL}/student/workouts`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) throw new Error("Erro ao carregar treinos");
+
+          const workouts = await response.json();
+          const container = document.getElementById("workoutsList");
+
+          if (workouts.length === 0) {
+            container.innerHTML =
+              "<p>Você ainda não possui treinos cadastrados. Procure um instrutor!</p>";
+            return;
+          }
+
+          container.innerHTML = workouts
+            .map(
+              (workout) => `
+            <div class="workout-card">
+              <h3>Treino ${workout.training_type}</h3>
+              <p><strong>Instrutor:</strong> ${workout.instructor_name || workout.instructor_id}</p>
+              <div class="exercises-list">
+                ${
+                  Array.isArray(workout.exercises)
+                    ? workout.exercises
+                        .map(
+                          (ex) => `
+                    <div style="margin-bottom: 4px;">
+                      <strong>${ex.nomeExercicio}</strong>: ${ex.series}x${ex.repeticoes} - ${ex.carga || ""}
+                    </div>
+                  `,
+                        )
+                        .join("")
+                    : `<pre>${workout.exercises}</pre>`
+                }
+              </div>
+              <div class="workout-actions">
+                <button class="btn btn-primary" onclick="printWorkout(${workout.id})">🖨️ Imprimir (Check-in)</button>
+              </div>
+            </div>
+          `,
+            )
+            .join("");
+        } catch (error) {
+          console.error("Erro:", error);
+          showAlert("Erro ao carregar treinos", "error");
+        }
+      }
+
+      // Imprimir treino (registra check-in)
+      async function printWorkout(workoutId) {
+        try {
+          // Registrar check-in
+          const response = await fetch(`${API_URL}/student/checkin`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ workout_id: workoutId }),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            const errorMessage =
+              error.error || error.message || "Erro ao registrar check-in";
+
+            // Se o erro for de check-in duplicado, permite imprimir mesmo assim
+            if (errorMessage.includes("Você já fez check-in hoje")) {
+              showAlert("Você já fez check-in hoje. Imprimindo...", "warning");
+            } else {
+              throw new Error(errorMessage);
+            }
+          } else {
+            // Só mostra msg de sucesso se retornou 200 OK
+            showAlert("Check-in registrado com sucesso!", "success");
+          }
+
+          // Imprimir apenas o treino específico
+          const workoutContent = document
+            .querySelector(
+              `.workout-card button[onclick="printWorkout(${workoutId})"]`,
+            )
+            .closest(".workout-card").innerHTML;
+
+          // Remover o botão de impressão do conteúdo a ser impresso
+          const tempDiv = document.createElement("div");
+          tempDiv.innerHTML = workoutContent;
+          const btn = tempDiv.querySelector(".workout-actions");
+          if (btn) btn.remove();
+
+          const printWindow = window.open("", "", "height=600,width=800");
+          printWindow.document.write(
+            "<html><head><title>Imprimir Treino</title>",
+          );
+          printWindow.document.write("<style>");
+          printWindow.document.write(
+            "body { font-family: sans-serif; padding: 20px; }",
+          );
+          printWindow.document.write(
+            ".workout-card { border: 1px solid #ccc; padding: 20px; border-radius: 8px; }",
+          );
+          printWindow.document.write("h3 { margin-top: 0; color: #333; }");
+          printWindow.document.write("</style>");
+          printWindow.document.write("</head><body>");
+          printWindow.document.write('<div class="workout-card">');
+          printWindow.document.write(tempDiv.innerHTML);
+          printWindow.document.write("</div>");
+          printWindow.document.write("</body></html>");
+          printWindow.document.close();
+          printWindow.focus();
+          // Pequeno delay para garantir que estilos carreguem
+          setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+          }, 500);
+        } catch (error) {
+          console.error("Erro:", error);
+          showAlert(error.message, "error");
+        }
+      }
+
+      // Carregar aulas disponíveis
+      async function loadAvailableClasses() {
+        try {
+          const response = await fetch(`${API_URL}/student/classes`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) throw new Error("Erro ao carregar aulas");
+
+          const classes = await response.json();
+          const container = document.getElementById("classesList");
+
+          if (classes.length === 0) {
+            container.innerHTML = "<p>Nenhuma aula disponível no momento.</p>";
+            return;
+          }
+
+          container.innerHTML = classes
+            .map((cls) => {
+              const date = new Date(cls.date);
+              const isPast = date < new Date();
+              const isFull = cls.current_participants >= cls.max_participants;
+
+              let badge = "";
+              let buttonHtml = "";
+
+              if (isPast) {
+                badge = '<span class="badge badge-danger">Encerrada</span>';
+              } else if (isFull) {
+                badge = '<span class="badge badge-warning">Lotada</span>';
+              } else {
+                badge =
+                  '<span class="badge badge-success">Vagas Disponíveis</span>';
+                buttonHtml = `<button class="btn btn-success" onclick="enrollClass(${cls.id})">Inscrever-se</button>`;
+              }
+
+              return `
+            <div class="class-card">
+              <h3>${cls.title}</h3>
+              <p><strong>Descrição:</strong> ${cls.description}</p>
+              <p><strong>Data/Hora:</strong> ${date.toLocaleString("pt-BR")}</p>
+              <p><strong>Local:</strong> ${cls.location}</p>
+              <p><strong>Vagas:</strong> ${cls.current_participants || 0}/${cls.max_participants}</p>
+              ${badge}
+              <div class="workout-actions">
+                ${buttonHtml}
+              </div>
+            </div>
+          `;
+            })
+            .join("");
+        } catch (error) {
+          console.error("Erro:", error);
+          showAlert("Erro ao carregar aulas", "error");
+        }
+      }
+
+      // Inscrever-se em aula
+      async function enrollClass(classId) {
+        try {
+          const response = await fetch(
+            `${API_URL}/student/classes/${classId}/enroll`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(
+              error.error || error.message || "Erro ao se inscrever",
+            );
+          }
+
+          showAlert("Inscrição realizada com sucesso!", "success");
+          loadAvailableClasses();
+          loadMyClasses();
+        } catch (error) {
+          console.error("Erro:", error);
+          showAlert(error.message, "error");
+        }
+      }
+
+      // Carregar minhas inscrições
+      async function loadMyClasses() {
+        try {
+          const response = await fetch(`${API_URL}/student/my-classes`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) throw new Error("Erro ao carregar inscrições");
+
+          const classes = await response.json();
+          const container = document.getElementById("myClassesList");
+
+          if (classes.length === 0) {
+            container.innerHTML =
+              "<p>Você não está inscrito em nenhuma aula.</p>";
+            return;
+          }
+
+          container.innerHTML = classes
+            .map((cls) => {
+              const date = new Date(cls.date);
+              const isPast = date < new Date();
+
+              let buttonHtml = "";
+              if (!isPast) {
+                buttonHtml = `<button class="btn btn-danger" onclick="cancelEnrollment(${cls.id})">Cancelar Inscrição</button>`;
+              }
+
+              return `
+            <div class="class-card">
+              <h3>${cls.title}</h3>
+              <p><strong>Descrição:</strong> ${cls.description}</p>
+              <p><strong>Data/Hora:</strong> ${date.toLocaleString("pt-BR")}</p>
+              <p><strong>Local:</strong> ${cls.location}</p>
+              ${isPast ? '<span class="badge badge-danger">Encerrada</span>' : '<span class="badge badge-success">Confirmada</span>'}
+              <div class="workout-actions">
+                ${buttonHtml}
+              </div>
+            </div>
+          `;
+            })
+            .join("");
+        } catch (error) {
+          console.error("Erro:", error);
+          showAlert("Erro ao carregar suas inscrições", "error");
+        }
+      }
+
+      // Cancelar inscrição
+      // Cancelar inscrição
+      async function cancelEnrollment(classId) {
+        showConfirmModal(
+          "Tem certeza que deseja cancelar sua inscrição?",
+          async () => {
+            console.log("Usuário confirmou cancelamento.");
+
+            try {
+              const response = await fetch(
+                `${API_URL}/student/classes/${classId}/cancel`,
+                {
+                  method: "DELETE",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                },
+              );
+
+              if (!response.ok) {
+                const error = await response.json();
+                throw new Error(
+                  error.error || error.message || "Erro ao cancelar inscrição",
+                );
+              }
+
+              showAlert("Inscrição cancelada com sucesso!", "success");
+              loadAvailableClasses();
+              loadMyClasses();
+            } catch (error) {
+              console.error("Erro:", error);
+              showAlert(error.message, "error");
+            }
+          },
+        );
+      }
+
+      // Logout
+      function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/";
+      }
+
+      // Inicializar
+      loadUserInfo();
+      loadWorkouts();
+    </script>
+  </body>
+</html>

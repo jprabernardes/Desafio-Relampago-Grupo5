@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Recepcionista</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f7fa;
+      }
+
+      .container {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 250px;
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 1rem;
+      }
+      .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 3rem;
+      }
+      .nav-item {
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .nav-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .nav-item.active {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      .logout-btn {
+        margin-top: auto;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 2rem;
+      }
+      .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      /* Main Content */
+      .main-content {
+        flex: 1;
+        padding: 2rem;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .header h1 {
+        font-size: 2rem;
+        color: #333;
+      }
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+      }
+
+      /* Cards */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .stat-card h3 {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+      }
+      .stat-card .value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #667eea;
+      }
+
+      /* Section */
+      .section {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        display: none;
+      }
+      .section.active {
+        display: block;
+      }
+      .section h2 {
+        margin-bottom: 1.5rem;
+        color: #333;
+      }
+
+      /* Forms */
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #333;
+        font-weight: 500;
+      }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+      }
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      /* Buttons */
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+      .btn-secondary {
+        background: #f0f0f0;
+        color: #333;
+      }
+      .btn-secondary:hover {
+        background: #e0e0e0;
+      }
+
+      /* Table */
+      .table-container {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+      }
+      th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: #333;
+      }
+      tr:hover {
+        background: #f8f9fa;
+      }
+
+      /* Alert */
+      .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        display: none;
+      }
+      .alert.show {
+        display: block;
+      }
+      .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="logo">FitManager</div>
+        <nav>
+          <div class="nav-item active" data-section="overview">
+            📊 Visão Geral
+          </div>
+          <div class="nav-item" data-section="create-student">
+            ➕ Criar Aluno
+          </div>
+          <div class="nav-item" data-section="create-instructor">
+            ➕ Criar Instrutor
+          </div>
+          <div class="nav-item" data-section="list-students">
+            👥 Listar Alunos
+          </div>
+          <div class="nav-item" data-section="list-instructors">
+            🏋️ Listar Instrutores
+          </div>
+        </nav>
+        <button class="logout-btn" onclick="logout()">🚪 Sair</button>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="header">
+          <h1>Dashboard Recepcionista</h1>
+          <div class="user-info">
+            <div class="user-avatar" id="userAvatar">R</div>
+            <span id="userName">Carregando...</span>
+          </div>
+        </div>
+
+        <!-- Alert -->
+        <div class="alert" id="alert"></div>
+
+        <!-- Overview Section -->
+        <section class="section active" id="overview">
+          <h2>Visão Geral</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h3>Total de Alunos</h3>
+              <div class="value" id="totalStudents">0</div>
+            </div>
+            <div class="stat-card">
+              <h3>Total de Instrutores</h3>
+              <div class="value" id="totalInstructors">0</div>
+            </div>
+            <div class="stat-card">
+              <h3>Check-ins Hoje</h3>
+              <div class="value" id="checkinsToday">0</div>
+            </div>
+            <div class="stat-card">
+              <h3>Total de Check-ins</h3>
+              <div class="value" id="totalCheckins">0</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Create Student Section -->
+        <section class="section" id="create-student">
+          <h2>Criar Novo Aluno</h2>
+          <form id="createStudentForm">
+            <div class="form-group">
+              <label for="studentName">Nome Completo</label>
+              <input type="text" id="studentName" required />
+            </div>
+            <div class="form-group">
+              <label for="studentEmail">Email</label>
+              <input type="email" id="studentEmail" required />
+            </div>
+            <div class="form-group">
+              <label for="studentCpf">CPF</label>
+              <input
+                type="text"
+                id="studentCpf"
+                required
+                placeholder="Apenas números (11 dígitos)"
+              />
+            </div>
+            <div class="form-group">
+              <label for="studentPassword">Senha</label>
+              <input type="password" id="studentPassword" required />
+            </div>
+            <div class="form-group">
+              <label for="studentPlan">Plano</label>
+              <select id="studentPlan" required>
+                <option value="">Selecione um plano</option>
+                <option value="mensal">Mensal</option>
+                <option value="trimestral">Trimestral</option>
+                <option value="semestral">Semestral</option>
+                <option value="anual">Anual</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Criar Aluno</button>
+          </form>
+        </section>
+
+        <!-- Create Instructor Section -->
+        <section class="section" id="create-instructor">
+          <h2>Criar Novo Instrutor</h2>
+          <form id="createInstructorForm">
+            <div class="form-group">
+              <label for="instructorName">Nome Completo</label>
+              <input type="text" id="instructorName" required />
+            </div>
+            <div class="form-group">
+              <label for="instructorEmail">Email</label>
+              <input type="email" id="instructorEmail" required />
+            </div>
+            <div class="form-group">
+              <label for="instructorCpf">CPF</label>
+              <input
+                type="text"
+                id="instructorCpf"
+                required
+                placeholder="Apenas números (11 dígitos)"
+              />
+            </div>
+            <div class="form-group">
+              <label for="instructorPassword">Senha</label>
+              <input type="password" id="instructorPassword" required />
+            </div>
+            <div class="form-group">
+              <label for="instructorSpecialty">Especialidade</label>
+              <input
+                type="text"
+                id="instructorSpecialty"
+                placeholder="Ex: Musculação, Pilates, Yoga"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-primary">
+              Criar Instrutor
+            </button>
+          </form>
+        </section>
+
+        <!-- List Students Section -->
+        <section class="section" id="list-students">
+          <h2>Lista de Alunos</h2>
+          <div class="table-container">
+            <table id="studentsTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nome</th>
+                  <th>Email</th>
+                  <th>Plano</th>
+                </tr>
+              </thead>
+              <tbody id="studentsTableBody">
+                <tr>
+                  <td colspan="4" style="text-align: center">Carregando...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- List Instructors Section -->
+        <section class="section" id="list-instructors">
+          <h2>Lista de Instrutores</h2>
+          <div class="table-container">
+            <table id="instructorsTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nome</th>
+                  <th>Email</th>
+                  <th>Especialidade</th>
+                </tr>
+              </thead>
+              <tbody id="instructorsTableBody">
+                <tr>
+                  <td colspan="4" style="text-align: center">Carregando...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      // Constantes
+      const API_URL = "http://localhost:3000/api";
+      let token = localStorage.getItem("token");
+
+      // Verificar autenticação
+      if (!token) {
+        window.location.href = "/";
+      }
+
+      // Navegação
+      document.querySelectorAll(".nav-item").forEach((item) => {
+        item.addEventListener("click", () => {
+          // Remover active de todos
+          document
+            .querySelectorAll(".nav-item")
+            .forEach((i) => i.classList.remove("active"));
+          document
+            .querySelectorAll(".section")
+            .forEach((s) => s.classList.remove("active"));
+
+          // Adicionar active no clicado
+          item.classList.add("active");
+          const sectionId = item.getAttribute("data-section");
+          document.getElementById(sectionId).classList.add("active");
+
+          // Carregar dados se necessário
+          if (sectionId === "list-students") loadStudents();
+          if (sectionId === "list-instructors") loadInstructors();
+          if (sectionId === "overview") loadMetrics();
+        });
+      });
+
+      // Função para mostrar alerta
+      function showAlert(message, type = "success") {
+        const alert = document.getElementById("alert");
+        alert.textContent = message;
+        alert.className = `alert alert-${type} show`;
+        setTimeout(() => {
+          alert.classList.remove("show");
+        }, 5000);
+      }
+
+      // Carregar informações do usuário
+      async function loadUserInfo() {
+        try {
+          const response = await fetch(`${API_URL}/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) throw new Error("Não autorizado");
+
+          const data = await response.json();
+          document.getElementById("userName").textContent = data.nome;
+          document.getElementById("userAvatar").textContent = data.nome
+            .charAt(0)
+            .toUpperCase();
+
+          // Verificar se é recepcionista
+          if (data.role !== "recepcionista") {
+            showAlert("Acesso negado. Você não é recepcionista.", "error");
+            setTimeout(() => logout(), 2000);
+          }
+        } catch (error) {
+          console.error("Erro ao carregar usuário:", error);
+          logout();
+        }
+      }
+
+      // Carregar métricas
+      async function loadMetrics() {
+        try {
+          const response = await fetch(`${API_URL}/receptionist/metrics`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) throw new Error("Erro ao carregar métricas");
+
+          const data = await response.json();
+          document.getElementById("totalStudents").textContent =
+            data.totalStudents || 0;
+          document.getElementById("totalInstructors").textContent =
+            data.totalInstructors || 0;
+          document.getElementById("totalCheckins").textContent =
+            data.totalCheckins || 0;
+          document.getElementById("checkinsToday").textContent =
+            data.checkinsToday || 0;
+        } catch (error) {
+          console.error("Erro ao carregar métricas:", error);
+          showAlert("Erro ao carregar métricas", "error");
+        }
+      }
+
+      // Criar aluno
+      document
+        .getElementById("createStudentForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const studentData = {
+            nome: document.getElementById("studentName").value,
+            email: document.getElementById("studentEmail").value,
+            cpf: document.getElementById("studentCpf").value,
+            senha: document.getElementById("studentPassword").value,
+            plan: document.getElementById("studentPlan").value,
+          };
+
+          try {
+            const response = await fetch(`${API_URL}/receptionist/students`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify(studentData),
+            });
+
+            if (!response.ok) {
+              const error = await response.json();
+              throw new Error(error.message || "Erro ao criar aluno");
+            }
+
+            showAlert("Aluno criado com sucesso!", "success");
+            document.getElementById("createStudentForm").reset();
+          } catch (error) {
+            console.error("Erro:", error);
+            showAlert(error.message, "error");
+          }
+        });
+
+      // Criar instrutor
+      document
+        .getElementById("createInstructorForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const instructorData = {
+            nome: document.getElementById("instructorName").value,
+            email: document.getElementById("instructorEmail").value,
+            cpf: document.getElementById("instructorCpf").value,
+            senha: document.getElementById("instructorPassword").value,
+            specialty: document.getElementById("instructorSpecialty").value,
+          };
+
+          try {
+            const response = await fetch(
+              `${API_URL}/receptionist/instructors`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(instructorData),
+              },
+            );
+
+            if (!response.ok) {
+              const error = await response.json();
+              throw new Error(error.message || "Erro ao criar instrutor");
+            }
+
+            showAlert("Instrutor criado com sucesso!", "success");
+            document.getElementById("createInstructorForm").reset();
+          } catch (error) {
+            console.error("Erro:", error);
+            showAlert(error.message, "error");
+          }
+        });
+
+      // Carregar alunos
+      async function loadStudents() {
+        try {
+          const response = await fetch(`${API_URL}/receptionist/students`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) throw new Error("Erro ao carregar alunos");
+
+          const students = await response.json();
+          const tbody = document.getElementById("studentsTableBody");
+
+          if (students.length === 0) {
+            tbody.innerHTML =
+              '<tr><td colspan="4" style="text-align: center">Nenhum aluno encontrado</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = students
+            .map(
+              (student) => `
+            <tr>
+              <td>${student.id}</td>
+              <td>${student.nome}</td>
+              <td>${student.email}</td>
+              <td>${student.plan || "N/A"}</td>
+            </tr>
+          `,
+            )
+            .join("");
+        } catch (error) {
+          console.error("Erro:", error);
+          showAlert("Erro ao carregar alunos", "error");
+        }
+      }
+
+      // Carregar instrutores
+      async function loadInstructors() {
+        try {
+          const response = await fetch(`${API_URL}/receptionist/instructors`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) throw new Error("Erro ao carregar instrutores");
+
+          const instructors = await response.json();
+          const tbody = document.getElementById("instructorsTableBody");
+
+          if (instructors.length === 0) {
+            tbody.innerHTML =
+              '<tr><td colspan="4" style="text-align: center">Nenhum instrutor encontrado</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = instructors
+            .map(
+              (instructor) => `
+            <tr>
+              <td>${instructor.id}</td>
+              <td>${instructor.nome}</td>
+              <td>${instructor.email}</td>
+              <td>${instructor.specialty || "N/A"}</td>
+            </tr>
+          `,
+            )
+            .join("");
+        } catch (error) {
+          console.error("Erro:", error);
+          showAlert("Erro ao carregar instrutores", "error");
+        }
+      }
+
+      // Logout
+      function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/";
+      }
+
+      // Inicializar
+      loadUserInfo();
+      loadMetrics();
+    </script>
+  </body>
+</html>
