@@ -1,20 +1,11 @@
-// src/repositories/UserRepository.ts
 import db from '../database/db';
 import { User } from '../models';
 
-/**
- * Repositório para acesso aos dados de usuários.
- * REGRA: Apenas acesso a dados, SEM regras de negócio.
- */
 export class UserRepository {
-  
-  /**
-   * Cria um novo usuário
-   */
   create(user: User): Promise<User> {
     return new Promise((resolve, reject) => {
-      const sql = `INSERT INTO users (nome, email, senha, role, cpf) VALUES (?, ?, ?, ?, ?)`;
-      const params = [user.nome, user.email, user.senha, user.role, user.cpf];
+      const sql = `INSERT INTO users (name, email, password, role, document) VALUES (?, ?, ?, ?, ?)`;
+      const params = [user.name, user.email, user.password, user.role, user.document];
       
       db.run(sql, params, function(err) {
         if (err) {
@@ -26,45 +17,33 @@ export class UserRepository {
     });
   }
 
-  /**
-   * Busca usuário por email
-   */
   findByEmail(email: string): Promise<User | undefined> {
     return new Promise((resolve, reject) => {
-      db.get('SELECT * FROM users WHERE email = ?', [email], (err, row: User) => {
+      db.get('SELECT * FROM users WHERE email = ?', [email], (err, row: any) => {
         if (err) reject(err);
-        else resolve(row);
+        else resolve(row ? (row as User) : undefined);
       });
     });
   }
 
-  /**
-   * Busca usuário por ID
-   */
   findById(id: number): Promise<User | undefined> {
     return new Promise((resolve, reject) => {
-      db.get('SELECT * FROM users WHERE id = ?', [id], (err, row: User) => {
+      db.get('SELECT * FROM users WHERE id = ?', [id], (err, row: any) => {
         if (err) reject(err);
-        else resolve(row);
+        else resolve(row ? (row as User) : undefined);
       });
     });
   }
 
-  /**
-   * Busca usuário por CPF
-   */
   findByCpf(cpf: string): Promise<User | undefined> {
     return new Promise((resolve, reject) => {
-      db.get('SELECT * FROM users WHERE cpf = ?', [cpf], (err, row: User) => {
+      db.get('SELECT * FROM users WHERE document = ?', [cpf], (err, row: any) => {
         if (err) reject(err);
-        else resolve(row);
+        else resolve(row ? (row as User) : undefined);
       });
     });
   }
 
-  /**
-   * Lista todos os usuários (com filtro opcional por role)
-   */
   findAll(role?: string): Promise<User[]> {
     return new Promise((resolve, reject) => {
       let sql = 'SELECT * FROM users';
@@ -75,51 +54,49 @@ export class UserRepository {
         params.push(role);
       }
       
-      db.all(sql, params, (err, rows: User[]) => {
+      db.all(sql, params, (err, rows: any[]) => {
         if (err) reject(err);
-        else resolve(rows || []);
+        else resolve((rows || []) as User[]);
       });
     });
   }
 
-  /**
-   * Busca usuários por nome ou email
-   */
   search(query: string): Promise<User[]> {
     return new Promise((resolve, reject) => {
-      const sql = 'SELECT * FROM users WHERE nome LIKE ? OR email LIKE ?';
+      const sql = 'SELECT * FROM users WHERE name LIKE ? OR email LIKE ?';
       const searchTerm = `%${query}%`;
       
-      db.all(sql, [searchTerm, searchTerm], (err, rows: User[]) => {
+      db.all(sql, [searchTerm, searchTerm], (err, rows: any[]) => {
         if (err) reject(err);
-        else resolve(rows || []);
+        else resolve((rows || []) as User[]);
       });
     });
   }
 
-  /**
-   * Atualiza usuário
-   */
   update(id: number, user: Partial<User>): Promise<void> {
     return new Promise((resolve, reject) => {
       const fields: string[] = [];
       const values: any[] = [];
 
-      if (user.nome) {
-        fields.push('nome = ?');
-        values.push(user.nome);
+      if (user.name) {
+        fields.push('name = ?');
+        values.push(user.name);
       }
       if (user.email) {
         fields.push('email = ?');
         values.push(user.email);
       }
-      if (user.senha) {
-        fields.push('senha = ?');
-        values.push(user.senha);
+      if (user.password) {
+        fields.push('password = ?');
+        values.push(user.password);
       }
       if (user.role) {
         fields.push('role = ?');
         values.push(user.role);
+      }
+      if (user.document) {
+        fields.push('document = ?');
+        values.push(user.document);
       }
 
       if (fields.length === 0) {
@@ -136,9 +113,6 @@ export class UserRepository {
     });
   }
 
-  /**
-   * Deleta usuário
-   */
   delete(id: number): Promise<void> {
     return new Promise((resolve, reject) => {
       db.run('DELETE FROM users WHERE id = ?', [id], (err) => {
@@ -148,9 +122,6 @@ export class UserRepository {
     });
   }
 
-  /**
-   * Conta usuários por role
-   */
   countByRole(role: string): Promise<number> {
     return new Promise((resolve, reject) => {
       db.get('SELECT COUNT(*) as count FROM users WHERE role = ?', [role], (err, row: any) => {

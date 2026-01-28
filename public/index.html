@@ -214,13 +214,13 @@
           e.preventDefault();
 
           const email = document.getElementById("email").value;
-          const senha = document.getElementById("senha").value;
+          const password = document.getElementById("senha").value;
 
           try {
             const response = await fetch(`${API_URL}/auth/login`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email, senha }),
+              body: JSON.stringify({ email, password }),
             });
 
             const data = await response.json();
@@ -240,7 +240,7 @@
                   window.location.href = "/dashboard-receptionist.html";
                   break;
                 case "instrutor":
-                  window.location.href = "/dashboard-instructor.html";
+                  window.location.href = "/dashboard-instructor/dashboard-instructor.html";
                   break;
                 case "aluno":
                   window.location.href = "/dashboard-student.html";

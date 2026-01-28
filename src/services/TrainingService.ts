@@ -1,112 +1,147 @@
-// src/services/TrainingService.ts
 import { TrainingRepository } from '../repositories/TrainingRepository';
 import { CheckInRepository } from '../repositories/CheckInRepository';
-import { Training, Exercise } from '../models';
-import { isNotEmpty, isPositiveNumber } from '../utils/validators';
+import { UserRepository } from '../repositories/UserRepository';
+import { Training } from '../models/Training';
+import { isNotEmpty } from '../utils/validators';
 
 export class TrainingService {
   private trainingRepository: TrainingRepository;
   private checkinRepository: CheckInRepository;
+  private userRepository: UserRepository;
 
   constructor() {
     this.trainingRepository = new TrainingRepository();
     this.checkinRepository = new CheckInRepository();
+    this.userRepository = new UserRepository();
   }
 
-  /**
-   * Cria um novo treino (apenas instrutores).
-   */
-  async create(training: Training, creatorRole: string): Promise<Training> {
-    if (creatorRole !== 'instrutor') {
-      throw new Error('Apenas instrutores podem criar treinos.');
+  async create(training: Training, instructorId: number, userIds?: number[]): Promise<Training> {
+    if (!isNotEmpty(training.name)) {
+      throw new Error('Nome do treino é obrigatório.');
     }
 
-    if (!training.exercises || training.exercises.length === 0) {
-      throw new Error('Treino deve conter pelo menos um exercício.');
-    }
+    training.instructor_id = instructorId;
+    training.finish = training.finish || false;
+    
+    const created = await this.trainingRepository.create(training);
 
-    // Valida exercícios
-    for (const ex of training.exercises) {
-      if (!isNotEmpty(ex.nomeExercicio)) {
-        throw new Error('Nome do exercício é obrigatório.');
-      }
-      if (!isPositiveNumber(ex.series) || !isPositiveNumber(ex.repeticoes)) {
-        throw new Error('Séries e repetições devem ser números positivos.');
+    if (userIds && userIds.length > 0) {
+      for (const userId of userIds) {
+        await this.trainingRepository.addUser(created.id!, userId);
       }
     }
 
-    return await this.trainingRepository.create(training);
+    return created;
   }
 
-  async assignExercises(studentId: number, instructorId: number, type: 'A' | 'B' | 'C', exercises: Exercise[]): Promise<Training> {
-    const existingTraining = await this.trainingRepository.findByStudentAndType(studentId, type);
-
-    if (existingTraining) {
-      // Overwrite exercises (User request: "O Treino A tem que ser sobreescrito")
-      await this.trainingRepository.update(existingTraining.id!, { exercises: exercises });
-      return { ...existingTraining, exercises: exercises };
-    } else {
-      // Create new training
-      const newTraining: Training = {
-        student_id: studentId,
-        instructor_id: instructorId,
-        training_type: type,
-        exercises
-      };
-      return await this.trainingRepository.create(newTraining);
-    }
-  }
-
-  async findByStudentId(studentId: number): Promise<Training[]> {
-    return await this.trainingRepository.findByStudentId(studentId);
+  async findByUserId(userId: number): Promise<Training[]> {
+    return await this.trainingRepository.findByUserId(userId);
   }
 
   async findByInstructorId(instructorId: number): Promise<Training[]> {
     return await this.trainingRepository.findByInstructorId(instructorId);
   }
 
-  async findById(id: number): Promise<Training | undefined> {
-    return await this.trainingRepository.findById(id);
+  async findById(id: number, instructorId: number): Promise<Training | undefined> {
+    const training = await this.trainingRepository.findById(id);
+    if (training && training.instructor_id !== instructorId) {
+      throw new Error('Você não tem permissão para acessar este treino.');
+    }
+    return training;
   }
 
-  async update(id: number, training: Partial<Training>, updaterRole: string): Promise<void> {
-    if (updaterRole !== 'instrutor') {
-      throw new Error('Apenas instrutores podem atualizar treinos.');
+  async update(id: number, training: Partial<Training>, instructorId: number): Promise<void> {
+    const existing = await this.trainingRepository.findById(id);
+    if (!existing) {
+      throw new Error('Treino não encontrado.');
+    }
+    if (existing.instructor_id !== instructorId) {
+      throw new Error('Você só pode editar seus próprios treinos.');
     }
 
     await this.trainingRepository.update(id, training);
   }
 
-  async delete(id: number, deleterRole: string): Promise<void> {
-    if (deleterRole !== 'instrutor') {
-      throw new Error('Apenas instrutores podem deletar treinos.');
+  async delete(id: number, instructorId: number): Promise<void> {
+    const existing = await this.trainingRepository.findById(id);
+    if (!existing) {
+      throw new Error('Treino não encontrado.');
+    }
+    if (existing.instructor_id !== instructorId) {
+      throw new Error('Você só pode deletar seus próprios treinos.');
     }
 
     await this.trainingRepository.delete(id);
   }
 
-  /**
-   * "Imprime" treino e registra check-in
-   */
-  async printTraining(trainingId: number, studentId: number): Promise<Training> {
+  async addUserToTraining(trainingId: number, userId: number, instructorId: number): Promise<void> {
+    const training = await this.trainingRepository.findById(trainingId);
+    if (!training) {
+      throw new Error('Treino não encontrado.');
+    }
+    if (training.instructor_id !== instructorId) {
+      throw new Error('Você só pode adicionar alunos aos seus próprios treinos.');
+    }
+
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new Error('Usuário não encontrado.');
+    }
+    if (user.role !== 'aluno') {
+      throw new Error('Apenas alunos podem ser associados a treinos.');
+    }
+
+    await this.trainingRepository.addUser(trainingId, userId);
+  }
+
+  async removeUserFromTraining(trainingId: number, userId: number, instructorId: number): Promise<void> {
+    const training = await this.trainingRepository.findById(trainingId);
+    if (!training) {
+      throw new Error('Treino não encontrado.');
+    }
+    if (training.instructor_id !== instructorId) {
+      throw new Error('Você só pode remover alunos dos seus próprios treinos.');
+    }
+
+    await this.trainingRepository.removeUser(trainingId, userId);
+  }
+
+  async getStudentsFromTrainings(instructorId: number): Promise<any[]> {
+    const trainings = await this.trainingRepository.findByInstructorId(instructorId);
+    const allUsers: any[] = [];
+
+    for (const training of trainings) {
+      const users = await this.trainingRepository.getUsersByTrainingId(training.id!);
+      allUsers.push(...users);
+    }
+
+    const uniqueUsers = Array.from(
+      new Map(allUsers.map(u => [u.id, u])).values()
+    );
+
+    return uniqueUsers;
+  }
+
+  async printTraining(trainingId: number, userId: number): Promise<Training> {
     const training = await this.trainingRepository.findById(trainingId);
     if (!training) {
       throw new Error('Treino não encontrado.');
     }
 
-    if (training.student_id !== studentId) {
+    const users = await this.trainingRepository.getUsersByTrainingId(trainingId);
+    const hasAccess = users.some(u => u.id === userId);
+    
+    if (!hasAccess) {
       throw new Error('Este treino não pertence a você.');
     }
 
-    // Verifica se já fez check-in hoje
-    const existingCheckIn = await this.checkinRepository.findTodayByStudentId(studentId);
+    const existingCheckIn = await this.checkinRepository.findTodayByStudentId(userId);
     if (existingCheckIn) {
       throw new Error('Você já fez check-in hoje.');
     }
 
-    // Registra check-in
     await this.checkinRepository.create({
-      student_id: studentId,
+      student_id: userId,
       training_id: trainingId
     });
 

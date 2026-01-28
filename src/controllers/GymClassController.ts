@@ -1,14 +1,13 @@
-// src/controllers/ClassController.ts
 import { Request, Response } from 'express';
-import { ClassService } from '../services/ClassService';
+import { GymClassService } from '../services/GymClassService';
 import { CheckInService } from '../services/CheckInService';
 
-export class ClassController {
-  private classService: ClassService;
+export class GymClassController {
+  private gymClassService: GymClassService;
   private checkinService: CheckInService;
 
   constructor() {
-    this.classService = new ClassService();
+    this.gymClassService = new GymClassService();
     this.checkinService = new CheckInService();
   }
 
@@ -16,7 +15,7 @@ export class ClassController {
     try {
       const creatorRole = (req as any).user.role;
       const instructorId = (req as any).user.id;
-      const classData = await this.classService.create(req.body, creatorRole, instructorId);
+      const classData = await this.gymClassService.create(req.body, creatorRole, instructorId);
       return res.status(201).json(classData);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -25,7 +24,7 @@ export class ClassController {
 
   findAll = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const classes = await this.classService.findAll();
+      const classes = await this.gymClassService.findAll();
       return res.status(200).json(classes);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -34,7 +33,7 @@ export class ClassController {
 
   findById = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const classData = await this.classService.findById(Number(req.params.id));
+      const classData = await this.gymClassService.findById(Number(req.params.id));
       if (!classData) {
         return res.status(404).json({ error: 'Aula não encontrada.' });
       }
@@ -48,7 +47,7 @@ export class ClassController {
     try {
       const updaterRole = (req as any).user.role;
       const instructorId = (req as any).user.id;
-      await this.classService.update(Number(req.params.id), req.body, updaterRole, instructorId);
+      await this.gymClassService.update(Number(req.params.id), req.body, updaterRole, instructorId);
       return res.status(200).json({ message: 'Aula atualizada com sucesso.' });
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -59,20 +58,17 @@ export class ClassController {
     try {
       const deleterRole = (req as any).user.role;
       const instructorId = (req as any).user.id;
-      await this.classService.delete(Number(req.params.id), deleterRole, instructorId);
+      await this.gymClassService.delete(Number(req.params.id), deleterRole, instructorId);
       return res.status(200).json({ message: 'Aula deletada com sucesso.' });
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
     }
   };
 
-  /**
-   * Lista aulas criadas pelo instrutor logado.
-   */
   findMyClasses = async (req: Request, res: Response): Promise<Response> => {
     try {
       const instructorId = (req as any).user.id;
-      const classes = await this.classService.findByInstructorId(instructorId);
+      const classes = await this.gymClassService.findByInstructorId(instructorId);
       return res.status(200).json(classes);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -82,7 +78,7 @@ export class ClassController {
   enroll = async (req: Request, res: Response): Promise<Response> => {
     try {
       const studentId = (req as any).user.id;
-      await this.classService.enroll(Number(req.params.id), studentId);
+      await this.gymClassService.enroll(Number(req.params.id), studentId);
       return res.status(200).json({ message: 'Inscrição realizada com sucesso!' });
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -92,7 +88,7 @@ export class ClassController {
   cancelEnrollment = async (req: Request, res: Response): Promise<Response> => {
     try {
       const studentId = (req as any).user.id;
-      await this.classService.cancelEnrollment(Number(req.params.id), studentId);
+      await this.gymClassService.cancelEnrollment(Number(req.params.id), studentId);
       return res.status(200).json({ message: 'Inscrição cancelada com sucesso!' });
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -101,20 +97,28 @@ export class ClassController {
 
   getEnrolledStudents = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const students = await this.classService.getEnrolledStudents(Number(req.params.id));
+      const instructorId = (req as any).user.id;
+      const students = await this.gymClassService.getEnrolledStudents(Number(req.params.id), instructorId);
       return res.status(200).json(students);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
     }
   };
 
-  /**
-   * Lista aulas em que o aluno logado está inscrito.
-   */
+  getStudentsFromClasses = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const instructorId = (req as any).user.id;
+      const students = await this.gymClassService.getStudentsFromClasses(instructorId);
+      return res.status(200).json(students);
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
+    }
+  };
+
   findMyEnrollments = async (req: Request, res: Response): Promise<Response> => {
     try {
       const studentId = (req as any).user.id;
-      const classes = await this.classService.findMyEnrollments(studentId);
+      const classes = await this.gymClassService.findMyEnrollments(studentId);
       return res.status(200).json(classes);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });

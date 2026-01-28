@@ -3,67 +3,94 @@ import db from './db';
 import bcrypt from 'bcrypt';
 
 /**
- * Cria todas as tabelas necessárias no banco de dados.
+ * Creates all necessary tables in the database.
  */
 export const createTables = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     db.serialize(() => {
-      // Tabela de usuários
+      // Users table
       db.run(`
         CREATE TABLE IF NOT EXISTS users (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          nome TEXT NOT NULL,
+          name TEXT NOT NULL,
           email TEXT UNIQUE NOT NULL,
-          senha TEXT NOT NULL,
+          password TEXT NOT NULL,
           role TEXT CHECK(role IN ('administrador', 'recepcionista', 'instrutor', 'aluno')) NOT NULL,
-          cpf TEXT UNIQUE NOT NULL,
+          document TEXT UNIQUE NOT NULL,
           created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
       `);
 
-      // Tabela de treinos
       db.run(`
-        CREATE TABLE IF NOT EXISTS trainings (
+        CREATE TABLE IF NOT EXISTS training (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          student_id INTEGER NOT NULL,
           instructor_id INTEGER NOT NULL,
-          training_type TEXT CHECK(training_type IN ('A', 'B', 'C')) NOT NULL,
-          exercises TEXT NOT NULL,
-          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (student_id) REFERENCES users(id),
+          name TEXT NOT NULL,
+          finish INTEGER NOT NULL DEFAULT 0,
+          completed_date TEXT,
           FOREIGN KEY (instructor_id) REFERENCES users(id)
         )
       `);
 
-      // Tabela de aulas
       db.run(`
-        CREATE TABLE IF NOT EXISTS classes (
+        CREATE TABLE IF NOT EXISTS exercise (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          nome_aula TEXT NOT NULL,
-          data TEXT NOT NULL,
-          hora TEXT NOT NULL,
-          limite_vagas INTEGER NOT NULL,
-          instrutor_id INTEGER NOT NULL,
-          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (instrutor_id) REFERENCES users(id)
+          name TEXT NOT NULL,
+          description TEXT NOT NULL,
+          repetitions INTEGER NOT NULL,
+          weight INTEGER NOT NULL,
+          series INTEGER NOT NULL
         )
       `);
 
-      // Tabela de inscrições
+      db.run(`
+        CREATE TABLE IF NOT EXISTS exercise_training (
+          exercise_id INTEGER NOT NULL,
+          training_id INTEGER NOT NULL,
+          PRIMARY KEY (exercise_id, training_id),
+          FOREIGN KEY (exercise_id) REFERENCES exercise(id),
+          FOREIGN KEY (training_id) REFERENCES training(id)
+        )
+      `);
+
+      db.run(`
+        CREATE TABLE IF NOT EXISTS training_user (
+          training_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL,
+          PRIMARY KEY (training_id, user_id),
+          FOREIGN KEY (training_id) REFERENCES training(id),
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+      `);
+
+      // Group classes table
+      db.run(`
+        CREATE TABLE IF NOT EXISTS gym_class (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          date TEXT NOT NULL,
+          time TEXT NOT NULL,
+          slots_limit INTEGER NOT NULL,
+          instructor_id INTEGER NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (instructor_id) REFERENCES users(id)
+        )
+      `);
+
+      // Enrollments table
       db.run(`
         CREATE TABLE IF NOT EXISTS enrollments (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           student_id INTEGER NOT NULL,
-          class_id INTEGER NOT NULL,
+          gym_class_id INTEGER NOT NULL,
           enrolled_at TEXT DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (student_id) REFERENCES users(id),
-          FOREIGN KEY (class_id) REFERENCES classes(id),
-          UNIQUE(student_id, class_id)
+          FOREIGN KEY (gym_class_id) REFERENCES gym_class(id),
+          UNIQUE(student_id, gym_class_id)
         )
       `);
 
-      // Tabela de check-ins
+      // Check-ins table
       db.run(`
         CREATE TABLE IF NOT EXISTS checkins (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,26 +98,13 @@ export const createTables = (): Promise<void> => {
           training_id INTEGER,
           checkin_at TEXT DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (student_id) REFERENCES users(id),
-          FOREIGN KEY (training_id) REFERENCES trainings(id)
-        )
-      `);
-
-      // Tabela de templates de exercícios
-      db.run(`
-        CREATE TABLE IF NOT EXISTS exercise_templates (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          series TEXT NOT NULL,
-          weight TEXT NOT NULL,
-          instructor_id INTEGER NOT NULL,
-          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (instructor_id) REFERENCES users(id)
+          FOREIGN KEY (training_id) REFERENCES training(id)
         )
       `, (err) => {
         if (err) {
           reject(err);
         } else {
-          console.log('Tabelas criadas com sucesso.');
+          console.log('Tables created successfully.');
           resolve();
         }
       });
@@ -99,58 +113,58 @@ export const createTables = (): Promise<void> => {
 };
 
 /**
- * Cria usuário administrador padrão caso não exista.
+ * Creates default admin user if it doesn't exist.
  */
 export const createDefaultUsers = async (): Promise<void> => {
   return new Promise(async (resolve, reject) => {
     try {
-      // Lista de usuários padrão
+      // Default users list
       const defaultUsers = [
         {
-          nome: 'Administrador',
+          name: 'Administrador',
           email: 'admin@academia.com',
-          senha: 'admin123',
+          password: 'admin123',
           role: 'administrador',
-          cpf: '00000000000',
+          document: '00000000000',
         },
         {
-          nome: 'Recepcionista',
+          name: 'Recepcionista',
           email: 'maria@academia.com',
-          senha: 'senha123',
+          password: 'senha123',
           role: 'recepcionista',
-          cpf: '11111111111',
+          document: '11111111111',
         },
         {
-          nome: 'Instrutor',
+          name: 'Instrutor',
           email: 'carlos@academia.com',
-          senha: 'senha123',
+          password: 'senha123',
           role: 'instrutor',
-          cpf: '22222222222',
+          document: '22222222222',
         },
         {
-          nome: 'Aluno',
+          name: 'Aluno',
           email: 'joao@academia.com',
-          senha: 'senha123',
+          password: 'senha123',
           role: 'aluno',
-          cpf: '33333333333',
+          document: '33333333333',
         },
       ];
 
       for (const user of defaultUsers) {
-        const hashedPassword = await bcrypt.hash(user.senha, 10);
+        const hashedPassword = await bcrypt.hash(user.password, 10);
 
         await new Promise<void>((res, rej) => {
           db.run(
             `
-            INSERT OR IGNORE INTO users (nome, email, senha, role, cpf)
+            INSERT OR IGNORE INTO users (name, email, password, role, document)
             VALUES (?, ?, ?, ?, ?)
           `,
-            [user.nome, user.email, hashedPassword, user.role, user.cpf],
+            [user.name, user.email, hashedPassword, user.role, user.document],
             (err) => {
               if (err) {
                 rej(err);
               } else {
-                console.log(`✅ Usuário ${user.role} verificado/criado (email: ${user.email}, senha: ${user.senha})`);
+                console.log(`✅ Usuário ${user.role} verificado/criado (email: ${user.email}, senha: ${user.password})`);
                 res();
               }
             }
@@ -167,15 +181,15 @@ export const createDefaultUsers = async (): Promise<void> => {
 
 
 /**
- * Inicializa a conexão com o banco de dados e configura o esquema inicial.
+ * Initializes the database connection and sets up the initial schema.
  */
 export const initializeDatabase = async (): Promise<void> => {
   try {
     await createTables();
     await createDefaultUsers();
-    console.log('✅ Banco de dados inicializado com sucesso!');
+    console.log('✅ Database initialized successfully!');
   } catch (error) {
-    console.error('❌ Erro ao inicializar banco de dados:', error);
+    console.error('❌ Error initializing database:', error);
     throw error;
   }
 };

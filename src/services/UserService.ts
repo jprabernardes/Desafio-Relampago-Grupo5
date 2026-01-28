@@ -32,46 +32,41 @@ export class UserService {
       throw new Error('Você não tem permissão para criar usuários.');
     }
 
-    // Validações de dados
-    if (!isNotEmpty(user.nome) || !isNotEmpty(user.email) || !isNotEmpty(user.senha)) {
-      throw new Error('Nome, email e senha são obrigatórios.');
+    // Validação de campos obrigatórios
+    if (!isNotEmpty(user.name) || !isNotEmpty(user.email) || !isNotEmpty(user.password) || !isNotEmpty(user.document) || !user.role) {
+      throw new Error('Nome, email, senha, documento (CPF) e role são obrigatórios.');
     }
 
     if (!isValidEmail(user.email)) {
       throw new Error('Email inválido.');
     }
 
-    if (!isValidPassword(user.senha)) {
+    if (!isValidPassword(user.password)) {
       throw new Error('Senha deve ter no mínimo 6 caracteres.');
     }
 
-    if (!isValidCPF(user.cpf)) {
+    if (!isValidCPF(user.document)) {
       throw new Error('CPF inválido. Deve conter 11 dígitos numéricos.');
     }
 
-    // Verifica se email já existe
     const existingEmail = await this.userRepository.findByEmail(user.email);
     if (existingEmail) {
       throw new Error('Email já cadastrado.');
     }
 
-    // Verifica se CPF já existe
-    const existingCPF = await this.userRepository.findByCpf(user.cpf);
+    const existingCPF = await this.userRepository.findByCpf(user.document);
     if (existingCPF) {
       throw new Error('CPF já cadastrado.');
     }
 
-    // Hash da senha
-    const hashedPassword = await hashPassword(user.senha);
+    const hashedPassword = await hashPassword(user.password);
 
-    // Cria usuário
     const newUser = await this.userRepository.create({
       ...user,
-      senha: hashedPassword
+      password: hashedPassword
     });
 
-    // Retorna sem a senha
-    const { senha: _, ...userWithoutPassword } = newUser;
+    const { password: _, ...userWithoutPassword } = newUser;
     return userWithoutPassword as User;
   }
 
@@ -81,7 +76,7 @@ export class UserService {
   async findById(id: number): Promise<User | undefined> {
     const user = await this.userRepository.findById(id);
     if (user) {
-      const { senha: _, ...userWithoutPassword } = user;
+      const { password: _, ...userWithoutPassword } = user;
       return userWithoutPassword as User;
     }
     return undefined;
@@ -92,7 +87,7 @@ export class UserService {
    */
   async findAll(role?: string): Promise<User[]> {
     const users = await this.userRepository.findAll(role);
-    return users.map(({ senha: _, ...user }) => user as User);
+    return users.map(({ password: _, ...user }) => user as User);
   }
 
   /**
@@ -104,7 +99,7 @@ export class UserService {
     }
 
     const users = await this.userRepository.search(query);
-    return users.map(({ senha: _, ...user }) => user as User);
+    return users.map(({ password: _, ...user }) => user as User);
   }
 
   /**
@@ -122,13 +117,12 @@ export class UserService {
       throw new Error('Email inválido.');
     }
 
-    if (data.senha && !isValidPassword(data.senha)) {
+    if (data.password && !isValidPassword(data.password)) {
       throw new Error('Senha deve ter no mínimo 6 caracteres.');
     }
 
-    // Se atualizar senha, fazer hash
-    if (data.senha) {
-      data.senha = await hashPassword(data.senha);
+    if (data.password) {
+      data.password = await hashPassword(data.password);
     }
 
     await this.userRepository.update(id, data);

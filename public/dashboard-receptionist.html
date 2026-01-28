@@ -517,11 +517,11 @@
           e.preventDefault();
 
           const studentData = {
-            nome: document.getElementById("studentName").value,
+            name: document.getElementById("studentName").value,
             email: document.getElementById("studentEmail").value,
-            cpf: document.getElementById("studentCpf").value,
-            senha: document.getElementById("studentPassword").value,
-            plan: document.getElementById("studentPlan").value,
+            document: document.getElementById("studentCpf").value,
+            password: document.getElementById("studentPassword").value,
+            role: "aluno",
           };
 
           try {
@@ -554,11 +554,11 @@
           e.preventDefault();
 
           const instructorData = {
-            nome: document.getElementById("instructorName").value,
+            name: document.getElementById("instructorName").value,
             email: document.getElementById("instructorEmail").value,
-            cpf: document.getElementById("instructorCpf").value,
-            senha: document.getElementById("instructorPassword").value,
-            specialty: document.getElementById("instructorSpecialty").value,
+            document: document.getElementById("instructorCpf").value,
+            password: document.getElementById("instructorPassword").value,
+            role: "instrutor",
           };
 
           try {

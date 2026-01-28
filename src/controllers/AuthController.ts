@@ -15,8 +15,8 @@ export class AuthController {
 
   login = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { email, senha } = req.body;
-      const result = await this.authService.login(email, senha);
+      const { email, password } = req.body;
+      const result = await this.authService.login(email, password);
       return res.status(200).json(result);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -26,9 +26,9 @@ export class AuthController {
   updatePassword = async (req: Request, res: Response): Promise<Response> => {
     try {
       const userId = (req as any).user.id;
-      const { senhaAtual, novaSenha } = req.body;
+      const { currentPassword, newPassword } = req.body;
       
-      await this.authService.updatePassword(userId, senhaAtual, novaSenha);
+      await this.authService.updatePassword(userId, currentPassword, newPassword);
       return res.status(200).json({ message: 'Senha atualizada com sucesso.' });
     } catch (error: any) {
       return res.status(400).json({ error: error.message });

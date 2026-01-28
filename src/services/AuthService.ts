@@ -20,9 +20,8 @@ export class AuthService {
   /**
    * Realiza o login do usuário e retorna um token JWT.
    */
-  async login(email: string, senha: string): Promise<LoginResponse> {
-    // Validações
-    if (!isNotEmpty(email) || !isNotEmpty(senha)) {
+  async login(email: string, password: string): Promise<LoginResponse> {
+    if (!isNotEmpty(email) || !isNotEmpty(password)) {
       throw new Error('Email e senha são obrigatórios.');
     }
 
@@ -30,27 +29,23 @@ export class AuthService {
       throw new Error('Email inválido.');
     }
 
-    // Busca usuário
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
       throw new Error('Credenciais inválidas.');
     }
 
-    // Verifica senha
-    const isPasswordValid = await comparePassword(senha, user.senha);
+    const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
       throw new Error('Credenciais inválidas.');
     }
 
-    // Gera JWT
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       config.jwtSecret,
       { expiresIn: '24h' }
     );
 
-    // Retorna sem a senha
-    const { senha: _, ...userWithoutPassword } = user;
+    const { password: _, ...userWithoutPassword } = user;
 
     return {
       token,
@@ -72,43 +67,39 @@ export class AuthService {
   /**
    * Atualiza senha do usuário
    */
-  async updatePassword(userId: number, senhaAtual: string, novaSenha: string): Promise<void> {
-    // Validações
-    if (!isNotEmpty(senhaAtual) || !isNotEmpty(novaSenha)) {
+  async updatePassword(userId: number, currentPassword: string, newPassword: string): Promise<void> {
+    if (!isNotEmpty(currentPassword) || !isNotEmpty(newPassword)) {
       throw new Error('Senha atual e nova senha são obrigatórias.');
     }
 
-    if (!isValidPassword(novaSenha)) {
+    if (!isValidPassword(newPassword)) {
       throw new Error('Nova senha deve ter no mínimo 6 caracteres.');
     }
 
-    // Busca usuário
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new Error('Usuário não encontrado.');
     }
 
-    // Verifica senha atual
-    const isPasswordValid = await comparePassword(senhaAtual, user.senha);
+    const isPasswordValid = await comparePassword(currentPassword, user.password);
     if (!isPasswordValid) {
       throw new Error('Senha atual incorreta.');
     }
 
-    // Atualiza senha
-    const hashedPassword = await hashPassword(novaSenha);
-    await this.userRepository.update(userId, { senha: hashedPassword });
+    const hashedPassword = await hashPassword(newPassword);
+    await this.userRepository.update(userId, { password: hashedPassword });
   }
 
   /**
    * Retorna informações do usuário sem a senha
    */
-  async getUserById(userId: number): Promise<Omit<User, 'senha'>> {
+  async getUserById(userId: number): Promise<Omit<User, 'password'>> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new Error('Usuário não encontrado.');
     }
 
-    const { senha: _, ...userWithoutPassword } = user;
+    const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 }

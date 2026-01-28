@@ -31,9 +31,11 @@ export class CheckInRepository {
    */
   findByStudentId(studentId: number): Promise<CheckIn[]> {
     return new Promise((resolve, reject) => {
-      db.all('SELECT * FROM checkins WHERE student_id = ? ORDER BY checkin_at DESC', [studentId], (err, rows: CheckIn[]) => {
+      db.all('SELECT * FROM checkins WHERE student_id = ? ORDER BY checkin_at DESC', [studentId], (err, rows: any[]) => {
         if (err) reject(err);
-        else resolve(rows || []);
+        else {
+          resolve((rows || []) as CheckIn[]);
+        }
       });
     });
   }
@@ -87,9 +89,9 @@ export class CheckInRepository {
       db.get(
         'SELECT * FROM checkins WHERE student_id = ? AND substr(checkin_at, 1, 10) = ?',
         [studentId, today],
-        (err, row: CheckIn) => {
+        (err, row: any) => {
           if (err) reject(err);
-          else resolve(row);
+          else resolve(row ? (row as CheckIn) : undefined);
         }
       );
     });
