@@ -7,8 +7,11 @@ import {
   isValidEmail,
   isValidPassword,
   isValidCPF,
-  isNotEmpty
+  isNotEmpty,
+  isValidPhone
 } from '../utils/validators';
+
+
 
 export class UserService {
   private userRepository: UserRepository;
@@ -73,6 +76,10 @@ export class UserService {
 
     if (!isValidCPF(user.document)) {
       throw new Error('CPF inválido. Deve conter 11 dígitos numéricos.');
+    }
+
+    if (user.phone && !isValidPhone(user.phone)) {
+      throw new Error('Telefone inválido. Use o formato (XX)XXXXXXXXX.');
     }
 
     const existingEmail = await this.userRepository.findByEmail(user.email);
@@ -187,6 +194,10 @@ export class UserService {
       throw new Error('Senha deve ter no mínimo 6 caracteres.');
     }
 
+    if (data.phone && !isValidPhone(data.phone)) {
+      throw new Error('Telefone inválido. Use o formato (XX)XXXXXXXXX.');
+    }
+
     if (data.password) {
       data.password = await hashPassword(data.password);
     }
@@ -205,7 +216,17 @@ export class UserService {
 
   async delete(id: number, deleterRole: string) {
     if (deleterRole !== 'administrador') {
-      throw new Error('Apenas administrador pode deletar usuários.');
+      if (deleterRole === 'recepcionista') {
+        const targetUser = await this.userRepository.findById(id);
+        if (!targetUser) {
+            throw new Error('Usuário não encontrado.');
+        }
+        if (targetUser.role !== 'aluno' && targetUser.role !== 'instrutor') {
+            throw new Error('Acesso negado: Recepcionistas só podem deletar Alunos e Instrutores.');
+        }
+      } else {
+         throw new Error('Apenas administrador ou recepcionista pode deletar usuários.');
+      }
     }
 
     await this.userRepository.delete(id);

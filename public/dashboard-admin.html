@@ -4,17 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - Administrador</title>
-    <link rel="stylesheet" href="css/dashboard-admin.css">
+    <link rel="stylesheet" href="css/dashboard-admin.css" />
   </head>
   <body>
     <div class="container">
       <div class="sidebar">
         <div class="logo">💪 FitManager</div>
-        <div class="nav-item active" id="navDashboard" onclick="loadTab('all')">📊 Dashboard</div>
+        <div class="nav-item active" id="navDashboard" onclick="loadTab('all')">
+          📊 Dashboard
+        </div>
         <div class="nav-item" id="navAlunos" onclick="loadTab('alunos')">
           <i class="fas fa-user-graduate"></i> Alunos
         </div>
-        <div class="nav-item" id="navFuncionarios" onclick="loadTab('funcionarios')">
+        <div
+          class="nav-item"
+          id="navFuncionarios"
+          onclick="loadTab('funcionarios')"
+        >
           <i class="fas fa-user-tie"></i> Funcionários
         </div>
         <div style="flex: 1"></div>
@@ -52,11 +58,11 @@
         <div class="table-container">
           <div class="table-header">
             <h2 id="tableTitle">Usuários do Sistema</h2>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-              <input 
-                type="text" 
-                id="searchInput" 
-                placeholder="Pesquisar..." 
+            <div style="display: flex; gap: 1rem; align-items: center">
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Pesquisar..."
                 class="search-input"
                 oninput="handleSearch()"
               />
@@ -112,7 +118,11 @@
               placeholder="11 dígitos"
             />
           </div>
-          <div class="form-group" id="addRoleGroup" style="display: none;">
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="addTelefone" placeholder="(XX)9XXXXXXXX" />
+          </div>
+          <div class="form-group" id="addRoleGroup" style="display: none">
             <label>Função *</label>
             <select id="addRole">
               <option value="">Selecione...</option>
@@ -122,7 +132,7 @@
               <option value="aluno">🏃 Aluno</option>
             </select>
           </div>
-          <div class="form-group" id="addTipoPlanoGroup" style="display: none;">
+          <div class="form-group" id="addTipoPlanoGroup" style="display: none">
             <label>Tipo de Plano *</label>
             <select id="addTipoPlano">
               <option value="">Selecione...</option>
@@ -132,7 +142,11 @@
               <option value="anual">Anual</option>
             </select>
           </div>
-          <div class="form-group" id="addTipoFuncionarioGroup" style="display: none;">
+          <div
+            class="form-group"
+            id="addTipoFuncionarioGroup"
+            style="display: none"
+          >
             <label>Função *</label>
             <select id="addTipoFuncionario">
               <option value="">Selecione...</option>
@@ -165,14 +179,22 @@
             <input type="text" id="editNome" required />
           </div>
           <div class="form-group">
-            <label>Email *</label>
             <input type="email" id="editEmail" required />
           </div>
-          <div class="form-group" id="editNovaSenhaGroup" style="display: none;">
-            <label>Nova Senha (deixe em branco para não alterar)</label>
-            <input type="password" id="editNovaSenha" minlength="6" placeholder="Digite nova senha" />
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="editTelefone" placeholder="(XX)9XXXXXXXX" />
           </div>
-          <div class="form-group" id="editTipoPlanoGroup" style="display: none;">
+          <div class="form-group" id="editNovaSenhaGroup" style="display: none">
+            <label>Nova Senha (deixe em branco para não alterar)</label>
+            <input
+              type="password"
+              id="editNovaSenha"
+              minlength="6"
+              placeholder="Digite nova senha"
+            />
+          </div>
+          <div class="form-group" id="editTipoPlanoGroup" style="display: none">
             <label>Tipo de Plano *</label>
             <select id="editTipoPlano">
               <option value="">Selecione...</option>
@@ -183,7 +205,11 @@
             </select>
           </div>
           <div class="form-actions">
-            <button type="button" class="btn btn-danger" onclick="confirmDeleteUser()">
+            <button
+              type="button"
+              class="btn btn-danger"
+              onclick="confirmDeleteUser()"
+            >
               Deletar Conta
             </button>
             <div style="flex: 1"></div>

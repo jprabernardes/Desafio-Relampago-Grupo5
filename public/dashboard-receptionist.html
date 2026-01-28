@@ -138,6 +138,11 @@
           </div>
 
           <!-- Student Specific -->
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="addTelefone" placeholder="(XX)9XXXXXXXX" />
+          </div>
+
           <div class="form-group" id="addTipoPlanoGroup" style="display: none">
             <label>Tipo de Plano *</label>
             <select id="addTipoPlano">
@@ -183,6 +188,10 @@
             <label>Email *</label>
             <input type="email" id="editEmail" required />
           </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="editTelefone" placeholder="(XX)9XXXXXXXX" />
+          </div>
 
           <!-- Student Specific -->
           <div class="form-group" id="editTipoPlanoGroup" style="display: none">
@@ -203,12 +212,45 @@
           </div>
 
           <div class="form-actions">
+            <button
+              type="button"
+              class="btn btn-danger"
+              onclick="confirmDeleteUser()"
+              style="background-color: #dc3545; color: white"
+            >
+              Deletar Conta
+            </button>
+            <div style="flex: 1"></div>
             <button type="button" class="btn" onclick="closeEditModal()">
               Cancelar
             </button>
             <button type="submit" class="btn btn-primary">Salvar</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <div class="modal" id="confirmModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Confirmação</h2>
+          <button class="close-btn" onclick="closeConfirmModal()">
+            &times;
+          </button>
+        </div>
+        <p id="confirmMessage" style="margin-bottom: 2rem; color: #666">
+          Tem certeza?
+        </p>
+        <div class="form-actions">
+          <button class="btn" onclick="closeConfirmModal()">Não</button>
+          <button
+            class="btn btn-danger"
+            onclick="confirmAction()"
+            style="background-color: #dc3545; color: white"
+          >
+            Sim, tenho certeza
+          </button>
+        </div>
       </div>
     </div>
 

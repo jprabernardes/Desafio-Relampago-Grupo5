@@ -29,6 +29,6 @@ router.get('/:id', adminOrReceptionist, userController.findById);
 router.put('/:id', adminOrReceptionist, userController.update);
 
 // Deletar usuário (apenas admin)
-router.delete('/:id', adminOnly, userController.delete);
+router.delete('/:id', adminOrReceptionist, userController.delete);
 
 export default router;

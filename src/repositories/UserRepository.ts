@@ -11,15 +11,16 @@ export class UserRepository {
   create(user: User): Promise<User> {
     return new Promise((resolve, reject) => {
       const sql = `
-        INSERT INTO users (name, email, password, role, document)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO users (name, email, password, role, document, phone)
+        VALUES (?, ?, ?, ?, ?, ?)
       `;
       const params = [
         user.name,
         user.email,
         user.password,
         user.role,
-        user.document
+        user.document,
+        user.phone
       ];
 
       db.run(sql, params, function (err) {
@@ -127,6 +128,10 @@ export class UserRepository {
       if (user.document) {
         fields.push('document = ?');
         values.push(user.document);
+      }
+      if (user.phone) {
+        fields.push('phone = ?');
+        values.push(user.phone);
       }
 
       if (fields.length === 0) return resolve();

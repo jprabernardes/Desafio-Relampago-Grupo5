@@ -27,6 +27,27 @@ document.getElementById("userAvatar").textContent = displayName
   .charAt(0)
   .toUpperCase();
 
+// --- Modal Logic ---
+let pendingConfirmAction = null;
+
+function showConfirmModal(message, action) {
+  document.getElementById("confirmMessage").textContent = message;
+  pendingConfirmAction = action;
+  document.getElementById("confirmModal").classList.add("active");
+}
+
+function closeConfirmModal() {
+  document.getElementById("confirmModal").classList.remove("active");
+  pendingConfirmAction = null;
+}
+
+function confirmAction() {
+  if (pendingConfirmAction) {
+    pendingConfirmAction();
+  }
+  closeConfirmModal();
+}
+
 // --- Main Logic ---
 
 // Load Tab
@@ -140,6 +161,7 @@ async function loadUsers(type) {
       nome: u.name || u.nome,
       email: u.email,
       cpf: u.document || u.cpf, // if backend provides it
+      phone: u.phone,
       // Specifics
       plan: u.plan_type || u.plan || "mensal",
     }));
@@ -232,8 +254,9 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
   const email = document.getElementById("addEmail").value;
   const password = document.getElementById("addSenha").value;
   const documentStr = document.getElementById("addCpf").value;
+  const phone = document.getElementById("addTelefone").value;
 
-  let body = { name, email, password, document: documentStr };
+  let body = { name, email, password, document: documentStr, phone };
   let endpoint = "";
 
   if (currentTab === "students") {
@@ -282,6 +305,7 @@ function openEditModal(id) {
   document.getElementById("editUserId").value = id;
   document.getElementById("editNome").value = userToEdit.nome;
   document.getElementById("editEmail").value = userToEdit.email;
+  document.getElementById("editTelefone").value = userToEdit.phone || "";
   document.getElementById("editAlertContainer").innerHTML = "";
 
   const isStudent = currentTab === "students";
@@ -307,8 +331,9 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
   const id = document.getElementById("editUserId").value;
   const name = document.getElementById("editNome").value;
   const email = document.getElementById("editEmail").value;
+  const phone = document.getElementById("editTelefone").value;
 
-  let body = { name, email };
+  let body = { name, email, phone };
 
   if (currentTab === "students") {
     body.planType = document.getElementById("editTipoPlano").value;
@@ -352,6 +377,35 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
   }
 });
 
+function confirmDeleteUser() {
+  const userId = document.getElementById("editUserId").value;
+  showConfirmModal("Tem certeza que deseja deletar esta conta?", async () => {
+    await deleteUser(userId);
+  });
+}
+
+async function deleteUser(id) {
+  try {
+    const res = await fetch(`${API_URL}/users/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.ok) {
+      showEditAlert("Conta deletada com sucesso!", "success");
+      setTimeout(async () => {
+        closeEditModal();
+        await loadUsers(currentTab);
+      }, 1500);
+    } else {
+      const data = await res.json();
+      showEditAlert(data.error || "Erro ao deletar");
+    }
+  } catch (e) {
+    showEditAlert("Erro de conexão");
+  }
+}
+
 function showEditAlert(msg, type) {
   const el = document.getElementById("editAlertContainer");
   el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
@@ -361,6 +415,32 @@ function logout() {
   localStorage.removeItem("token");
   window.location.href = "/";
 }
+
+// Função para formatar telefone
+function formatPhoneNumber(value) {
+  if (!value) return "";
+  value = value.replace(/\D/g, "");
+  if (value.length > 11) value = value.slice(0, 11);
+
+  // (XX)
+  if (value.length > 2) {
+    return `(${value.slice(0, 2)})${value.slice(2)}`;
+  } else if (value.length > 0) {
+    return `(${value}`;
+  }
+  return value;
+}
+
+// Aplicar máscara nos campos de telefone
+const phoneInputs = ["addTelefone", "editTelefone"];
+phoneInputs.forEach((id) => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener("input", (e) => {
+      e.target.value = formatPhoneNumber(e.target.value);
+    });
+  }
+});
 
 // Init
 loadTab("overview");

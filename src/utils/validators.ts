@@ -55,3 +55,12 @@ export const isValidTime = (time: string): boolean => {
 export const isPositiveNumber = (value: number): boolean => {
   return typeof value === 'number' && value > 0;
 };
+
+/**
+ * Valida telefone no formato (XX)9XXXXXXXX ou (XX)XXXXXXXX
+ */
+export const isValidPhone = (phone: string): boolean => {
+  // Aceita (XX)XXXXXXXX and (XX)9XXXXXXXX
+  const phoneRegex = /^\(\d{2}\)\d{8,9}$/;
+  return phoneRegex.test(phone);
+};
