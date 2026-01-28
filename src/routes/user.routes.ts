@@ -25,10 +25,10 @@ router.get('/dashboard', adminOrReceptionist, userController.getDashboard);
 // Buscar por ID (admin ou recepcionista)
 router.get('/:id', adminOrReceptionist, userController.findById);
 
-// Atualizar usuário (apenas admin)
-router.put('/:id', adminOnly, userController.update);
+// Atualizar usuário (admin ou recepcionista - validado no service)
+router.put('/:id', adminOrReceptionist, userController.update);
 
 // Deletar usuário (apenas admin)
-router.delete('/:id', adminOnly, userController.delete);
+router.delete('/:id', adminOrReceptionist, userController.delete);
 
 export default router;

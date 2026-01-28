@@ -1,13 +1,29 @@
+// src/repositories/UserRepository.ts
 import db from '../database/db';
 import { User } from '../models';
 
+/**
+ * Repositório para acesso aos dados de usuários.
+ * REGRA: Apenas acesso a dados, SEM regras de negócio.
+ */
 export class UserRepository {
+
   create(user: User): Promise<User> {
     return new Promise((resolve, reject) => {
-      const sql = `INSERT INTO users (name, email, password, role, document) VALUES (?, ?, ?, ?, ?)`;
-      const params = [user.name, user.email, user.password, user.role, user.document];
-      
-      db.run(sql, params, function(err) {
+      const sql = `
+        INSERT INTO users (name, email, password, role, document, phone)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `;
+      const params = [
+        user.name,
+        user.email,
+        user.password,
+        user.role,
+        user.document,
+        user.phone
+      ];
+
+      db.run(sql, params, function (err) {
         if (err) {
           reject(err);
         } else {
@@ -19,28 +35,40 @@ export class UserRepository {
 
   findByEmail(email: string): Promise<User | undefined> {
     return new Promise((resolve, reject) => {
-      db.get('SELECT * FROM users WHERE email = ?', [email], (err, row: any) => {
-        if (err) reject(err);
-        else resolve(row ? (row as User) : undefined);
-      });
+      db.get(
+        'SELECT * FROM users WHERE email = ?',
+        [email],
+        (err, row: any) => {
+          if (err) reject(err);
+          else resolve(row ? (row as User) : undefined);
+        }
+      );
     });
   }
 
   findById(id: number): Promise<User | undefined> {
     return new Promise((resolve, reject) => {
-      db.get('SELECT * FROM users WHERE id = ?', [id], (err, row: any) => {
-        if (err) reject(err);
-        else resolve(row ? (row as User) : undefined);
-      });
+      db.get(
+        'SELECT * FROM users WHERE id = ?',
+        [id],
+        (err, row: any) => {
+          if (err) reject(err);
+          else resolve(row ? (row as User) : undefined);
+        }
+      );
     });
   }
 
   findByCpf(cpf: string): Promise<User | undefined> {
     return new Promise((resolve, reject) => {
-      db.get('SELECT * FROM users WHERE document = ?', [cpf], (err, row: any) => {
-        if (err) reject(err);
-        else resolve(row ? (row as User) : undefined);
-      });
+      db.get(
+        'SELECT * FROM users WHERE document = ?',
+        [cpf],
+        (err, row: any) => {
+          if (err) reject(err);
+          else resolve(row ? (row as User) : undefined);
+        }
+      );
     });
   }
 
@@ -48,12 +76,12 @@ export class UserRepository {
     return new Promise((resolve, reject) => {
       let sql = 'SELECT * FROM users';
       const params: any[] = [];
-      
+
       if (role) {
         sql += ' WHERE role = ?';
         params.push(role);
       }
-      
+
       db.all(sql, params, (err, rows: any[]) => {
         if (err) reject(err);
         else resolve((rows || []) as User[]);
@@ -63,9 +91,12 @@ export class UserRepository {
 
   search(query: string): Promise<User[]> {
     return new Promise((resolve, reject) => {
-      const sql = 'SELECT * FROM users WHERE name LIKE ? OR email LIKE ?';
+      const sql = `
+        SELECT * FROM users
+        WHERE name LIKE ? OR email LIKE ?
+      `;
       const searchTerm = `%${query}%`;
-      
+
       db.all(sql, [searchTerm, searchTerm], (err, rows: any[]) => {
         if (err) reject(err);
         else resolve((rows || []) as User[]);
@@ -98,12 +129,15 @@ export class UserRepository {
         fields.push('document = ?');
         values.push(user.document);
       }
-
-      if (fields.length === 0) {
-        return resolve();
+      if (user.phone) {
+        fields.push('phone = ?');
+        values.push(user.phone);
       }
 
+      if (fields.length === 0) return resolve();
+
       values.push(id);
+
       const sql = `UPDATE users SET ${fields.join(', ')} WHERE id = ?`;
 
       db.run(sql, values, (err) => {
@@ -124,10 +158,14 @@ export class UserRepository {
 
   countByRole(role: string): Promise<number> {
     return new Promise((resolve, reject) => {
-      db.get('SELECT COUNT(*) as count FROM users WHERE role = ?', [role], (err, row: any) => {
-        if (err) reject(err);
-        else resolve(row.count || 0);
-      });
+      db.get(
+        'SELECT COUNT(*) as count FROM users WHERE role = ?',
+        [role],
+        (err, row: any) => {
+          if (err) reject(err);
+          else resolve(row.count || 0);
+        }
+      );
     });
   }
 }
