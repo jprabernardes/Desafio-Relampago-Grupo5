@@ -1,24 +1,15 @@
-// src/repositories/TrainingRepository.ts
 import db from '../database/db';
-import { Training, Exercise } from '../models';
+import { Training, TrainingUser } from '../models/Training';
 
-/**
- * Repositório para acesso aos dados de treinos.
- * REGRA: Apenas acesso a dados, SEM regras de negócio.
- */
 export class TrainingRepository {
-  
-  /**
-   * Cria um novo treino
-   */
   create(training: Training): Promise<Training> {
     return new Promise((resolve, reject) => {
-      const sql = `INSERT INTO trainings (student_id, instructor_id, training_type, exercises) VALUES (?, ?, ?, ?)`;
+      const sql = `INSERT INTO training (instructor_id, name, finish, completed_date) VALUES (?, ?, ?, ?)`;
       const params = [
-        training.student_id,
         training.instructor_id,
-        training.training_type,
-        JSON.stringify(training.exercises)
+        training.name,
+        training.finish ? 1 : 0,
+        training.completed_date || null
       ];
       
       db.run(sql, params, function(err) {
@@ -31,19 +22,16 @@ export class TrainingRepository {
     });
   }
 
-  /**
-   * Busca treino por ID
-   */
   findById(id: number): Promise<Training | undefined> {
     return new Promise((resolve, reject) => {
-      db.get('SELECT * FROM trainings WHERE id = ?', [id], (err, row: any) => {
+      db.get('SELECT * FROM training WHERE id = ?', [id], (err, row: any) => {
         if (err) {
           reject(err);
         } else if (row) {
           resolve({
             ...row,
-            exercises: JSON.parse(row.exercises)
-          });
+            finish: row.finish === 1
+          } as Training);
         } else {
           resolve(undefined);
         }
@@ -51,92 +39,67 @@ export class TrainingRepository {
     });
   }
 
-  findByStudentAndType(studentId: number, type: string): Promise<Training | undefined> {
-    return new Promise((resolve, reject) => {
-      db.get('SELECT * FROM trainings WHERE student_id = ? AND training_type = ?', [studentId, type], (err, row: any) => {
-        if (err) {
-          reject(err);
-        } else if (row) {
-          resolve({
-            ...row,
-            exercises: JSON.parse(row.exercises)
-          });
-        } else {
-          resolve(undefined);
-        }
-      });
-    });
-  }
-
-  /**
-   * Lista treinos de um aluno
-   */
-    findByStudentId(studentId: number): Promise<Training[]> {
+  findByUserId(userId: number): Promise<Training[]> {
     return new Promise((resolve, reject) => {
       const sql = `
-        SELECT t.*, u.nome as instructor_name 
-        FROM trainings t 
+        SELECT t.*, u.name as instructor_name 
+        FROM training t 
+        INNER JOIN training_user tu ON t.id = tu.training_id
         LEFT JOIN users u ON t.instructor_id = u.id 
-        WHERE t.student_id = ?
+        WHERE tu.user_id = ?
       `;
-      db.all(sql, [studentId], (err, rows: any[]) => {
+      db.all(sql, [userId], (err, rows: any[]) => {
         if (err) {
           reject(err);
         } else {
-          const trainings = (rows || []).map(row => ({
+          resolve((rows || []).map(row => ({
             ...row,
-            exercises: JSON.parse(row.exercises)
-          }));
-          resolve(trainings);
+            finish: row.finish === 1
+          })) as Training[]);
         }
       });
     });
   }
 
-  /**
-   * Lista treinos criados por um instrutor
-   */
   findByInstructorId(instructorId: number): Promise<Training[]> {
     return new Promise((resolve, reject) => {
-      db.all('SELECT * FROM trainings WHERE instructor_id = ?', [instructorId], (err, rows: any[]) => {
+      db.all('SELECT * FROM training WHERE instructor_id = ?', [instructorId], (err, rows: any[]) => {
         if (err) {
           reject(err);
         } else {
-          const trainings = (rows || []).map(row => ({
+          resolve((rows || []).map(row => ({
             ...row,
-            exercises: JSON.parse(row.exercises)
-          }));
-          resolve(trainings);
+            finish: row.finish === 1
+          })) as Training[]);
         }
       });
     });
   }
 
-  /**
-   * Atualiza treino
-   */
   update(id: number, training: Partial<Training>): Promise<void> {
     return new Promise((resolve, reject) => {
       const fields: string[] = [];
       const values: any[] = [];
 
-      if (training.training_type) {
-        fields.push('training_type = ?');
-        values.push(training.training_type);
+      if (training.name) {
+        fields.push('name = ?');
+        values.push(training.name);
       }
-      if (training.exercises) {
-        fields.push('exercises = ?');
-        values.push(JSON.stringify(training.exercises));
+      if (training.finish !== undefined) {
+        fields.push('finish = ?');
+        values.push(training.finish ? 1 : 0);
       }
-      
-      fields.push('updated_at = CURRENT_TIMESTAMP');
+      if (training.completed_date !== undefined) {
+        fields.push('completed_date = ?');
+        values.push(training.completed_date);
+      }
 
       if (fields.length === 0) {
         return resolve();
       }
 
       values.push(id);
-      const sql = `UPDATE trainings SET ${fields.join(', ')} WHERE id = ?`;
+      const sql = `UPDATE training SET ${fields.join(', ')} WHERE id = ?`;
 
       db.run(sql, values, (err) => {
         if (err) reject(err);
@@ -145,14 +108,52 @@ export class TrainingRepository {
     });
   }
 
-  /**
-   * Deleta treino
-   */
   delete(id: number): Promise<void> {
     return new Promise((resolve, reject) => {
-      db.run('DELETE FROM trainings WHERE id = ?', [id], (err) => {
+      db.run('DELETE FROM training WHERE id = ?', [id], (err) => {
         if (err) reject(err);
         else resolve();
+      });
+    });
+  }
+
+  addUser(trainingId: number, userId: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      db.run(
+        'INSERT OR IGNORE INTO training_user (training_id, user_id) VALUES (?, ?)',
+        [trainingId, userId],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+  }
+
+  removeUser(trainingId: number, userId: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      db.run(
+        'DELETE FROM training_user WHERE training_id = ? AND user_id = ?',
+        [trainingId, userId],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+  }
+
+  getUsersByTrainingId(trainingId: number): Promise<any[]> {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT u.id, u.name, u.email, u.document
+        FROM users u
+        INNER JOIN training_user tu ON u.id = tu.user_id
+        WHERE tu.training_id = ?
+      `;
+      db.all(sql, [trainingId], (err, rows: any[]) => {
+        if (err) reject(err);
+        else resolve(rows || []);
       });
     });
   }
