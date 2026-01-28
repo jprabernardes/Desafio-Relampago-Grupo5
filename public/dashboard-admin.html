@@ -4,266 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - Administrador</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: #f5f7fa;
-      }
-
-      .container {
-        display: flex;
-        min-height: 100vh;
-      }
-
-      /* Sidebar */
-      .sidebar {
-        width: 250px;
-        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 2rem 1rem;
-      }
-      .logo {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin-bottom: 3rem;
-      }
-      .nav-item {
-        padding: 0.75rem 1rem;
-        margin-bottom: 0.5rem;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-      .nav-item:hover {
-        background: rgba(255, 255, 255, 0.1);
-      }
-      .nav-item.active {
-        background: rgba(255, 255, 255, 0.2);
-      }
-      .logout-btn {
-        margin-top: auto;
-        background: rgba(255, 255, 255, 0.1);
-        padding: 0.75rem;
-        border-radius: 8px;
-        cursor: pointer;
-        text-align: center;
-      }
-
-      /* Main Content */
-      .main-content {
-        flex: 1;
-        padding: 2rem;
-      }
-      .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-      }
-      .header h1 {
-        font-size: 1.875rem;
-        font-weight: 700;
-      }
-      .user-info {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
-      .user-avatar {
-        width: 40px;
-        height: 40px;
-        background: #667eea;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 600;
-      }
-
-      /* Stats Cards */
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-      }
-      .stat-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      }
-      .stat-card h3 {
-        font-size: 0.875rem;
-        color: #6b7280;
-        text-transform: uppercase;
-        margin-bottom: 0.5rem;
-      }
-      .stat-card .value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #111827;
-      }
-
-      /* Table */
-      .table-container {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-      }
-      .table-header {
-        padding: 1.5rem;
-        border-bottom: 1px solid #e5e7eb;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .table-header h2 {
-        font-size: 1.25rem;
-        font-weight: 600;
-      }
-      .btn {
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        border: none;
-        cursor: pointer;
-        font-weight: 500;
-        transition: all 0.2s;
-      }
-      .btn-primary {
-        background: #667eea;
-        color: white;
-      }
-      .btn-primary:hover {
-        background: #5568d3;
-      }
-      .btn-danger {
-        background: #ef4444;
-        color: white;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      th {
-        text-align: left;
-        padding: 1rem 1.5rem;
-        background: #f9fafb;
-        font-weight: 600;
-        color: #6b7280;
-        font-size: 0.875rem;
-      }
-      td {
-        padding: 1rem 1.5rem;
-        border-top: 1px solid #e5e7eb;
-      }
-      .role-badge {
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.875rem;
-        font-weight: 500;
-      }
-      .role-administrador {
-        background: #fef3c7;
-        color: #92400e;
-      }
-      .role-recepcionista {
-        background: #dbeafe;
-        color: #1e40af;
-      }
-      .role-aluno {
-        background: #d1fae5;
-        color: #065f46;
-      }
-      .role-instrutor {
-        background: #fce7f3;
-        color: #9f1239;
-      }
-
-      /* Modal */
-      .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 1000;
-        align-items: center;
-        justify-content: center;
-      }
-      .modal.active {
-        display: flex;
-      }
-      .modal-content {
-        background: white;
-        border-radius: 12px;
-        padding: 2rem;
-        width: 90%;
-        max-width: 500px;
-      }
-      .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-      }
-      .close-btn {
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        cursor: pointer;
-      }
-      .form-group {
-        margin-bottom: 1.5rem;
-      }
-      .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-      }
-      .form-group input,
-      .form-group select {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-      }
-      .form-actions {
-        display: flex;
-        gap: 1rem;
-        justify-content: flex-end;
-      }
-      .alert {
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-      }
-      .alert-success {
-        background: #d1fae5;
-        color: #065f46;
-      }
-      .alert-error {
-        background: #fee2e2;
-        color: #991b1b;
-      }
-    </style>
+    <link rel="stylesheet" href="css/dashboard-admin.css">
   </head>
   <body>
     <div class="container">
       <div class="sidebar">
         <div class="logo">💪 FitManager</div>
-        <div class="nav-item active">📊 Dashboard</div>
-        <div class="nav-item">👥 Usuários</div>
+        <div class="nav-item active" id="navDashboard" onclick="loadTab('all')">📊 Dashboard</div>
+        <div class="nav-item" id="navAlunos" onclick="loadTab('alunos')">
+          <i class="fas fa-user-graduate"></i> Alunos
+        </div>
+        <div class="nav-item" id="navFuncionarios" onclick="loadTab('funcionarios')">
+          <i class="fas fa-user-tie"></i> Funcionários
+        </div>
         <div style="flex: 1"></div>
         <div class="logout-btn" onclick="logout()">🚪 Sair</div>
       </div>
@@ -298,13 +51,22 @@
 
         <div class="table-container">
           <div class="table-header">
-            <h2>Usuários do Sistema</h2>
-            <button class="btn btn-primary" onclick="openModal()">
-              + Novo Usuário
-            </button>
+            <h2 id="tableTitle">Usuários do Sistema</h2>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Pesquisar..." 
+                class="search-input"
+                oninput="handleSearch()"
+              />
+              <button class="btn btn-primary" onclick="openAddModal()">
+                + Adicionar Conta
+              </button>
+            </div>
           </div>
           <table>
-            <thead>
+            <thead id="tableHead">
               <tr>
                 <th>Nome</th>
                 <th>Email</th>
@@ -319,35 +81,40 @@
       </div>
     </div>
 
-    <div class="modal" id="userModal">
+    <!-- Modal Adicionar -->
+    <div class="modal" id="addModal">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>Novo Usuário</h2>
-          <button class="close-btn" onclick="closeModal()">&times;</button>
+          <h2 id="addModalTitle">Adicionar Conta</h2>
+          <button class="close-btn" onclick="closeAddModal()">&times;</button>
         </div>
-        <div id="alertContainer"></div>
-        <form id="userForm">
+        <div id="addAlertContainer"></div>
+        <form id="addForm">
           <div class="form-group">
             <label>Nome *</label>
-            <input type="text" id="nome" required />
+            <input type="text" id="addNome" required />
           </div>
           <div class="form-group">
             <label>Email *</label>
-            <input type="email" id="email" required />
+            <input type="email" id="addEmail" required />
           </div>
           <div class="form-group">
+            <label>Senha *</label>
+            <input type="password" id="addSenha" required minlength="6" />
+          </div>
+          <div class="form-group" id="addCpfGroup">
             <label>CPF *</label>
             <input
               type="text"
-              id="cpf"
+              id="addCpf"
               required
               maxlength="11"
               placeholder="11 dígitos"
             />
           </div>
-          <div class="form-group">
+          <div class="form-group" id="addRoleGroup" style="display: none;">
             <label>Role *</label>
-            <select id="role" required>
+            <select id="addRole">
               <option value="">Selecione...</option>
               <option value="administrador">👑 Administrador</option>
               <option value="recepcionista">📋 Recepcionista</option>
@@ -355,12 +122,72 @@
               <option value="aluno">🏃 Aluno</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Senha *</label>
-            <input type="password" id="senha" required minlength="6" />
+          <div class="form-group" id="addTipoPlanoGroup" style="display: none;">
+            <label>Tipo de Plano *</label>
+            <select id="addTipoPlano">
+              <option value="">Selecione...</option>
+              <option value="mensal">Mensal</option>
+              <option value="trimestral">Trimestral</option>
+              <option value="semestral">Semestral</option>
+              <option value="anual">Anual</option>
+            </select>
+          </div>
+          <div class="form-group" id="addTipoFuncionarioGroup" style="display: none;">
+            <label>Função *</label>
+            <select id="addTipoFuncionario">
+              <option value="">Selecione...</option>
+              <option value="recepcionista">Recepcionista</option>
+              <option value="instrutor">Instrutor</option>
+            </select>
           </div>
           <div class="form-actions">
-            <button type="button" class="btn" onclick="closeModal()">
+            <button type="button" class="btn" onclick="closeAddModal()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Editar -->
+    <div class="modal" id="editModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="editModalTitle">Editar Conta</h2>
+          <button class="close-btn" onclick="closeEditModal()">&times;</button>
+        </div>
+        <div id="editAlertContainer"></div>
+        <form id="editForm">
+          <input type="hidden" id="editUserId" />
+          <div class="form-group">
+            <label>Nome *</label>
+            <input type="text" id="editNome" required />
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="editEmail" required />
+          </div>
+          <div class="form-group" id="editNovaSenhaGroup" style="display: none;">
+            <label>Nova Senha (deixe em branco para não alterar)</label>
+            <input type="password" id="editNovaSenha" minlength="6" placeholder="Digite nova senha" />
+          </div>
+          <div class="form-group" id="editTipoPlanoGroup" style="display: none;">
+            <label>Tipo de Plano *</label>
+            <select id="editTipoPlano">
+              <option value="">Selecione...</option>
+              <option value="mensal">Mensal</option>
+              <option value="trimestral">Trimestral</option>
+              <option value="semestral">Semestral</option>
+              <option value="anual">Anual</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-danger" onclick="confirmDeleteUser()">
+              Deletar Conta
+            </button>
+            <div style="flex: 1"></div>
+            <button type="button" class="btn" onclick="closeEditModal()">
               Cancelar
             </button>
             <button type="submit" class="btn btn-primary">Salvar</button>
@@ -389,174 +216,6 @@
       </div>
     </div>
 
-    <script>
-      const API_URL = "/api";
-      const token = localStorage.getItem("token");
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-
-      // ... (auth checks)
-
-      // Lógica do Modal de Confirmação
-      let pendingConfirmAction = null;
-
-      function showConfirmModal(message, action) {
-        document.getElementById("confirmMessage").textContent = message;
-        pendingConfirmAction = action;
-        document.getElementById("confirmModal").classList.add("active");
-      }
-
-      function closeConfirmModal() {
-        document.getElementById("confirmModal").classList.remove("active");
-        pendingConfirmAction = null;
-      }
-
-      function confirmAction() {
-        if (pendingConfirmAction) {
-          pendingConfirmAction();
-        }
-        closeConfirmModal();
-      }
-
-      if (!token || user.role !== "administrador") {
-        window.location.href = "/";
-      }
-
-      async function deleteUser(id) {
-        showConfirmModal(
-          "Tem certeza que deseja deletar este usuário?",
-          async () => {
-            try {
-              const res = await fetch(`${API_URL}/users/${id}`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` },
-              });
-
-              if (res.ok) {
-                loadData();
-                showAlert("Usuário deletado com sucesso!", "success");
-              } else {
-                const data = await res.json();
-                showAlert(data.error || "Erro ao deletar");
-              }
-            } catch (error) {
-              showAlert("Erro ao conectar com o servidor");
-            }
-          },
-        );
-      }
-
-      document.getElementById("userName").textContent = user.nome;
-      document.getElementById("userAvatar").textContent = user.nome
-        .charAt(0)
-        .toUpperCase();
-
-      async function loadData() {
-        try {
-          const [usersRes, metricsRes] = await Promise.all([
-            fetch(`${API_URL}/users`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-            fetch(`${API_URL}/users/dashboard`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-          ]);
-
-          const users = await usersRes.json();
-          const metrics = await metricsRes.json();
-
-          document.getElementById("totalUsers").textContent = users.length;
-          document.getElementById("totalStudents").textContent =
-            metrics.totalStudents || 0;
-          document.getElementById("totalInstructors").textContent =
-            metrics.totalInstructors || 0;
-          document.getElementById("totalReceptionists").textContent =
-            metrics.totalReceptionists || 0;
-
-          renderUsers(users);
-        } catch (error) {
-          console.error("Erro:", error);
-        }
-      }
-
-      function renderUsers(users) {
-        const tbody = document.getElementById("usersTable");
-        tbody.innerHTML = users
-          .map(
-            (u) => `
-        <tr>
-          <td>${u.nome}</td>
-          <td>${u.email}</td>
-          <td>${u.cpf}</td>
-          <td><span class="role-badge role-${u.role}">${u.role}</span></td>
-          <td>
-            <button class="btn btn-danger" onclick="deleteUser(${u.id})">Deletar</button>
-          </td>
-        </tr>
-      `,
-          )
-          .join("");
-      }
-
-      function openModal() {
-        document.getElementById("userModal").classList.add("active");
-        document.getElementById("userForm").reset();
-      }
-
-      function closeModal() {
-        document.getElementById("userModal").classList.remove("active");
-      }
-
-      function showAlert(message, type = "error") {
-        const alert = document.getElementById("alertContainer");
-        alert.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
-        setTimeout(() => (alert.innerHTML = ""), 5000);
-      }
-
-      document
-        .getElementById("userForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-
-          const data = {
-            name: document.getElementById("nome").value,
-            email: document.getElementById("email").value,
-            document: document.getElementById("cpf").value,
-            role: document.getElementById("role").value,
-            password: document.getElementById("senha").value,
-          };
-
-          try {
-            const res = await fetch(`${API_URL}/users`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify(data),
-            });
-
-            const result = await res.json();
-
-            if (res.ok) {
-              showAlert("Usuário criado com sucesso!", "success");
-              setTimeout(() => {
-                closeModal();
-                loadData();
-              }, 1500);
-            } else {
-              showAlert(result.error || "Erro ao criar usuário");
-            }
-          } catch (error) {
-            showAlert("Erro ao conectar com o servidor");
-          }
-        });
-
-      function logout() {
-        localStorage.clear();
-        window.location.href = "/";
-      }
-
-      loadData();
-    </script>
+    <script src="js/dashboard-admin.js"></script>
   </body>
 </html>
