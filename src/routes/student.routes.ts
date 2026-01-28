@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { TrainingController } from '../controllers/TrainingController';
-import { ClassController } from '../controllers/ClassController';
+import { GymClassController } from '../controllers/GymClassController';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { studentOnly } from '../middlewares/role.middleware';
 
 const router = Router();
 const trainingController = new TrainingController();
-const classController = new ClassController();
+const gymClassController = new GymClassController();
 
 router.use(authMiddleware);
 router.use(studentOnly);
@@ -20,9 +20,9 @@ router.post('/checkin', (req, res, next) => {
 }, trainingController.print);
 
 // Aulas
-router.get('/classes', classController.findAll);
-router.get('/my-classes', classController.findMyEnrollments);
-router.post('/classes/:id/enroll', classController.enroll);
-router.delete('/classes/:id/cancel', classController.cancelEnrollment);
+router.get('/classes', gymClassController.findAll);
+router.get('/my-classes', gymClassController.findMyEnrollments);
+router.post('/classes/:id/enroll', gymClassController.enroll);
+router.delete('/classes/:id/cancel', gymClassController.cancelEnrollment);
 
 export default router;
