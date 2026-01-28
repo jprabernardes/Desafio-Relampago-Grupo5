@@ -36,7 +36,7 @@ export class TrainingController {
     try {
       const userId = (req as any).user.id;
       const userRole = (req as any).user.role;
-      
+
       let training;
       if (userRole === 'instrutor') {
         training = await this.trainingService.findById(Number(req.params.id), userId);
@@ -47,11 +47,11 @@ export class TrainingController {
           return res.status(404).json({ error: 'Treino não encontrado.' });
         }
       }
-      
+
       if (!training) {
         return res.status(404).json({ error: 'Treino não encontrado.' });
       }
-      
+
       const exercises = await this.exerciseService.findByTrainingId(training.id!);
       return res.status(200).json({ ...training, exercises });
     } catch (error: any) {
@@ -137,7 +137,15 @@ export class TrainingController {
     try {
       const userId = (req as any).user.id;
       const trainings = await this.trainingService.findByUserId(userId);
-      return res.status(200).json(trainings);
+
+      const trainingsWithExercises = await Promise.all(
+        trainings.map(async (t) => {
+          const exercises = await this.exerciseService.findByTrainingId(t.id!);
+          return { ...t, exercises };
+        })
+      );
+
+      return res.status(200).json(trainingsWithExercises);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
     }
