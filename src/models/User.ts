@@ -7,3 +7,4 @@ export interface User {
   document: string;
   created_at?: string;
 }
+  

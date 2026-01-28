@@ -11,7 +11,6 @@ export class UserController {
     this.checkInService = new CheckInService();
   }
 
-
   create = async (req: Request, res: Response): Promise<Response> => {
     try {
       const creatorRole = (req as any).user.role;
@@ -57,7 +56,8 @@ export class UserController {
   update = async (req: Request, res: Response): Promise<Response> => {
     try {
       const updaterRole = (req as any).user.role;
-      await this.userService.update(Number(req.params.id), req.body, updaterRole);
+      const { planType, ...userData } = req.body;
+      await this.userService.update(Number(req.params.id), userData, updaterRole, planType);
       return res.status(200).json({ message: 'Usuário atualizado com sucesso.' });
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
