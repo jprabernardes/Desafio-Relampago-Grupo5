@@ -220,7 +220,7 @@ window.toggleSelection = (el, id) => {
   }
 };
 
-// Buscar Aluno
+// Buscar Aluno (CORRIGIDO: busca por Nome, Email OU CPF)
 document
   .getElementById("studentSearch")
   .addEventListener("input", async (e) => {
@@ -234,25 +234,45 @@ document
       const res = await fetch(`${API_URL}/instructor/students`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Erro");
+      
+      if (!res.ok) throw new Error("Erro ao buscar alunos");
 
       const allStudents = await res.json();
-      const filtered = allStudents.filter(
-        (s) =>
-          (s.name || s.nome || "").toLowerCase().includes(term.toLowerCase()) ||
-          s.email.includes(term),
+      
+      // Mapear para garantir que temos os campos corretos
+      const studentsWithNames = allStudents.map(s => ({
+        id: s.id,
+        name: s.name || s.nome || `Aluno ${s.id}`,
+        email: s.email || "",
+        document: s.document || s.cpf || ""
+      }));
+      
+      const filtered = studentsWithNames.filter(
+        (s) => {
+          return s.name.toLowerCase().includes(term.toLowerCase()) ||
+                 s.email.toLowerCase().includes(term.toLowerCase()) ||
+                 s.document.includes(term);
+        }
       );
 
       const select = document.getElementById("studentSelect");
-      select.innerHTML = filtered
-        .map(
-          (s) =>
-            `<option value="${s.id}">${s.name || s.nome} (${s.email})</option>`,
-        )
-        .join("");
-      select.style.display = "block";
+      
+      if (filtered.length === 0) {
+        select.innerHTML = '<option disabled>Nenhum aluno encontrado</option>';
+        select.style.display = "block";
+      } else {
+        select.innerHTML = filtered
+          .map(
+            (s) => `<option value="${s.id}">${s.name} - CPF: ${s.document || 'N/A'}</option>`
+          )
+          .join("");
+        select.style.display = "block";
+      }
     } catch (e) {
-      console.error(e);
+      console.error("Erro na busca de alunos:", e);
+      const select = document.getElementById("studentSelect");
+      select.innerHTML = '<option disabled>Erro ao buscar alunos</option>';
+      select.style.display = "block";
     }
   });
 
@@ -312,14 +332,16 @@ document
         .querySelectorAll(".template-card.selected")
         .forEach((el) => el.classList.remove("selected"));
       document.getElementById("assignWorkoutForm").reset();
+      document.getElementById("studentSelect").style.display = "none";
     } catch (e) {
       console.error(e);
       showAlert(e.message || "Erro ao atribuir treino", "error");
     }
   });
 
-// --- Gerenciamento de Aulas (Criar/Editar/Excluir) ---
+// --- Gerenciamento de Aulas ---
 let myClasses = [];
+let allClasses = [];
 
 async function loadClasses() {
   try {
@@ -327,31 +349,79 @@ async function loadClasses() {
       headers: { Authorization: `Bearer ${token}` },
     });
     myClasses = await res.json();
+    allClasses = [...myClasses]; // Cópia para filtro
     renderClasses();
   } catch (e) {
     console.error(e);
   }
 }
 
-function renderClasses() {
+// Formatar data para dd/mm/yyyy
+function formatDateBR(dateStr) {
+  const [year, month, day] = dateStr.split('-');
+  return `${day}/${month}/${year}`;
+}
+
+// CORREÇÃO: Função de filtro de aulas
+function filterClasses() {
+  const searchTerm = document.getElementById("classSearchInput").value.toLowerCase();
+  
+  if (searchTerm) {
+    myClasses = allClasses.filter(c => 
+      (c.name || c.nome_aula || "").toLowerCase().includes(searchTerm)
+    );
+  } else {
+    myClasses = [...allClasses];
+  }
+  
+  renderClasses();
+}
+
+async function renderClasses() {
   const container = document.getElementById("classesContainer");
   if (myClasses.length === 0) {
     container.innerHTML = "<p>Nenhuma aula agendada.</p>";
     return;
   }
 
-  container.innerHTML = myClasses
+  // Para cada aula, buscar quantos alunos estão inscritos
+  const classesWithEnrollments = await Promise.all(
+    myClasses.map(async (c) => {
+      try {
+        const res = await fetch(`${API_URL}/instructor/classes/${c.id}/participants`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        if (!res.ok) {
+          console.error(`Erro ao buscar alunos da aula ${c.id}: HTTP ${res.status}`);
+          return { ...c, enrolledCount: '?' }; // Mostrar ? quando houver erro
+        }
+        
+        const students = await res.json();
+        console.log(`Aula ${c.id} (${c.name}): ${students.length} alunos`, students);
+        return { ...c, enrolledCount: students.length || 0 };
+      } catch (e) {
+        console.error(`Erro ao buscar alunos da aula ${c.id}:`, e);
+        return { ...c, enrolledCount: '?' }; // Mostrar ? quando houver erro
+      }
+    })
+  );
+
+  container.innerHTML = classesWithEnrollments
     .map(
       (c) => `
-          <div style="background:#fff; padding:1.5rem; margin-bottom:1rem; border-radius:8px; border:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-              <div>
-                  <h3 style="color:#333; margin-bottom:0.5rem;">${c.name || c.nome_aula}</h3>
-                  <p style="color:#666;">📅 ${new Date(c.date || c.data).toLocaleDateString()} &nbsp; ⏰ ${c.time || c.hora} </p>
-                  <p style="color:#666; font-size:0.9rem;">👥 ${c.slots_limit || c.limite_vagas} vagas</p>
-              </div>
-              <div class="template-actions" style="position:static;">
-                   <button class="template-action-btn" title="Editar" onclick="editClass(${c.id})">✏️</button>
-                   <button class="template-action-btn" title="Cancelar Aula" onclick="deleteClass(${c.id})" style="color:#e53e3e;">🗑️</button>
+          <div style="background:#fff; padding:1.5rem; margin-bottom:1rem; border-radius:8px; border:1px solid #eee; cursor: pointer; transition: all 0.2s;" 
+               onmouseover="this.style.borderColor='#667eea'" 
+               onmouseout="this.style.borderColor='#eee'"
+               onclick="openClassDetailsModal(${c.id})">
+              <div style="display: flex; justify-content: space-between; align-items: start;">
+                  <div style="flex: 1;">
+                      <h3 style="color:#333; margin-bottom:0.5rem;">${c.name || c.nome_aula}</h3>
+                      <p style="color:#666;">📅 ${formatDateBR(c.date || c.data)} &nbsp; ⏰ ${c.time || c.hora} </p>
+                      <p style="color:#667eea; font-weight: 500; margin-top: 0.5rem;">
+                          👥 ${c.enrolledCount}/${c.slots_limit || c.limite_vagas} alunos inscritos
+                      </p>
+                  </div>
               </div>
           </div>
       `,
@@ -359,15 +429,50 @@ function renderClasses() {
     .join("");
 }
 
-// Create/Edit Class Form
+// CORREÇÃO: Setar data mínima ao criar aula
+window.openCreateClassTab = () => {
+  document.querySelector('[data-section="create-class"]').click();
+  
+  // Setar data mínima como hoje
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById("classDate").setAttribute('min', today);
+  document.getElementById("classDate").value = today;
+};
+
+// Função para validar data e mostrar mensagem customizada em português
+function validateDate(inputElement) {
+  const selectedDate = new Date(inputElement.value);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  if (selectedDate < today) {
+    inputElement.setCustomValidity('Por favor, selecione uma data que não seja anterior a hoje.');
+    return false;
+  } else {
+    inputElement.setCustomValidity(''); // Limpar mensagem de erro
+    return true;
+  }
+}
+
+// CORREÇÃO: Create/Edit Class Form com validação de data
 document
   .getElementById("createClassForm")
   .addEventListener("submit", async (e) => {
     e.preventDefault();
     const id = document.getElementById("classId").value;
+    const dateInput = document.getElementById("classDate");
+    const dateValue = dateInput.value;
+    
+    // VALIDAÇÃO: Não permitir datas passadas
+    if (!validateDate(dateInput)) {
+      showAlert("Não é possível agendar aulas para datas passadas!", "error");
+      dateInput.reportValidity(); // Mostrar mensagem customizada
+      return;
+    }
+    
     const data = {
       name: document.getElementById("className").value,
-      date: document.getElementById("classDate").value,
+      date: dateValue,
       time: document.getElementById("classTime").value,
       slots_limit: parseInt(document.getElementById("classLimit").value),
     };
@@ -394,6 +499,7 @@ document
         } else {
           document.getElementById("createClassForm").reset();
         }
+        loadClasses();
       } else {
         const err = await res.json();
         showAlert(err.error || "Erro ao salvar", "error");
@@ -419,10 +525,8 @@ window.editClass = (id) => {
 
   // Modify UI for Edit
   document.getElementById("classFormTitle").textContent = "Editar Aula";
-  document.getElementById("saveClassBtn").textContent =
-    "Salvar Alterações";
-  document.getElementById("cancelClassEditBtn").style.display =
-    "inline-block";
+  document.getElementById("saveClassBtn").textContent = "Salvar Alterações";
+  document.getElementById("cancelClassEditBtn").style.display = "inline-block";
 
   document.querySelector(".main-content").scrollTop = 0;
 };
@@ -430,8 +534,7 @@ window.editClass = (id) => {
 window.cancelClassEdit = () => {
   document.getElementById("createClassForm").reset();
   document.getElementById("classId").value = "";
-  document.getElementById("classFormTitle").textContent =
-    "Criar Nova Aula";
+  document.getElementById("classFormTitle").textContent = "Criar Nova Aula";
   document.getElementById("saveClassBtn").textContent = "Agendar Aula";
   document.getElementById("cancelClassEditBtn").style.display = "none";
 };
@@ -460,5 +563,141 @@ window.deleteClass = async (id) => {
   );
 };
 
+// --- NOVO: Modal de Detalhes da Aula ---
+let currentClassInModal = null;
+
+async function openClassDetailsModal(classId) {
+  currentClassInModal = classId;
+  const classData = allClasses.find(c => c.id === classId);
+  
+  if (!classData) return;
+  
+  // Preencher dados
+  document.getElementById("detailsClassId").value = classData.id;
+  document.getElementById("detailsClassName").value = classData.name || classData.nome_aula;
+  document.getElementById("detailsClassDate").value = classData.date || classData.data;
+  document.getElementById("detailsClassTime").value = classData.time || classData.hora;
+  document.getElementById("detailsClassLimit").value = classData.slots_limit || classData.limite_vagas;
+  
+  // Setar data mínima
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById("detailsClassDate").setAttribute('min', today);
+  
+  // Buscar alunos inscritos
+  try {
+    const res = await fetch(`${API_URL}/instructor/classes/${classId}/participants`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+    
+    const students = await res.json();
+    console.log("Alunos inscritos na aula:", students); // DEBUG
+    
+    const studentsList = document.getElementById("enrolledStudentsList");
+    if (!students || students.length === 0) {
+      studentsList.innerHTML = '<p style="color: #666; font-style: italic;">Nenhum aluno inscrito ainda.</p>';
+    } else {
+      studentsList.innerHTML = students.map(s => `
+        <div style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+            ${(s.name || s.nome || 'A').charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <div style="font-weight: 500; color: #333;">${s.name || s.nome || 'Sem nome'}</div>
+            <div style="font-size: 0.875rem; color: #666;">${s.email || 'Sem email'}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+  } catch (e) {
+    console.error("Erro ao carregar alunos inscritos:", e);
+    document.getElementById("enrolledStudentsList").innerHTML = `<p style="color: #e53e3e;">Erro ao carregar alunos: ${e.message}</p>`;
+  }
+  
+  document.getElementById("classDetailsModal").classList.add("active");
+}
+
+function closeClassDetailsModal() {
+  document.getElementById("classDetailsModal").classList.remove("active");
+  currentClassInModal = null;
+}
+
+// Submit do formulário de edição no modal
+document.getElementById("editClassForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const id = document.getElementById("detailsClassId").value;
+  const dateInput = document.getElementById("detailsClassDate");
+  const dateValue = dateInput.value;
+  
+  // VALIDAÇÃO: Não permitir datas passadas
+  if (!validateDate(dateInput)) {
+    showAlert("Não é possível agendar aulas para datas passadas!", "error");
+    dateInput.reportValidity(); // Mostrar mensagem customizada
+    return;
+  }
+  
+  const data = {
+    name: document.getElementById("detailsClassName").value,
+    date: dateValue,
+    time: document.getElementById("detailsClassTime").value,
+    slots_limit: parseInt(document.getElementById("detailsClassLimit").value),
+  };
+
+  try {
+    const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (res.ok) {
+      showAlert("Aula atualizada com sucesso!");
+      closeClassDetailsModal();
+      loadClasses();
+    } else {
+      const err = await res.json();
+      showAlert(err.error || "Erro ao atualizar", "error");
+    }
+  } catch (e) {
+    showAlert("Erro de conexão", "error");
+  }
+});
+
+// Deletar aula do modal
+function deleteClassFromModal() {
+  const classId = document.getElementById("detailsClassId").value;
+  closeClassDetailsModal();
+  deleteClass(parseInt(classId));
+}
+
 loadUserInfo();
 loadTemplates();
+
+// Setar data mínima e adicionar validação customizada ao carregar a página
+window.addEventListener('DOMContentLoaded', () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById("classDate").setAttribute('min', today);
+  
+  // Adicionar listeners para validação customizada nos campos de data
+  const classDateInput = document.getElementById("classDate");
+  const detailsClassDateInput = document.getElementById("detailsClassDate");
+  
+  if (classDateInput) {
+    classDateInput.addEventListener('input', function() {
+      validateDate(this);
+    });
+  }
+  
+  if (detailsClassDateInput) {
+    detailsClassDateInput.addEventListener('input', function() {
+      validateDate(this);
+    });
+  }
+});

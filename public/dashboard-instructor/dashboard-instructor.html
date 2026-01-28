@@ -15,7 +15,7 @@
             🏋️ Criar Exercício
           </div>
           <div class="nav-item" data-section="assign-workout">
-            📝 Atribuir Treino
+            📋 Atribuir Treino
           </div>
           <div class="nav-item" data-section="create-class">➕ Criar Aula</div>
           <div class="nav-item" data-section="classes">📅 Minhas Aulas</div>
@@ -93,7 +93,7 @@
           <h2>Atribuir Treino ao Aluno</h2>
           <form id="assignWorkoutForm">
             <div class="form-group">
-              <label for="studentSearch">Buscar Aluno (Nome ou CPF)</label>
+              <label for="studentSearch">Buscar Aluno (Nome, Email ou CPF)</label>
               <input
                 type="text"
                 id="studentSearch"
@@ -178,7 +178,23 @@
 
         <!-- My Classes -->
         <section class="section" id="classes">
-          <h2>Minhas Aulas Agendadas</h2>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2>Minhas Aulas Agendadas</h2>
+            <button class="btn btn-primary" onclick="openCreateClassTab()">
+              ➕ Agendar Aula
+            </button>
+          </div>
+          
+          <div class="form-group" style="max-width: 400px;">
+            <input 
+              type="text" 
+              id="classSearchInput" 
+              placeholder="🔍 Pesquisar aulas..." 
+              oninput="filterClasses()"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;"
+            />
+          </div>
+
           <div id="classesContainer">
             <p>Carregando aulas...</p>
           </div>
@@ -186,6 +202,7 @@
       </main>
     </div>
 
+    <!-- Modal de Confirmação -->
     <div class="modal" id="confirmModal">
       <div class="modal-content">
         <div class="modal-header">
@@ -203,6 +220,60 @@
             Sim, tenho certeza
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Modal de Detalhes da Aula -->
+    <div class="modal" id="classDetailsModal">
+      <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+          <h2 id="classDetailsTitle">Detalhes da Aula</h2>
+          <button class="close-btn" onclick="closeClassDetailsModal()">&times;</button>
+        </div>
+        
+        <form id="editClassForm">
+          <input type="hidden" id="detailsClassId" />
+          
+          <div class="form-group">
+            <label for="detailsClassName">Nome da Aula</label>
+            <input type="text" id="detailsClassName" required />
+          </div>
+          
+          <div class="form-group">
+            <label for="detailsClassDate">Data</label>
+            <input type="date" id="detailsClassDate" required />
+          </div>
+          
+          <div class="form-group">
+            <label for="detailsClassTime">Hora</label>
+            <input type="time" id="detailsClassTime" required />
+          </div>
+          
+          <div class="form-group">
+            <label for="detailsClassLimit">Limite de Vagas</label>
+            <input type="number" id="detailsClassLimit" required min="1" />
+          </div>
+          
+          <div class="form-group">
+            <label style="margin-bottom: 1rem; display: block; font-weight: 600;">Alunos Inscritos</label>
+            <div id="enrolledStudentsList" style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb;">
+              <p style="color: #666;">Carregando...</p>
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" class="btn btn-danger" onclick="deleteClassFromModal()">
+              🗑️ Deletar Aula
+            </button>
+            <div style="flex: 1"></div>
+            <button type="button" class="btn btn-secondary" onclick="closeClassDetailsModal()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              💾 Salvar Alterações
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 
