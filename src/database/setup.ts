@@ -30,6 +30,8 @@ export const createTables = (): Promise<void> => {
         )
       `);
 
+
+
       db.run(`
         CREATE TABLE IF NOT EXISTS training (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
