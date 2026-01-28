@@ -17,9 +17,23 @@ export const createTables = (): Promise<void> => {
           password TEXT NOT NULL,
           role TEXT CHECK(role IN ('administrador', 'recepcionista', 'instrutor', 'aluno')) NOT NULL,
           document TEXT UNIQUE NOT NULL,
+          phone TEXT,
           created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
       `);
+
+      // Migration check for phone column (for existing databases)
+      db.all("PRAGMA table_info(users)", (err, rows: any[]) => {
+        if (!err && rows) {
+            const hasPhone = rows.some(r => r.name === 'phone');
+            if (!hasPhone) {
+                db.run("ALTER TABLE users ADD COLUMN phone TEXT", (err) => {
+                    if (err) console.error("Error adding phone column:", err);
+                    else console.log("✅ Phone column added to users table.");
+                });
+            }
+        }
+      });
 
       db.run(`
         CREATE TABLE IF NOT EXISTS student_profile (
@@ -29,6 +43,8 @@ export const createTables = (): Promise<void> => {
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
       `);
+
+
 
       db.run(`
         CREATE TABLE IF NOT EXISTS training (

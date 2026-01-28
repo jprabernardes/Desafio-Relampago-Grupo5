@@ -5,6 +5,7 @@ export interface User {
   password: string;
   role: 'administrador' | 'recepcionista' | 'instrutor' | 'aluno';
   document: string;
+  phone?: string;
   created_at?: string;
 }
   
