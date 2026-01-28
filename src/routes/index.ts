@@ -3,7 +3,7 @@ import { Router } from 'express';
 import authRoutes from './auth.routes';
 import userRoutes from './user.routes';
 import trainingRoutes from './training.routes';
-import classRoutes from './class.routes';
+import gymClassRoutes from './gymClass.routes';
 
 import adminRoutes from './admin.routes';
 import receptionistRoutes from './receptionist.routes';
@@ -16,7 +16,7 @@ const router = Router();
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/trainings', trainingRoutes);
-router.use('/classes', classRoutes);
+router.use('/classes', gymClassRoutes);
 
 // Rotas específicas por Role (Frontend)
 router.use('/admin', adminRoutes);
