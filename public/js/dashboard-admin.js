@@ -149,7 +149,7 @@ function updateTableHeaders(tipo) {
         <th>Nome</th>
         <th>Email</th>
         <th>CPF</th>
-        <th>Role</th>
+        <th>Função</th>
         <th>Ações</th>
       </tr>
     `;
