@@ -21,6 +21,9 @@ export class AuthService {
    * Realiza o login do usuário e retorna um token JWT.
    */
   async login(email: string, password: string): Promise<LoginResponse> {
+    if (!isValidPassword(password)) {
+      throw new Error('Senha deve ter no mínimo 6 caracteres.');
+    }
     if (!isNotEmpty(email) || !isNotEmpty(password)) {
       throw new Error('Email e senha são obrigatórios.');
     }
