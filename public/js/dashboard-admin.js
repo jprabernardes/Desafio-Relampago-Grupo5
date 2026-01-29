@@ -45,7 +45,7 @@ async function loadData() {
       alert("Acesso negado. Você não é administrador.");
       logout();
     }
-
+  
     // Adaptador: backend usa 'name', frontend usa 'nome'
     document.getElementById("userName").textContent =
       userData.name || userData.nome || "Admin";
@@ -546,3 +546,4 @@ phoneInputs.forEach((id) => {
 });
 
 loadTab('alunos');
+loadData();
