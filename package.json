@@ -11,7 +11,8 @@
     "test:unit": "mocha --require ts-node/register 'tests/unit/**/*.test.ts'",
     "test:integration": "mocha --require ts-node/register 'tests/integration/**/*.test.ts'",
     "test:coverage": "nyc npm test",
-    "test:report": "nyc --reporter=html --reporter=text npm test"
+    "test:report": "nyc --reporter=html --reporter=text npm test",
+    "start": "node dist/server.js"
   },
   "keywords": [
     "academia",
