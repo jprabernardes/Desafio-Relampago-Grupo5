@@ -76,6 +76,28 @@ export class TrainingRepository {
     });
   }
 
+  findByInstructorAndUserId(instructorId: number, userId: number): Promise<Training[]> {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT t.*
+        FROM training t
+        INNER JOIN training_user tu ON t.id = tu.training_id
+        WHERE t.instructor_id = ? AND tu.user_id = ?
+        ORDER BY t.id DESC
+      `;
+      db.all(sql, [instructorId, userId], (err, rows: any[]) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve((rows || []).map(row => ({
+            ...row,
+            finish: row.finish === 1
+          })) as Training[]);
+        }
+      });
+    });
+  }
+
   update(id: number, training: Partial<Training>): Promise<void> {
     return new Promise((resolve, reject) => {
       const fields: string[] = [];

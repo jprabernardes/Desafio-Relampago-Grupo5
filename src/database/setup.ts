@@ -72,6 +72,9 @@ export const createTables = (): Promise<void> => {
         CREATE TABLE IF NOT EXISTS exercise_training (
           exercise_id INTEGER NOT NULL,
           training_id INTEGER NOT NULL,
+          series INTEGER,
+          repetitions INTEGER,
+          weight REAL,
           PRIMARY KEY (exercise_id, training_id),
           FOREIGN KEY (exercise_id) REFERENCES exercise(id) ON DELETE CASCADE,
           FOREIGN KEY (training_id) REFERENCES training(id) ON DELETE CASCADE

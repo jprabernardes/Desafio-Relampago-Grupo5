@@ -1,6 +1,207 @@
 const API_URL = "/api";
 let token = localStorage.getItem("token");
 
+// ========== FUNÇÕES DE VALIDAÇÃO E SANITIZAÇÃO ==========
+
+// Sanitiza entrada numérica
+function sanitizeNumberInput(value, options = {}) {
+  const { allowDecimals = false, max = null, min = null, step = 1 } = options;
+  
+  // Remove tudo exceto números e ponto decimal (se permitido)
+  let cleaned = allowDecimals 
+    ? value.toString().replace(/[^\d.]/g, '')
+    : value.toString().replace(/\D/g, '');
+  
+  // Se permite decimais, garante apenas um ponto
+  if (allowDecimals) {
+    const parts = cleaned.split('.');
+    cleaned = parts[0] + (parts.length > 1 ? '.' + parts.slice(1).join('').substring(0, 1) : '');
+  }
+  
+  // Converte para número
+  let num = allowDecimals ? parseFloat(cleaned) || 0 : parseInt(cleaned) || 0;
+  
+  // Aplica limites
+  if (min !== null && num < min) num = min;
+  if (max !== null && num > max) num = max;
+  
+  // Arredonda para step se necessário
+  if (allowDecimals && step) {
+    num = Math.round(num / step) * step;
+  }
+  
+  return num;
+}
+
+// Valida formulário de exercício
+function validateExerciseForm() {
+  const errors = [];
+  const name = document.getElementById("exName").value.trim();
+  const description = document.getElementById("exDescription").value.trim();
+  const series = parseInt(document.getElementById("exSeries").value) || 0;
+  const repetitions = parseInt(document.getElementById("exRepetitions").value) || 0;
+  const weight = parseFloat(document.getElementById("exWeight").value) || 0;
+
+  // Validação de nome
+  if (!name) {
+    errors.push({ field: "exName", message: "Nome é obrigatório" });
+  } else if (name.length < 3) {
+    errors.push({ field: "exName", message: "Nome deve ter no mínimo 3 caracteres" });
+  } else if (name.length > 100) {
+    errors.push({ field: "exName", message: "Nome deve ter no máximo 100 caracteres" });
+  }
+
+  // Validação de descrição
+  if (!description) {
+    errors.push({ field: "exDescription", message: "Descrição é obrigatória" });
+  } else if (description.length < 10) {
+    errors.push({ field: "exDescription", message: "Descrição deve ter no mínimo 10 caracteres" });
+  } else if (description.length > 500) {
+    errors.push({ field: "exDescription", message: "Descrição deve ter no máximo 500 caracteres" });
+  }
+
+  // Validação de séries
+  if (!series || series < 1) {
+    errors.push({ field: "exSeries", message: "Séries deve ser no mínimo 1" });
+  } else if (series > 20) {
+    errors.push({ field: "exSeries", message: "Séries deve ser no máximo 20" });
+  }
+
+  // Validação de repetições
+  if (!repetitions || repetitions < 1) {
+    errors.push({ field: "exRepetitions", message: "Repetições deve ser no mínimo 1" });
+  } else if (repetitions > 100) {
+    errors.push({ field: "exRepetitions", message: "Repetições deve ser no máximo 100" });
+  }
+
+  // Validação de peso
+  if (weight < 0) {
+    errors.push({ field: "exWeight", message: "Peso não pode ser negativo" });
+  } else if (weight > 500) {
+    errors.push({ field: "exWeight", message: "Peso deve ser no máximo 500kg" });
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+// Valida formulário de treino
+function validateTrainingForm() {
+  const errors = [];
+  const name = document.getElementById("trainingName")?.value.trim() || "";
+  // Acessa a variável selectedExercises do escopo do módulo ou global
+  const exercises = selectedExercises || window.selectedExercises || [];
+  
+  console.log("Validação - selectedExercises (módulo):", selectedExercises);
+  console.log("Validação - window.selectedExercises:", window.selectedExercises);
+  console.log("Validação - exercises (usado):", exercises);
+  console.log("Validação - quantidade:", exercises.length);
+
+  // Validação de nome
+  if (!name) {
+    errors.push({ field: "trainingName", message: "Nome do treino é obrigatório" });
+  } else if (name.length < 3) {
+    errors.push({ field: "trainingName", message: "Nome deve ter no mínimo 3 caracteres" });
+  } else if (name.length > 50) {
+    errors.push({ field: "trainingName", message: "Nome deve ter no máximo 50 caracteres" });
+  }
+
+  // Validação de exercícios
+  if (exercises.length === 0) {
+    errors.push({ field: "selectedExercises", message: "Selecione pelo menos um exercício" });
+  }
+
+  // Validação de parâmetros de cada exercício
+  exercises.forEach((sel, idx) => {
+    if (sel.series < 1 || sel.series > 20) {
+      errors.push({ field: `exercise-${idx}-series`, message: `Séries do exercício ${idx + 1} deve ser entre 1 e 20` });
+    }
+    if (sel.repetitions < 1 || sel.repetitions > 100) {
+      errors.push({ field: `exercise-${idx}-repetitions`, message: `Repetições do exercício ${idx + 1} deve ser entre 1 e 100` });
+    }
+    if (sel.weight < 0 || sel.weight > 500) {
+      errors.push({ field: `exercise-${idx}-weight`, message: `Peso do exercício ${idx + 1} deve ser entre 0 e 500kg` });
+    }
+  });
+
+  return { valid: errors.length === 0, errors };
+}
+
+// Valida formulário de aula
+function validateClassForm() {
+  const errors = [];
+  const name = document.getElementById("className").value.trim();
+  const date = document.getElementById("classDate").value;
+  const time = document.getElementById("classTime").value;
+  const limit = parseInt(document.getElementById("classLimit").value) || 0;
+
+  // Validação de nome
+  if (!name) {
+    errors.push({ field: "className", message: "Nome é obrigatório" });
+  } else if (name.length < 3) {
+    errors.push({ field: "className", message: "Nome deve ter no mínimo 3 caracteres" });
+  } else if (name.length > 100) {
+    errors.push({ field: "className", message: "Nome deve ter no máximo 100 caracteres" });
+  }
+
+  // Validação de data
+  if (!date) {
+    errors.push({ field: "classDate", message: "Data é obrigatória" });
+  } else {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (selectedDate < today) {
+      errors.push({ field: "classDate", message: "Data não pode ser no passado" });
+    }
+  }
+
+  // Validação de hora
+  if (!time) {
+    errors.push({ field: "classTime", message: "Hora é obrigatória" });
+  } else {
+    const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(time)) {
+      errors.push({ field: "classTime", message: "Hora inválida. Use formato HH:MM" });
+    }
+  }
+
+  // Validação de limite
+  if (!limit || limit < 1) {
+    errors.push({ field: "classLimit", message: "Limite de vagas deve ser no mínimo 1" });
+  } else if (limit > 1000) {
+    errors.push({ field: "classLimit", message: "Limite de vagas deve ser no máximo 1000" });
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+// Exibe erros de validação
+function showValidationErrors(errors) {
+  // Remove erros anteriores
+  document.querySelectorAll(".error-message").forEach(el => el.remove());
+  document.querySelectorAll(".invalid-input").forEach(el => el.classList.remove("invalid-input"));
+  document.querySelectorAll(".valid-input").forEach(el => el.classList.remove("valid-input"));
+
+  // Adiciona novos erros
+  errors.forEach(error => {
+    const field = document.getElementById(error.field);
+    if (field) {
+      field.classList.add("invalid-input");
+      const errorMsg = document.createElement("span");
+      errorMsg.className = "error-message";
+      errorMsg.textContent = error.message;
+      field.parentElement.appendChild(errorMsg);
+    }
+  });
+}
+
+// Limpa erros de validação
+function clearValidationErrors() {
+  document.querySelectorAll(".error-message").forEach(el => el.remove());
+  document.querySelectorAll(".invalid-input").forEach(el => el.classList.remove("invalid-input"));
+  document.querySelectorAll(".valid-input").forEach(el => el.classList.remove("valid-input"));
+}
+
 // Lógica do Modal de Confirmação
 let pendingConfirmAction = null;
 
@@ -39,6 +240,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
 
     if (sectionId === "create-exercise" || sectionId === "assign-workout")
       loadTemplates();
+    if (sectionId === "students") loadStudents();
     if (sectionId === "classes") loadClasses();
 
     // Reset edits when switching tabs
@@ -76,45 +278,465 @@ async function loadTemplates() {
       headers: { Authorization: `Bearer ${token}` },
     });
     templates = await res.json();
+    allExercisesForDetail = templates; // Para uso no modal de detalhes
     renderTemplates();
   } catch (e) {
     console.error(e);
   }
 }
 
+// Função unificada para renderizar cards de exercício
+function renderExerciseCard(exercise, options = {}) {
+  const {
+    showActions = false,
+    showDescription = true,
+    showStats = true,
+    showHint = false,
+    onClick = null,
+    cardClass = "template-card",
+    cardId = null,
+    allowDetailView = true
+  } = options;
+
+  // Determinar evento de clique apenas para seleção (não abre modal)
+  let clickHandler = "";
+  if (onClick) {
+    clickHandler = `onclick="${onClick}" style="cursor: pointer;"`;
+  }
+  
+  const idAttr = cardId ? `id="${cardId}"` : "";
+  
+  // Ícone de info para abrir modal de detalhes (sempre visível se allowDetailView)
+  const infoIcon = allowDetailView ? `
+    <button class="template-action-btn" 
+            title="Ver detalhes do exercício"
+                  onclick="event.stopPropagation(); event.preventDefault(); openExerciseDetailModal(${exercise.id}, event); return false;">
+      ℹ️
+    </button>
+  ` : "";
+  
+  return `
+    <div class="${cardClass}" ${clickHandler} ${idAttr}>
+      <h4>${exercise.name}</h4>
+      ${showDescription && exercise.description ? `<p class="exercise-info">${exercise.description}</p>` : ""}
+      ${showStats ? `
+        <div class="exercise-stats">
+          <span>📊 ${exercise.series || 0} séries x ${exercise.repetitions || 0} repetições</span>
+          <span>⚖️ ${exercise.weight || 0} kg</span>
+        </div>
+      ` : ""}
+      ${showHint ? `<p class="exercise-hint">Clique para selecionar e personalizar</p>` : ""}
+      ${(showActions || allowDetailView) ? `
+        <div class="template-actions" onclick="event.stopPropagation()">
+          ${infoIcon}
+          ${showActions ? `
+            <button class="template-action-btn" title="Editar" onclick="event.stopPropagation(); editTemplate(${exercise.id})">✏️</button>
+            <button class="template-action-btn" title="Excluir" onclick="event.stopPropagation(); deleteTemplate(${exercise.id})">🗑️</button>
+          ` : ""}
+        </div>
+      ` : ""}
+    </div>
+  `;
+}
+
+// Modal de detalhes do exercício
+let allExercisesForDetail = [];
+
+window.openExerciseDetailModal = (exerciseId, event) => {
+  // Prevenir que o evento feche outros modais
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  
+  const exercise = allExercisesForDetail.find(e => e.id === exerciseId) || 
+                  templates.find(t => t.id === exerciseId) ||
+                  allExercisesForTraining.find(e => e.id === exerciseId);
+  
+  if (!exercise) {
+    showAlert("Exercício não encontrado", "error");
+    return;
+  }
+
+  const content = document.getElementById("exerciseDetailContent");
+  if (!content) return;
+
+  content.innerHTML = `
+    <div style="padding: 1rem 0;">
+      <h3 style="color: #333; margin-bottom: 1rem; font-size: 1.5rem;">${exercise.name}</h3>
+      
+      <div style="margin-bottom: 1.5rem;">
+        <h4 style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">Descrição</h4>
+        <p style="color: #333; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%; hyphens: auto; overflow: hidden;">${exercise.description || "Sem descrição"}</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem;">
+        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Séries</div>
+          <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">${exercise.series || 0}</div>
+        </div>
+        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Repetições</div>
+          <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">${exercise.repetitions || 0}</div>
+        </div>
+        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Peso</div>
+          <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">${exercise.weight || 0} kg</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("exerciseDetailModal").classList.add("active");
+};
+
+window.closeExerciseDetailModal = () => {
+  document.getElementById("exerciseDetailModal").classList.remove("active");
+};
+
+// Variáveis de paginação e busca
+let templatesSearchFilter = "";
+let templatesCurrentPage = 1;
+let templatesPageSize = 12;
+let assignTemplatesSearchFilter = "";
+let assignTemplatesCurrentPage = 1;
+let studentsCurrentPage = 1;
+let studentsPageSize = 12;
+
 function renderTemplates() {
   const list = document.getElementById("templatesList");
   const assignList = document.getElementById("assignTemplatesList");
 
+  // Filtrar templates para gerenciamento
+  let filteredTemplates = templates;
+  if (templatesSearchFilter) {
+    const searchTerm = templatesSearchFilter.toLowerCase();
+    filteredTemplates = templates.filter(
+      (t) =>
+        (t.name || "").toLowerCase().includes(searchTerm) ||
+        (t.description || "").toLowerCase().includes(searchTerm)
+    );
+  }
+
+  // Paginar templates para gerenciamento
+  const totalPages = Math.ceil(filteredTemplates.length / templatesPageSize);
+  const startIndex = (templatesCurrentPage - 1) * templatesPageSize;
+  const paginatedTemplates = filteredTemplates.slice(
+    startIndex,
+    startIndex + templatesPageSize
+  );
+
   // Renderizar para Gerenciamento (Editar/Excluir)
-  list.innerHTML = templates
-    .map(
-      (t) => `
-        <div class="template-card" onclick="toggleSelection(this, ${t.id})">
-          <h4>${t.name}</h4>
-          <p>${t.series}x${t.repetitions} - ${t.weight}kg</p>
-          <p style="font-size:0.85rem; color:#666; margin-top:0.25rem;">${t.description || ''}</p>
-          <div class="template-actions" onclick="event.stopPropagation()">
-              <button class="template-action-btn" title="Editar" onclick="editTemplate(${t.id})">✏️</button>
-              <button class="template-action-btn" title="Excluir" onclick="deleteTemplate(${t.id})">🗑️</button>
-          </div>
-        </div>
-      `,
-    )
-    .join("");
+  if (list) {
+    if (paginatedTemplates.length === 0) {
+      list.innerHTML = "<p>Nenhum template encontrado.</p>";
+    } else {
+      list.innerHTML = paginatedTemplates
+        .map((t) => renderExerciseCard(t, {
+          showActions: true,
+          showDescription: true,
+          showStats: true,
+          showHint: false,
+          onClick: `event.stopPropagation(); toggleSelection(this, ${t.id})`,
+          allowDetailView: true
+        }))
+        .join("");
+    }
+    renderPagination("templatesPagination", templatesCurrentPage, totalPages, (page) => {
+      templatesCurrentPage = page;
+      renderTemplates();
+    });
+  }
+
+  // Filtrar templates para atribuição
+  let filteredAssignTemplates = templates;
+  if (assignTemplatesSearchFilter) {
+    const searchTerm = assignTemplatesSearchFilter.toLowerCase();
+    filteredAssignTemplates = templates.filter(
+      (t) =>
+        (t.name || "").toLowerCase().includes(searchTerm) ||
+        (t.description || "").toLowerCase().includes(searchTerm)
+    );
+  }
+
+  // Paginar templates para atribuição
+  const assignTotalPages = Math.ceil(filteredAssignTemplates.length / templatesPageSize);
+  const assignStartIndex = (assignTemplatesCurrentPage - 1) * templatesPageSize;
+  const paginatedAssignTemplates = filteredAssignTemplates.slice(
+    assignStartIndex,
+    assignStartIndex + templatesPageSize
+  );
 
   // Renderizar para Atribuição (Apenas Seleção)
-  assignList.innerHTML = templates
-    .map(
-      (t) => `
-        <div class="template-card" onclick="toggleSelection(this, ${t.id})">
-          <h4>${t.name}</h4>
-          <p>${t.series}x${t.repetitions} - ${t.weight}kg</p>
+  if (assignList) {
+    if (paginatedAssignTemplates.length === 0) {
+      assignList.innerHTML = "<p>Nenhum exercício encontrado.</p>";
+    } else {
+      assignList.innerHTML = paginatedAssignTemplates
+        .map((t) => renderExerciseCard(t, {
+          showActions: false,
+          showDescription: true,
+          showStats: true,
+          showHint: false,
+          onClick: `event.stopPropagation(); toggleSelection(this, ${t.id})`,
+          allowDetailView: true
+        }))
+        .join("");
+    }
+    renderPagination("assignTemplatesPagination", assignTemplatesCurrentPage, assignTotalPages, (page) => {
+      assignTemplatesCurrentPage = page;
+      renderTemplates();
+    });
+  }
+}
+
+// --- Students (cards + search) ---
+let allStudents = [];
+let filteredStudents = [];
+
+async function loadStudents() {
+  try {
+    const res = await fetch(`${API_URL}/instructor/students`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Erro ao carregar alunos");
+    allStudents = await res.json();
+    filteredStudents = allStudents;
+    renderStudents();
+  } catch (e) {
+    console.error(e);
+    const grid = document.getElementById("studentsGrid");
+    if (grid) grid.innerHTML = "<p>Erro ao carregar alunos.</p>";
+  }
+}
+
+function renderStudents() {
+  const grid = document.getElementById("studentsGrid");
+  if (!grid) return;
+
+  if (!filteredStudents || filteredStudents.length === 0) {
+    grid.innerHTML = "<p>Nenhum aluno encontrado.</p>";
+    renderPagination("studentsPagination", 1, 1, () => {});
+    return;
+  }
+
+  // Paginar alunos
+  const totalPages = Math.ceil(filteredStudents.length / studentsPageSize);
+  const startIndex = (studentsCurrentPage - 1) * studentsPageSize;
+  const paginatedStudents = filteredStudents.slice(
+    startIndex,
+    startIndex + studentsPageSize
+  );
+
+  grid.innerHTML = paginatedStudents
+    .map((s) => {
+      const name = s.name || s.nome || "Aluno";
+      const email = s.email || "";
+      return `
+        <div class="student-card" onclick="openStudent(${s.id})">
+          <h4>${name}</h4>
+          <p>${email}</p>
         </div>
-      `,
-    )
+      `;
+    })
+    .join("");
+
+  renderPagination("studentsPagination", studentsCurrentPage, totalPages, (page) => {
+    studentsCurrentPage = page;
+    renderStudents();
+  });
+}
+
+// --- Modal Detalhes do Aluno ---
+let currentStudentId = null;
+let studentTrainings = [];
+let allExercisesForTraining = [];
+let selectedExercises = []; // Array de { exerciseId, series, repetitions, weight }
+window.selectedExercises = selectedExercises; // Tornar acessível globalmente
+let isEditingTraining = false;
+let currentTrainingId = null;
+
+window.openStudent = async (studentId) => {
+  currentStudentId = studentId;
+  await openStudentDetailModal(studentId);
+};
+
+async function openStudentDetailModal(studentId) {
+  currentStudentId = studentId;
+  document.getElementById("studentDetailModal").classList.add("active");
+  await Promise.all([loadStudentData(studentId), loadStudentTrainings(studentId), loadExercisesForTraining()]);
+}
+
+function closeStudentDetailModal() {
+  document.getElementById("studentDetailModal").classList.remove("active");
+  currentStudentId = null;
+  studentTrainings = [];
+}
+
+async function loadStudentData(studentId) {
+  try {
+    const res = await fetch(`${API_URL}/instructor/students/${studentId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Erro ao carregar aluno");
+    const student = await res.json();
+    document.getElementById("studentName").textContent = student.name || student.nome || "Aluno";
+    document.getElementById("studentEmail").textContent = student.email ? `📧 ${student.email}` : "";
+    const phoneElement = document.getElementById("studentPhone");
+    if (phoneElement) {
+      phoneElement.textContent = student.phone ? `📞 ${student.phone}` : "";
+    }
+  } catch (e) {
+    console.error(e);
+    showStudentAlert("Erro ao carregar dados do aluno", "error");
+  }
+}
+
+async function loadStudentTrainings(studentId) {
+  try {
+    const res = await fetch(`${API_URL}/instructor/students/${studentId}/trainings`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Erro ao carregar treinos");
+    studentTrainings = await res.json();
+    renderStudentTrainings();
+  } catch (e) {
+    console.error(e);
+    showStudentAlert("Erro ao carregar treinos", "error");
+  }
+}
+
+async function loadExercisesForTraining() {
+  try {
+    const res = await fetch(`${API_URL}/instructor/exercises`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Erro ao carregar exercícios");
+    allExercisesForTraining = await res.json();
+    allExercisesForDetail = allExercisesForTraining; // Para uso no modal de detalhes
+  } catch (e) {
+    console.error(e);
+    showStudentAlert("Erro ao carregar exercícios", "error");
+  }
+}
+
+function renderStudentTrainings() {
+  const grid = document.getElementById("trainingsGrid");
+  if (!grid) return;
+  
+  if (!studentTrainings || studentTrainings.length === 0) {
+    grid.innerHTML = "<p>Nenhum treino cadastrado.</p>";
+    return;
+  }
+
+  grid.innerHTML = studentTrainings
+    .map((t) => {
+      const exerciseCount = t.exercises ? t.exercises.length : 0;
+      return `
+        <div class="training-card" onclick="openEditTrainingModal(${t.id})">
+          <h3>${t.name || "Treino"}</h3>
+          <p>📋 ${exerciseCount} exercício${exerciseCount !== 1 ? "s" : ""}</p>
+          <p style="color: #999; font-size: 0.85rem;">Clique para editar</p>
+        </div>
+      `;
+    })
     .join("");
 }
+
+function showStudentAlert(msg, type = "success") {
+  const el = document.getElementById("studentAlert");
+  if (!el) return;
+  el.className = `alert alert-${type} show`;
+  el.textContent = msg;
+  setTimeout(() => el.classList.remove("show"), 3000);
+}
+
+const studentsSearchInput = document.getElementById("studentsSearch");
+// Função de paginação
+function renderPagination(containerId, currentPage, totalPages, onPageChange) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (totalPages <= 1) {
+    container.innerHTML = "";
+    return;
+  }
+
+  let paginationHTML = '<div class="pagination-controls">';
+  
+  // Botão anterior
+  if (currentPage > 1) {
+    paginationHTML += `<button class="pagination-btn" onclick="(${onPageChange.toString()})(${currentPage - 1})">« Anterior</button>`;
+  }
+
+  // Números de página
+  const maxVisible = 5;
+  let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+  let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+  
+  if (endPage - startPage < maxVisible - 1) {
+    startPage = Math.max(1, endPage - maxVisible + 1);
+  }
+
+  if (startPage > 1) {
+    paginationHTML += `<button class="pagination-btn" onclick="(${onPageChange.toString()})(1)">1</button>`;
+    if (startPage > 2) {
+      paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+    }
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    if (i === currentPage) {
+      paginationHTML += `<button class="pagination-btn active">${i}</button>`;
+    } else {
+      paginationHTML += `<button class="pagination-btn" onclick="(${onPageChange.toString()})(${i})">${i}</button>`;
+    }
+  }
+
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+    }
+    paginationHTML += `<button class="pagination-btn" onclick="(${onPageChange.toString()})(${totalPages})">${totalPages}</button>`;
+  }
+
+  // Botão próximo
+  if (currentPage < totalPages) {
+    paginationHTML += `<button class="pagination-btn" onclick="(${onPageChange.toString()})(${currentPage + 1})">Próximo »</button>`;
+  }
+
+  paginationHTML += '</div>';
+  container.innerHTML = paginationHTML;
+}
+
+// Event listeners para busca
+document.getElementById("studentsSearch")?.addEventListener("input", (e) => {
+  const term = e.target.value.toLowerCase();
+  filteredStudents = allStudents.filter(
+    (s) =>
+      (s.name || s.nome || "").toLowerCase().includes(term) ||
+      (s.email || "").toLowerCase().includes(term)
+  );
+  studentsCurrentPage = 1; // Resetar para primeira página
+  renderStudents();
+});
+
+// Busca de templates na aba de criar exercício
+const templatesSearchInput = document.getElementById("templatesSearch");
+if (templatesSearchInput) {
+  templatesSearchInput.addEventListener("input", (e) => {
+    templatesSearchFilter = e.target.value;
+    templatesCurrentPage = 1; // Resetar para primeira página
+    renderTemplates();
+  });
+}
+
+// Busca de templates na aba de atribuir treino
+document.getElementById("assignExerciseSearch")?.addEventListener("input", (e) => {
+  assignTemplatesSearchFilter = e.target.value;
+  assignTemplatesCurrentPage = 1; // Resetar para primeira página
+  renderTemplates();
+});
 
 // Lógica de Edição/Exclusão
 window.editTemplate = (id) => {
@@ -128,10 +750,19 @@ window.editTemplate = (id) => {
   document.getElementById("exRepetitions").value = t.repetitions;
   document.getElementById("exWeight").value = t.weight;
 
+  // Atualizar contador de caracteres
+  const counter = document.getElementById("exDescriptionCounter");
+  if (counter) {
+    const length = (t.description || "").length;
+    counter.textContent = `${length}/500 caracteres`;
+    counter.className = "char-counter" + (length > 450 ? " warning" : "");
+  }
+
   document.getElementById("formTitle").textContent = "Editar Template";
   document.getElementById("saveBtn").textContent = "Atualizar Template";
   document.getElementById("cancelEditBtn").style.display = "inline-block";
 
+  clearValidationErrors();
   document.querySelector(".main-content").scrollTop = 0; // Scroll to top
 };
 
@@ -143,6 +774,9 @@ window.cancelEdit = () => {
     "Criar Template de Exercício";
   document.getElementById("saveBtn").textContent = "Salvar Template";
   document.getElementById("cancelEditBtn").style.display = "none";
+  clearValidationErrors();
+  const counter = document.getElementById("exDescriptionCounter");
+  if (counter) counter.textContent = "0/500 caracteres";
 };
 
 window.deleteTemplate = async (id) => {
@@ -167,14 +801,54 @@ window.deleteTemplate = async (id) => {
   );
 };
 
+// Máscaras e validações em tempo real - Formulário de Exercício
+document.getElementById("exSeries")?.addEventListener("input", (e) => {
+  const sanitized = sanitizeNumberInput(e.target.value, { max: 20, min: 1 });
+  e.target.value = sanitized;
+  clearValidationErrors();
+});
+
+document.getElementById("exRepetitions")?.addEventListener("input", (e) => {
+  const sanitized = sanitizeNumberInput(e.target.value, { max: 100, min: 1 });
+  e.target.value = sanitized;
+  clearValidationErrors();
+});
+
+document.getElementById("exWeight")?.addEventListener("input", (e) => {
+  const sanitized = sanitizeNumberInput(e.target.value, { allowDecimals: true, max: 500, min: 0, step: 0.5 });
+  e.target.value = sanitized;
+  clearValidationErrors();
+});
+
+document.getElementById("exDescription")?.addEventListener("input", (e) => {
+  const length = e.target.value.length;
+  const counter = document.getElementById("exDescriptionCounter");
+  if (counter) {
+    counter.textContent = `${length}/500 caracteres`;
+    counter.className = "char-counter" + (length > 450 ? " warning" : length > 500 ? " error" : "");
+  }
+  clearValidationErrors();
+});
+
 document
   .getElementById("createExerciseForm")
   .addEventListener("submit", async (e) => {
     e.preventDefault();
+    
+    // Validação
+    const validation = validateExerciseForm();
+    if (!validation.valid) {
+      showValidationErrors(validation.errors);
+      showAlert("Corrija os erros no formulário", "error");
+      return;
+    }
+
+    clearValidationErrors();
+    
     const id = document.getElementById("exId").value;
     const data = {
-      name: document.getElementById("exName").value,
-      description: document.getElementById("exDescription").value,
+      name: document.getElementById("exName").value.trim(),
+      description: document.getElementById("exDescription").value.trim(),
       series: parseInt(document.getElementById("exSeries").value),
       repetitions: parseInt(document.getElementById("exRepetitions").value),
       weight: parseFloat(document.getElementById("exWeight").value),
@@ -281,7 +955,12 @@ document
   .addEventListener("submit", async (e) => {
     e.preventDefault();
     const studentId = document.getElementById("studentSelect").value;
-    const type = document.getElementById("trainingType").value;
+    const trainingName = document.getElementById("trainingNameAssign")?.value.trim() || "";
+    
+    if (!trainingName) {
+      showAlert("Nome do treino é obrigatório", "error");
+      return;
+    }
 
     if (!studentId) return showAlert("Selecione um aluno", "error");
     if (selectedTemplateIds.length === 0)
@@ -290,7 +969,7 @@ document
     try {
       // 1. Criar o treino
       const trainingData = {
-        name: `Treino ${type}`,
+        name: trainingName,
         userIds: [parseInt(studentId)]
       };
 
@@ -429,7 +1108,6 @@ async function renderClasses() {
     .join("");
 }
 
-// CORREÇÃO: Setar data mínima ao criar aula
 window.openCreateClassTab = () => {
   document.querySelector('[data-section="create-class"]').click();
   
@@ -454,11 +1132,48 @@ function validateDate(inputElement) {
   }
 }
 
-// CORREÇÃO: Create/Edit Class Form com validação de data
+// Máscaras e validações em tempo real - Formulário de Aula
+document.getElementById("classLimit")?.addEventListener("input", (e) => {
+  const sanitized = sanitizeNumberInput(e.target.value, { max: 1000, min: 1 });
+  e.target.value = sanitized;
+  clearValidationErrors();
+});
+
+document.getElementById("classDate")?.addEventListener("change", (e) => {
+  const selectedDate = new Date(e.target.value);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (selectedDate < today) {
+    e.target.classList.add("invalid-input");
+    const errorMsg = document.createElement("span");
+    errorMsg.className = "error-message";
+    errorMsg.textContent = "Data não pode ser no passado";
+    if (!e.target.parentElement.querySelector(".error-message")) {
+      e.target.parentElement.appendChild(errorMsg);
+    }
+  } else {
+    e.target.classList.remove("invalid-input");
+    const errorMsg = e.target.parentElement.querySelector(".error-message");
+    if (errorMsg) errorMsg.remove();
+  }
+});
+
+// Create/Edit Class Form
 document
   .getElementById("createClassForm")
   .addEventListener("submit", async (e) => {
     e.preventDefault();
+    
+    // Validação
+    const validation = validateClassForm();
+    if (!validation.valid) {
+      showValidationErrors(validation.errors);
+      showAlert("Corrija os erros no formulário", "error");
+      return;
+    }
+
+    clearValidationErrors();
+    
     const id = document.getElementById("classId").value;
     const dateInput = document.getElementById("classDate");
     const dateValue = dateInput.value;
@@ -563,7 +1278,6 @@ window.deleteClass = async (id) => {
   );
 };
 
-// --- NOVO: Modal de Detalhes da Aula ---
 let currentClassInModal = null;
 
 async function openClassDetailsModal(classId) {
@@ -633,7 +1347,6 @@ document.getElementById("editClassForm").addEventListener("submit", async (e) =>
   const dateInput = document.getElementById("detailsClassDate");
   const dateValue = dateInput.value;
   
-  // VALIDAÇÃO: Não permitir datas passadas
   if (!validateDate(dateInput)) {
     showAlert("Não é possível agendar aulas para datas passadas!", "error");
     dateInput.reportValidity(); // Mostrar mensagem customizada
@@ -701,3 +1414,451 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// --- Modal Criar/Editar Treino (do aluno) ---
+let exerciseSearchFilter = "";
+
+function renderAvailableExercises() {
+  const grid = document.getElementById("availableExercisesGrid");
+  if (!grid) return;
+  
+  if (!allExercisesForTraining || allExercisesForTraining.length === 0) {
+    grid.innerHTML = "<p>Nenhum exercício disponível. Crie exercícios primeiro.</p>";
+    return;
+  }
+
+  // Filtrar exercícios baseado na busca
+  const filteredExercises = exerciseSearchFilter
+    ? allExercisesForTraining.filter((ex) => {
+        const searchTerm = exerciseSearchFilter.toLowerCase();
+        return (
+          (ex.name || "").toLowerCase().includes(searchTerm) ||
+          (ex.description || "").toLowerCase().includes(searchTerm)
+        );
+      })
+    : allExercisesForTraining;
+
+  if (filteredExercises.length === 0) {
+    grid.innerHTML = "<p>Nenhum exercício encontrado com o termo de busca.</p>";
+    return;
+  }
+
+  grid.innerHTML = filteredExercises
+    .map((ex) => `
+      <div class="modal-exercise-card" id="ex-card-${ex.id}" 
+           onclick="toggleExerciseSelection(${ex.id})"
+           style="cursor: pointer;">
+        <h4>${ex.name}</h4>
+        ${ex.description ? `<p class="exercise-info">${ex.description}</p>` : ""}
+        <div class="exercise-stats">
+          <span>📊 ${ex.series || 0} séries x ${ex.repetitions || 0} repetições</span>
+          <span>⚖️ ${ex.weight || 0} kg</span>
+        </div>
+        <p class="exercise-hint">Clique para selecionar e personalizar</p>
+        <div class="template-actions" onclick="event.stopPropagation()">
+          <button class="template-action-btn" 
+                  title="Ver detalhes do exercício"
+                  onclick="event.stopPropagation(); event.preventDefault(); openExerciseDetailModal(${ex.id}, event); return false;">
+            ℹ️
+          </button>
+        </div>
+      </div>
+    `)
+    .join("");
+}
+
+// Event listener para busca de exercícios (adicionado dinamicamente quando necessário)
+function setupExerciseSearchListener() {
+  const searchInput = document.getElementById("exerciseSearchInput");
+  if (searchInput && !searchInput.hasAttribute("data-listener-attached")) {
+    searchInput.setAttribute("data-listener-attached", "true");
+    searchInput.addEventListener("input", (e) => {
+      exerciseSearchFilter = e.target.value;
+      renderAvailableExercises();
+    });
+  }
+}
+
+window.toggleExerciseSelection = (exerciseId) => {
+  const exercise = allExercisesForTraining.find((e) => e.id === exerciseId);
+  if (!exercise) return;
+
+  const card = document.getElementById(`ex-card-${exerciseId}`);
+  const index = selectedExercises.findIndex((e) => e.exerciseId === exerciseId);
+
+  if (index >= 0) {
+    // Remover
+    selectedExercises.splice(index, 1);
+    if (card) card.classList.remove("selected");
+  } else {
+    // Adicionar com valores padrão do template
+    selectedExercises.push({
+      exerciseId: exerciseId,
+      series: exercise.series || 3,
+      repetitions: exercise.repetitions || 12,
+      weight: exercise.weight || 0,
+    });
+    if (card) card.classList.add("selected");
+  }
+
+  // Atualizar referência global
+  window.selectedExercises = selectedExercises;
+  console.log("Exercícios após toggle:", selectedExercises);
+  console.log("Quantidade após toggle:", selectedExercises.length);
+
+  renderSelectedExercises();
+};
+
+function renderSelectedExercises() {
+  const list = document.getElementById("selectedExercisesList");
+  if (!list) return;
+  
+  if (selectedExercises.length === 0) {
+    list.innerHTML = "<p style='color: #666;'>Nenhum exercício selecionado</p>";
+    return;
+  }
+
+  list.innerHTML = selectedExercises
+    .map((sel, idx) => {
+      const exercise = allExercisesForTraining.find((e) => e.id === sel.exerciseId);
+      if (!exercise) return "";
+
+      return `
+        <div class="exercise-item">
+          <div class="exercise-item-info">
+            <h4>${exercise.name}</h4>
+          </div>
+          <div class="exercise-item-params">
+            <div class="param-group">
+              <label>Séries</label>
+              <input
+                type="number"
+                min="1"
+                max="20"
+                value="${sel.series}"
+                oninput="const val = sanitizeNumberInput(this.value, { max: 20, min: 1 }); this.value = val; updateExerciseParam(${idx}, 'series', val)"
+              />
+            </div>
+            <div class="param-group">
+              <label>Repetições</label>
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value="${sel.repetitions}"
+                oninput="const val = sanitizeNumberInput(this.value, { max: 100, min: 1 }); this.value = val; updateExerciseParam(${idx}, 'repetitions', val)"
+              />
+            </div>
+            <div class="param-group">
+              <label>Carga (kg)</label>
+              <select onchange="updateExerciseParam(${idx}, 'weight', this.value)">
+                ${generateWeightOptions(sel.weight)}
+              </select>
+            </div>
+            <button
+              type="button"
+              class="remove-exercise-btn"
+              onclick="removeExerciseFromSelection(${idx})"
+            >
+              Remover
+            </button>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function generateWeightOptions(currentWeight) {
+  const options = [];
+  for (let i = 0; i <= 500; i += 2.5) {
+    options.push(
+      `<option value="${i}" ${i === currentWeight ? "selected" : ""}>${i} kg</option>`
+    );
+  }
+  return options.join("");
+}
+
+window.updateExerciseParam = (index, param, value) => {
+  if (selectedExercises[index]) {
+    if (param === "weight") {
+      const sanitized = sanitizeNumberInput(value, { allowDecimals: true, max: 500, min: 0, step: 0.5 });
+      selectedExercises[index][param] = parseFloat(sanitized);
+    } else if (param === "series") {
+      const sanitized = sanitizeNumberInput(value, { max: 20, min: 1 });
+      selectedExercises[index][param] = parseInt(sanitized);
+    } else if (param === "repetitions") {
+      const sanitized = sanitizeNumberInput(value, { max: 100, min: 1 });
+      selectedExercises[index][param] = parseInt(sanitized);
+    }
+    window.selectedExercises = selectedExercises; // Atualizar referência global
+  }
+};
+
+window.removeExerciseFromSelection = (index) => {
+  const exerciseId = selectedExercises[index].exerciseId;
+  selectedExercises.splice(index, 1);
+  window.selectedExercises = selectedExercises; // Atualizar referência global
+  const card = document.getElementById(`ex-card-${exerciseId}`);
+  if (card) card.classList.remove("selected");
+  renderSelectedExercises();
+};
+
+window.openCreateTrainingModal = () => {
+  if (!currentStudentId) return;
+  isEditingTraining = false;
+  currentTrainingId = null;
+  selectedExercises = [];
+  window.selectedExercises = selectedExercises; // Atualizar referência global
+  exerciseSearchFilter = ""; // Limpar filtro de busca
+  document.getElementById("modalTitle").textContent = "Criar Treino";
+  document.getElementById("trainingId").value = "";
+  document.getElementById("trainingName").value = "";
+  document.getElementById("deleteTrainingBtn").style.display = "none";
+  const searchInput = document.getElementById("exerciseSearchInput");
+  if (searchInput) searchInput.value = "";
+  setupExerciseSearchListener(); // Configurar listener de busca
+  document.getElementById("trainingModal").classList.add("active");
+  renderAvailableExercises();
+  renderSelectedExercises();
+};
+
+window.openEditTrainingModal = async (trainingId) => {
+  try {
+    isEditingTraining = true;
+    currentTrainingId = trainingId;
+    const training = studentTrainings.find((t) => t.id === trainingId);
+    if (!training) {
+      showStudentAlert("Treino não encontrado", "error");
+      return;
+    }
+
+    // Carregar detalhes completos do treino (com exercícios e parâmetros)
+    const res = await fetch(`${API_URL}/instructor/trainings/${trainingId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Erro ao carregar treino");
+
+    const fullTraining = await res.json();
+
+    document.getElementById("modalTitle").textContent = "Editar Treino";
+    document.getElementById("trainingId").value = trainingId;
+    document.getElementById("trainingName").value = fullTraining.name || "";
+    document.getElementById("deleteTrainingBtn").style.display = "inline-block";
+    exerciseSearchFilter = ""; // Limpar filtro de busca
+    const searchInput = document.getElementById("exerciseSearchInput");
+    if (searchInput) searchInput.value = "";
+    setupExerciseSearchListener(); // Configurar listener de busca
+
+    // Preencher exercícios selecionados com seus parâmetros
+    selectedExercises = [];
+    if (fullTraining.exercises && fullTraining.exercises.length > 0) {
+      for (const ex of fullTraining.exercises) {
+        selectedExercises.push({
+          exerciseId: ex.id,
+          series: ex.series || 3,
+          repetitions: ex.repetitions || 12,
+          weight: ex.weight || 0,
+        });
+      }
+    }
+    window.selectedExercises = selectedExercises; // Atualizar referência global
+
+    renderAvailableExercises();
+    renderSelectedExercises();
+    document.getElementById("trainingModal").classList.add("active");
+  } catch (e) {
+    console.error(e);
+    showStudentAlert("Erro ao carregar treino", "error");
+  }
+};
+
+window.closeTrainingModal = () => {
+  document.getElementById("trainingModal").classList.remove("active");
+  selectedExercises = [];
+  isEditingTraining = false;
+  currentTrainingId = null;
+};
+
+window.deleteTraining = async () => {
+  if (!currentTrainingId) return;
+
+  if (!confirm("Tem certeza que deseja deletar este treino?")) return;
+
+  try {
+    const res = await fetch(`${API_URL}/instructor/trainings/${currentTrainingId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.ok) {
+      showStudentAlert("Treino deletado com sucesso!");
+      closeTrainingModal();
+      await loadStudentTrainings(currentStudentId);
+    } else {
+      const err = await res.json();
+      showStudentAlert(err.error || "Erro ao deletar treino", "error");
+    }
+  } catch (e) {
+    console.error(e);
+    showStudentAlert("Erro ao deletar treino", "error");
+  }
+};
+
+// Event listener do formulário de treino
+document.getElementById("trainingForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  // Debug: verificar exercícios selecionados
+  console.log("Exercícios selecionados:", selectedExercises);
+  console.log("Quantidade:", selectedExercises.length);
+
+  // Validação
+  const validation = validateTrainingForm();
+  if (!validation.valid) {
+    console.log("Erros de validação:", validation.errors);
+    validation.errors.forEach(err => {
+      showStudentAlert(err.message, "error");
+    });
+    return;
+  }
+
+  const name = document.getElementById("trainingName").value.trim();
+
+  try {
+    if (isEditingTraining && currentTrainingId) {
+      // Atualizar treino existente
+      const updateRes = await fetch(`${API_URL}/instructor/trainings/${currentTrainingId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name }),
+      });
+
+      if (!updateRes.ok) {
+        const err = await updateRes.json();
+        throw new Error(err.error || "Erro ao atualizar treino");
+      }
+
+      // Buscar exercícios atuais do treino
+      const currentRes = await fetch(`${API_URL}/instructor/trainings/${currentTrainingId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const currentTraining = await currentRes.json();
+      const currentExerciseIds = currentTraining.exercises
+        ? currentTraining.exercises.map((e) => e.id)
+        : [];
+
+      const newExerciseIds = selectedExercises.map((e) => e.exerciseId);
+
+      // Remover exercícios que não estão mais selecionados
+      for (const exId of currentExerciseIds) {
+        if (!newExerciseIds.includes(exId)) {
+          await fetch(
+            `${API_URL}/instructor/trainings/${currentTrainingId}/exercises/${exId}`,
+            {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+        }
+      }
+
+      // Adicionar/atualizar exercícios selecionados
+      for (const sel of selectedExercises) {
+        const exists = currentExerciseIds.includes(sel.exerciseId);
+        if (!exists) {
+          await fetch(`${API_URL}/instructor/trainings/${currentTrainingId}/exercises`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ exerciseId: sel.exerciseId }),
+          });
+        }
+
+        // Atualizar parâmetros do exercício no treino
+        await fetch(
+          `${API_URL}/instructor/trainings/${currentTrainingId}/exercises/${sel.exerciseId}`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              series: sel.series,
+              repetitions: sel.repetitions,
+              weight: sel.weight,
+            }),
+          }
+        );
+      }
+
+      showStudentAlert("Treino atualizado com sucesso!");
+    } else {
+      // Criar novo treino
+      const createRes = await fetch(`${API_URL}/instructor/trainings`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          userIds: [parseInt(currentStudentId)],
+        }),
+      });
+
+      if (!createRes.ok) {
+        const err = await createRes.json();
+        throw new Error(err.error || "Erro ao criar treino");
+      }
+
+      const newTraining = await createRes.json();
+
+      // Adicionar exercícios com parâmetros
+      for (const sel of selectedExercises) {
+        await fetch(`${API_URL}/instructor/trainings/${newTraining.id}/exercises`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ exerciseId: sel.exerciseId }),
+        });
+
+        await fetch(
+          `${API_URL}/instructor/trainings/${newTraining.id}/exercises/${sel.exerciseId}`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              series: sel.series,
+              repetitions: sel.repetitions,
+              weight: sel.weight,
+            }),
+          }
+        );
+      }
+
+      showStudentAlert("Treino criado com sucesso!");
+    }
+
+    closeTrainingModal();
+    await loadStudentTrainings(currentStudentId);
+  } catch (e) {
+    console.error(e);
+    showStudentAlert(e.message || "Erro ao salvar treino", "error");
+  }
+});
+
+loadUserInfo();
+loadTemplates();
+loadStudents();
