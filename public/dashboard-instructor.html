@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - Instrutor</title>
-    <link rel="stylesheet" href="dashboard-instructor.css" />
+    <link rel="stylesheet" href="./css/dashboard-instructor.css" />
   </head>
   <body>
     <div class="container">
@@ -306,9 +306,15 @@
             </button>
             <button type="submit" class="btn btn-primary">
               💾 Salvar Alterações
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Modal Detalhes do Aluno -->
-    <div class="modal" id="studentDetailModal">
-      <div class="modal-content student-modal-content">
+    <div class="modal" id="studentDetailModal" onclick="if(event.target === this) closeStudentDetailModal()">
+      <div class="modal-content student-modal-content" onclick="event.stopPropagation()">
         <div class="modal-header">
           <h2>Detalhes do Aluno</h2>
           <button class="close-btn" onclick="closeStudentDetailModal()">&times;</button>
@@ -400,6 +406,6 @@
       </div>
     </div>
 
-    <script src="dashboard-instructor.js"></script>
+    <script src="./js/dashboard-instructor.js"></script>
   </body>
 </html>

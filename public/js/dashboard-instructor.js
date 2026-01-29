@@ -90,11 +90,6 @@ function validateTrainingForm() {
   const name = document.getElementById("trainingName")?.value.trim() || "";
   // Acessa a variável selectedExercises do escopo do módulo ou global
   const exercises = selectedExercises || window.selectedExercises || [];
-  
-  console.log("Validação - selectedExercises (módulo):", selectedExercises);
-  console.log("Validação - window.selectedExercises:", window.selectedExercises);
-  console.log("Validação - exercises (usado):", exercises);
-  console.log("Validação - quantidade:", exercises.length);
 
   // Validação de nome
   if (!name) {
@@ -563,15 +558,27 @@ window.openStudent = async (studentId) => {
 
 async function openStudentDetailModal(studentId) {
   currentStudentId = studentId;
-  document.getElementById("studentDetailModal").classList.add("active");
-  await Promise.all([loadStudentData(studentId), loadStudentTrainings(studentId), loadExercisesForTraining()]);
+  const modal = document.getElementById("studentDetailModal");
+  if (!modal) {
+    console.error("Modal studentDetailModal não encontrado");
+    return;
+  }
+  modal.classList.add("active");
+  await Promise.all([
+    loadStudentData(studentId),
+    loadStudentTrainings(studentId),
+    loadExercisesForTraining(),
+  ]);
 }
 
-function closeStudentDetailModal() {
-  document.getElementById("studentDetailModal").classList.remove("active");
+window.closeStudentDetailModal = function () {
+  const modal = document.getElementById("studentDetailModal");
+  if (modal) {
+    modal.classList.remove("active");
+  }
   currentStudentId = null;
   studentTrainings = [];
-}
+};
 
 async function loadStudentData(studentId) {
   try {
@@ -1077,7 +1084,6 @@ async function renderClasses() {
         }
         
         const students = await res.json();
-        console.log(`Aula ${c.id} (${c.name}): ${students.length} alunos`, students);
         return { ...c, enrolledCount: students.length || 0 };
       } catch (e) {
         console.error(`Erro ao buscar alunos da aula ${c.id}:`, e);
@@ -1308,7 +1314,6 @@ async function openClassDetailsModal(classId) {
     }
     
     const students = await res.json();
-    console.log("Alunos inscritos na aula:", students); // DEBUG
     
     const studentsList = document.getElementById("enrolledStudentsList");
     if (!students || students.length === 0) {
@@ -1503,8 +1508,6 @@ window.toggleExerciseSelection = (exerciseId) => {
 
   // Atualizar referência global
   window.selectedExercises = selectedExercises;
-  console.log("Exercícios após toggle:", selectedExercises);
-  console.log("Quantidade após toggle:", selectedExercises.length);
 
   renderSelectedExercises();
 };
@@ -1709,14 +1712,9 @@ window.deleteTraining = async () => {
 document.getElementById("trainingForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // Debug: verificar exercícios selecionados
-  console.log("Exercícios selecionados:", selectedExercises);
-  console.log("Quantidade:", selectedExercises.length);
-
   // Validação
   const validation = validateTrainingForm();
   if (!validation.valid) {
-    console.log("Erros de validação:", validation.errors);
     validation.errors.forEach(err => {
       showStudentAlert(err.message, "error");
     });
