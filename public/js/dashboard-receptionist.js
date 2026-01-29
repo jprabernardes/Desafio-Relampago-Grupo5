@@ -3,6 +3,7 @@
 let currentTab = "overview";
 let allUsers = [];
 let filteredUsers = [];
+let paginator = null; // ⭐ NOVO: Instância do paginador
 
 const API_URL = "/api";
 
@@ -149,7 +150,7 @@ async function loadMetrics() {
   }
 }
 
-// Load Users (Students or Instructors)
+// ⭐ MODIFICADO: Load Users com Paginação
 async function loadUsers(type) {
   let endpoint = "";
   if (type === "students") endpoint = "/receptionist/students";
@@ -167,14 +168,24 @@ async function loadUsers(type) {
       id: u.id,
       nome: u.name || u.nome,
       email: u.email,
-      cpf: u.document || u.cpf, // if backend provides it
+      cpf: u.document || u.cpf,
       phone: u.phone,
-      // Specifics
       plan: u.plan_type || u.plan || "mensal",
     }));
 
-    filteredUsers = allUsers;
-    renderTable();
+    filteredUsers = [...allUsers];
+
+    // ⭐ NOVO: Inicializar ou atualizar paginador
+    if (!paginator) {
+      paginator = new Paginator(filteredUsers, 10, renderTablePage);
+    } else {
+      paginator.updateItems(filteredUsers);
+    }
+
+    // ⭐ NOVO: Ir para primeira página e renderizar controles
+    paginator.goToPage(1);
+    paginator.render('paginationContainer');
+
   } catch (err) {
     console.error(err);
     document.getElementById("usersTable").innerHTML =
@@ -182,16 +193,18 @@ async function loadUsers(type) {
   }
 }
 
-function renderTable() {
+// ⭐ NOVO: Função para renderizar página de usuários
+function renderTablePage(pageItems) {
   const tbody = document.getElementById("usersTable");
-  if (filteredUsers.length === 0) {
+  
+  if (pageItems.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="5" style="text-align: center;">Nenhum registro encontrado.</td></tr>';
+      '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #666;">Nenhum registro encontrado.</td></tr>';
     return;
   }
 
   if (currentTab === "students") {
-    tbody.innerHTML = filteredUsers
+    tbody.innerHTML = pageItems
       .map(
         (u) => `
             <tr>
@@ -199,22 +212,21 @@ function renderTable() {
                 <td>${u.email}</td>
                 <td><span class="plan-badge plan-${u.plan}">${u.plan}</span></td>
                 <td>
-                    <button class="btn btn-primary" onclick="openEditModal(${u.id})">Editar</button>
-                    <!-- No delete for now -->
+                    <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
                 </td>
             </tr>
         `,
       )
       .join("");
   } else if (currentTab === "instructors") {
-    tbody.innerHTML = filteredUsers
+    tbody.innerHTML = pageItems
       .map(
         (u) => `
             <tr>
                 <td>${u.nome}</td>
                 <td>${u.email}</td>
                 <td>
-                    <button class="btn btn-primary" onclick="openEditModal(${u.id})">Editar</button>
+                    <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
                 </td>
             </tr>
         `,
@@ -223,15 +235,25 @@ function renderTable() {
   }
 }
 
-// Search
+// ⭐ MODIFICADO: Search com Paginação
 function handleSearch() {
-  const term = document.getElementById("searchInput").value.toLowerCase();
-  filteredUsers = allUsers.filter(
-    (u) =>
-      u.nome.toLowerCase().includes(term) ||
-      u.email.toLowerCase().includes(term),
-  );
-  renderTable();
+  const term = document.getElementById("searchInput").value.toLowerCase().trim();
+  
+  if (!term) {
+    filteredUsers = [...allUsers];
+  } else {
+    filteredUsers = allUsers.filter(
+      (u) =>
+        u.nome.toLowerCase().includes(term) ||
+        u.email.toLowerCase().includes(term),
+    );
+  }
+  
+  // ⭐ NOVO: Atualizar paginação
+  if (paginator) {
+    paginator.updateItems(filteredUsers);
+    paginator.render('paginationContainer');
+  }
 }
 
 // --- Modals ---
@@ -271,7 +293,7 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
     body.planType = document.getElementById("addTipoPlano").value;
     endpoint = "/receptionist/students";
   } else {
-    body.role = "instrutor"; // Forced by our context
+    body.role = "instrutor";
     endpoint = "/receptionist/instructors";
   }
 
@@ -321,7 +343,7 @@ function openEditModal(id) {
 
   if (isStudent) {
     document.getElementById("editTipoPlano").value =
-      userToEdit.plan.toLowerCase(); // Ensure Case match
+      userToEdit.plan.toLowerCase();
   }
 
   document.getElementById("editModal").classList.add("active");
@@ -344,19 +366,6 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
   if (currentTab === "students") {
     body.planType = document.getElementById("editTipoPlano").value;
   }
-
-  // We use the same generic user update endpoint or specific ones?
-  // Admin uses PUT /users/:id. Receptionist routes might not have PUT /receptionist/students/:id exposed?
-  // Let's check routes.
-  // If NO specific update route exists for receptionist, we might need to add it or use the generic one if authorized using a separate endpoint.
-  // Wait, the TASK said "Port Admin...". Admin uses `/api/users/:id`.
-  // Does Receptionist have permission to access `PUT /api/users/:id`?
-  // Let's try using the Admin endpoint first, as Receptionist usually has some user management rights.
-  // If it fails (403), we know we need to Fix Backend Permissions.
-  // BUT the user didn't ask us to touch backend yet (except for previous debugging).
-  // The previous receptionist dashboard DID NOT HAVE EDIT functionality implemented in JS! It only had Create.
-  // User requested: "copie o sistema de cadastro... A diferença é que... ela so consegue alterar dados de instrutores!" implies she SHOULD be able to Edit.
-  // I will try to use `PUT /api/users/:id`. If it fails, I'll flag it.
 
   try {
     const res = await fetch(`${API_URL}/users/${id}`, {
@@ -392,8 +401,7 @@ function confirmDeleteUser() {
 async function deleteUser(id) {
   try {
     const res = await fetch(`${API_URL}/users/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
+      method: "DELETE"
     });
 
     if (res.ok) {
@@ -427,7 +435,6 @@ function formatPhoneNumber(value) {
   value = value.replace(/\D/g, "");
   if (value.length > 11) value = value.slice(0, 11);
 
-  // (XX)
   if (value.length > 2) {
     return `(${value.slice(0, 2)})${value.slice(2)}`;
   } else if (value.length > 0) {
