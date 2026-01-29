@@ -78,9 +78,9 @@ export const isNotEmpty = (value: string): boolean => {
 };
 
 /**
- * Valida se uma data está no formato DD/MM/YYYY
+ * Valida se uma data está no formato DD-MM-YYYY
  * Regras:
- * - Formato DD/MM/YYYY (brasileiro)
+ * - Formato DD-MM-YYYY (com traços)
  * - Dia entre 01 e 31
  * - Mês entre 01 e 12
  * - Ano com 4 dígitos
@@ -92,8 +92,8 @@ export const isValidDate = (date: string): boolean => {
     return false;
   }
 
-  // Regex para formato DD/MM/YYYY
-  const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+  // Regex para formato DD-MM-YYYY (com traços)
+  const dateRegex = /^(\d{2})-(\d{2})-(\d{4})$/;
   const match = date.match(dateRegex);
 
   if (!match) {

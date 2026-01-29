@@ -28,7 +28,7 @@ export class GymClassService {
     }
 
     if (!isValidDate(classData.date)) {
-      throw new Error('Data inválida. Use formato YYYY-MM-DD.');
+      throw new Error('Data inválida. Use formato DD-MM-YYYY.');
     }
 
     if (!isValidTime(classData.time)) {

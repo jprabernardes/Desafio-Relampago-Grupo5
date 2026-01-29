@@ -546,4 +546,3 @@ phoneInputs.forEach((id) => {
 });
 
 loadTab('alunos');
-loadData();

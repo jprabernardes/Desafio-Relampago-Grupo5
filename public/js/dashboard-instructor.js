@@ -971,6 +971,26 @@ function formatDateBR(dateStr) {
   return `${day}/${month}/${year}`;
 }
 
+// Converte data do input HTML (YYYY-MM-DD) para formato backend (DD-MM-YYYY)
+function convertDateForBackend(dateStr) {
+  if (!dateStr) return '';
+  console.log("convertDateForBackend - INPUT:", dateStr);
+  const [year, month, day] = dateStr.split('-');
+  const result = `${day}-${month}-${year}`;
+  console.log("convertDateForBackend - OUTPUT:", result);
+  return result;
+}
+
+// Converte data do backend (DD-MM-YYYY) para input HTML (YYYY-MM-DD)
+function convertDateFromBackend(dateStr) {
+  if (!dateStr) return '';
+  console.log("convertDateFromBackend - INPUT:", dateStr);
+  const [day, month, year] = dateStr.split('-');
+  const result = `${year}-${month}-${day}`;
+  console.log("convertDateFromBackend - OUTPUT:", result);
+  return result;
+}
+
 // CORREÇÃO: Função de filtro de aulas
 function filterClasses() {
   const searchTerm = document
@@ -1122,7 +1142,7 @@ document
 
     const data = {
       name: document.getElementById("className").value,
-      date: dateValue,
+      date: convertDateForBackend(dateValue), // Converte YYYY-MM-DD para DD-MM-YYYY
       time: document.getElementById("classTime").value,
       slots_limit: parseInt(document.getElementById("classLimit").value),
     };
@@ -1218,15 +1238,11 @@ async function openClassDetailsModal(classId) {
 
   // Preencher dados
   document.getElementById("detailsClassId").value = classData.id;
-  document.getElementById("detailsClassName").value =
-    classData.name || classData.nome_aula;
-  document.getElementById("detailsClassDate").value =
-    classData.date || classData.data;
-  document.getElementById("detailsClassTime").value =
-    classData.time || classData.hora;
-  document.getElementById("detailsClassLimit").value =
-    classData.slots_limit || classData.limite_vagas;
-
+  document.getElementById("detailsClassName").value = classData.name || classData.nome_aula;
+  document.getElementById("detailsClassDate").value = convertDateFromBackend(classData.date || classData.data);
+  document.getElementById("detailsClassTime").value = classData.time || classData.hora;
+  document.getElementById("detailsClassLimit").value = classData.slots_limit || classData.limite_vagas;
+  
   // Setar data mínima
   const today = new Date().toISOString().split("T")[0];
   document.getElementById("detailsClassDate").setAttribute("min", today);
@@ -1279,27 +1295,25 @@ function closeClassDetailsModal() {
 }
 
 // Submit do formulário de edição no modal
-document
-  .getElementById("editClassForm")
-  .addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const id = document.getElementById("detailsClassId").value;
-    const dateInput = document.getElementById("detailsClassDate");
-    const dateValue = dateInput.value;
-
-    if (!validateDate(dateInput)) {
-      showAlert("Não é possível agendar aulas para datas passadas!", "error");
-      dateInput.reportValidity(); // Mostrar mensagem customizada
-      return;
-    }
-
-    const data = {
-      name: document.getElementById("detailsClassName").value,
-      date: dateValue,
-      time: document.getElementById("detailsClassTime").value,
-      slots_limit: parseInt(document.getElementById("detailsClassLimit").value),
-    };
+document.getElementById("editClassForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const id = document.getElementById("detailsClassId").value;
+  const dateInput = document.getElementById("detailsClassDate");
+  const dateValue = dateInput.value;
+  
+  if (!validateDate(dateInput)) {
+    showAlert("Não é possível agendar aulas para datas passadas!", "error");
+    dateInput.reportValidity(); // Mostrar mensagem customizada
+    return;
+  }
+  
+  const data = {
+    name: document.getElementById("detailsClassName").value,
+    date: convertDateForBackend(dateValue), // Converte YYYY-MM-DD para DD-MM-YYYY
+    time: document.getElementById("detailsClassTime").value,
+    slots_limit: parseInt(document.getElementById("detailsClassLimit").value),
+  };
 
     try {
       const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
