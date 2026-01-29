@@ -79,7 +79,17 @@ export const createTables = (): Promise<void> => {
           FOREIGN KEY (exercise_id) REFERENCES exercise(id) ON DELETE CASCADE,
           FOREIGN KEY (training_id) REFERENCES training(id) ON DELETE CASCADE
         )
-      `);
+      `, () => {
+        // Migration to add columns if they don't exist
+        db.all("PRAGMA table_info(exercise_training)", (err, rows: any[]) => {
+          if (!err && rows) {
+             const columns = rows.map(r => r.name);
+             if (!columns.includes('series')) db.run("ALTER TABLE exercise_training ADD COLUMN series INTEGER");
+             if (!columns.includes('repetitions')) db.run("ALTER TABLE exercise_training ADD COLUMN repetitions INTEGER");
+             if (!columns.includes('weight')) db.run("ALTER TABLE exercise_training ADD COLUMN weight REAL");
+          }
+        });
+      });
 
       db.run(`
         CREATE TABLE IF NOT EXISTS training_user (

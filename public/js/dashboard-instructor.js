@@ -5,30 +5,32 @@ const API_URL = "/api";
 // Sanitiza entrada numérica
 function sanitizeNumberInput(value, options = {}) {
   const { allowDecimals = false, max = null, min = null, step = 1 } = options;
-  
+
   // Remove tudo exceto números e ponto decimal (se permitido)
-  let cleaned = allowDecimals 
-    ? value.toString().replace(/[^\d.]/g, '')
-    : value.toString().replace(/\D/g, '');
-  
+  let cleaned = allowDecimals
+    ? value.toString().replace(/[^\d.]/g, "")
+    : value.toString().replace(/\D/g, "");
+
   // Se permite decimais, garante apenas um ponto
   if (allowDecimals) {
-    const parts = cleaned.split('.');
-    cleaned = parts[0] + (parts.length > 1 ? '.' + parts.slice(1).join('').substring(0, 1) : '');
+    const parts = cleaned.split(".");
+    cleaned =
+      parts[0] +
+      (parts.length > 1 ? "." + parts.slice(1).join("").substring(0, 1) : "");
   }
-  
+
   // Converte para número
   let num = allowDecimals ? parseFloat(cleaned) || 0 : parseInt(cleaned) || 0;
-  
+
   // Aplica limites
   if (min !== null && num < min) num = min;
   if (max !== null && num > max) num = max;
-  
+
   // Arredonda para step se necessário
   if (allowDecimals && step) {
     num = Math.round(num / step) * step;
   }
-  
+
   return num;
 }
 
@@ -38,25 +40,38 @@ function validateExerciseForm() {
   const name = document.getElementById("exName").value.trim();
   const description = document.getElementById("exDescription").value.trim();
   const series = parseInt(document.getElementById("exSeries").value) || 0;
-  const repetitions = parseInt(document.getElementById("exRepetitions").value) || 0;
+  const repetitions =
+    parseInt(document.getElementById("exRepetitions").value) || 0;
   const weight = parseFloat(document.getElementById("exWeight").value) || 0;
 
   // Validação de nome
   if (!name) {
     errors.push({ field: "exName", message: "Nome é obrigatório" });
   } else if (name.length < 3) {
-    errors.push({ field: "exName", message: "Nome deve ter no mínimo 3 caracteres" });
+    errors.push({
+      field: "exName",
+      message: "Nome deve ter no mínimo 3 caracteres",
+    });
   } else if (name.length > 100) {
-    errors.push({ field: "exName", message: "Nome deve ter no máximo 100 caracteres" });
+    errors.push({
+      field: "exName",
+      message: "Nome deve ter no máximo 100 caracteres",
+    });
   }
 
   // Validação de descrição
   if (!description) {
     errors.push({ field: "exDescription", message: "Descrição é obrigatória" });
   } else if (description.length < 10) {
-    errors.push({ field: "exDescription", message: "Descrição deve ter no mínimo 10 caracteres" });
+    errors.push({
+      field: "exDescription",
+      message: "Descrição deve ter no mínimo 10 caracteres",
+    });
   } else if (description.length > 500) {
-    errors.push({ field: "exDescription", message: "Descrição deve ter no máximo 500 caracteres" });
+    errors.push({
+      field: "exDescription",
+      message: "Descrição deve ter no máximo 500 caracteres",
+    });
   }
 
   // Validação de séries
@@ -68,16 +83,25 @@ function validateExerciseForm() {
 
   // Validação de repetições
   if (!repetitions || repetitions < 1) {
-    errors.push({ field: "exRepetitions", message: "Repetições deve ser no mínimo 1" });
+    errors.push({
+      field: "exRepetitions",
+      message: "Repetições deve ser no mínimo 1",
+    });
   } else if (repetitions > 100) {
-    errors.push({ field: "exRepetitions", message: "Repetições deve ser no máximo 100" });
+    errors.push({
+      field: "exRepetitions",
+      message: "Repetições deve ser no máximo 100",
+    });
   }
 
   // Validação de peso
   if (weight < 0) {
     errors.push({ field: "exWeight", message: "Peso não pode ser negativo" });
   } else if (weight > 500) {
-    errors.push({ field: "exWeight", message: "Peso deve ser no máximo 500kg" });
+    errors.push({
+      field: "exWeight",
+      message: "Peso deve ser no máximo 500kg",
+    });
   }
 
   return { valid: errors.length === 0, errors };
@@ -92,28 +116,49 @@ function validateTrainingForm() {
 
   // Validação de nome
   if (!name) {
-    errors.push({ field: "trainingName", message: "Nome do treino é obrigatório" });
+    errors.push({
+      field: "trainingName",
+      message: "Nome do treino é obrigatório",
+    });
   } else if (name.length < 3) {
-    errors.push({ field: "trainingName", message: "Nome deve ter no mínimo 3 caracteres" });
+    errors.push({
+      field: "trainingName",
+      message: "Nome deve ter no mínimo 3 caracteres",
+    });
   } else if (name.length > 50) {
-    errors.push({ field: "trainingName", message: "Nome deve ter no máximo 50 caracteres" });
+    errors.push({
+      field: "trainingName",
+      message: "Nome deve ter no máximo 50 caracteres",
+    });
   }
 
   // Validação de exercícios
   if (exercises.length === 0) {
-    errors.push({ field: "selectedExercises", message: "Selecione pelo menos um exercício" });
+    errors.push({
+      field: "selectedExercises",
+      message: "Selecione pelo menos um exercício",
+    });
   }
 
   // Validação de parâmetros de cada exercício
   exercises.forEach((sel, idx) => {
     if (sel.series < 1 || sel.series > 20) {
-      errors.push({ field: `exercise-${idx}-series`, message: `Séries do exercício ${idx + 1} deve ser entre 1 e 20` });
+      errors.push({
+        field: `exercise-${idx}-series`,
+        message: `Séries do exercício ${idx + 1} deve ser entre 1 e 20`,
+      });
     }
     if (sel.repetitions < 1 || sel.repetitions > 100) {
-      errors.push({ field: `exercise-${idx}-repetitions`, message: `Repetições do exercício ${idx + 1} deve ser entre 1 e 100` });
+      errors.push({
+        field: `exercise-${idx}-repetitions`,
+        message: `Repetições do exercício ${idx + 1} deve ser entre 1 e 100`,
+      });
     }
     if (sel.weight < 0 || sel.weight > 500) {
-      errors.push({ field: `exercise-${idx}-weight`, message: `Peso do exercício ${idx + 1} deve ser entre 0 e 500kg` });
+      errors.push({
+        field: `exercise-${idx}-weight`,
+        message: `Peso do exercício ${idx + 1} deve ser entre 0 e 500kg`,
+      });
     }
   });
 
@@ -132,9 +177,15 @@ function validateClassForm() {
   if (!name) {
     errors.push({ field: "className", message: "Nome é obrigatório" });
   } else if (name.length < 3) {
-    errors.push({ field: "className", message: "Nome deve ter no mínimo 3 caracteres" });
+    errors.push({
+      field: "className",
+      message: "Nome deve ter no mínimo 3 caracteres",
+    });
   } else if (name.length > 100) {
-    errors.push({ field: "className", message: "Nome deve ter no máximo 100 caracteres" });
+    errors.push({
+      field: "className",
+      message: "Nome deve ter no máximo 100 caracteres",
+    });
   }
 
   // Validação de data
@@ -145,7 +196,10 @@ function validateClassForm() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (selectedDate < today) {
-      errors.push({ field: "classDate", message: "Data não pode ser no passado" });
+      errors.push({
+        field: "classDate",
+        message: "Data não pode ser no passado",
+      });
     }
   }
 
@@ -155,15 +209,24 @@ function validateClassForm() {
   } else {
     const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
     if (!timeRegex.test(time)) {
-      errors.push({ field: "classTime", message: "Hora inválida. Use formato HH:MM" });
+      errors.push({
+        field: "classTime",
+        message: "Hora inválida. Use formato HH:MM",
+      });
     }
   }
 
   // Validação de limite
   if (!limit || limit < 1) {
-    errors.push({ field: "classLimit", message: "Limite de vagas deve ser no mínimo 1" });
+    errors.push({
+      field: "classLimit",
+      message: "Limite de vagas deve ser no mínimo 1",
+    });
   } else if (limit > 1000) {
-    errors.push({ field: "classLimit", message: "Limite de vagas deve ser no máximo 1000" });
+    errors.push({
+      field: "classLimit",
+      message: "Limite de vagas deve ser no máximo 1000",
+    });
   }
 
   return { valid: errors.length === 0, errors };
@@ -172,12 +235,16 @@ function validateClassForm() {
 // Exibe erros de validação
 function showValidationErrors(errors) {
   // Remove erros anteriores
-  document.querySelectorAll(".error-message").forEach(el => el.remove());
-  document.querySelectorAll(".invalid-input").forEach(el => el.classList.remove("invalid-input"));
-  document.querySelectorAll(".valid-input").forEach(el => el.classList.remove("valid-input"));
+  document.querySelectorAll(".error-message").forEach((el) => el.remove());
+  document
+    .querySelectorAll(".invalid-input")
+    .forEach((el) => el.classList.remove("invalid-input"));
+  document
+    .querySelectorAll(".valid-input")
+    .forEach((el) => el.classList.remove("valid-input"));
 
   // Adiciona novos erros
-  errors.forEach(error => {
+  errors.forEach((error) => {
     const field = document.getElementById(error.field);
     if (field) {
       field.classList.add("invalid-input");
@@ -191,9 +258,13 @@ function showValidationErrors(errors) {
 
 // Limpa erros de validação
 function clearValidationErrors() {
-  document.querySelectorAll(".error-message").forEach(el => el.remove());
-  document.querySelectorAll(".invalid-input").forEach(el => el.classList.remove("invalid-input"));
-  document.querySelectorAll(".valid-input").forEach(el => el.classList.remove("valid-input"));
+  document.querySelectorAll(".error-message").forEach((el) => el.remove());
+  document
+    .querySelectorAll(".invalid-input")
+    .forEach((el) => el.classList.remove("invalid-input"));
+  document
+    .querySelectorAll(".valid-input")
+    .forEach((el) => el.classList.remove("valid-input"));
 }
 
 // Lógica do Modal de Confirmação
@@ -230,8 +301,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     const sectionId = item.getAttribute("data-section");
     document.getElementById(sectionId).classList.add("active");
 
-    if (sectionId === "create-exercise")
-      loadTemplates();
+    if (sectionId === "create-exercise") loadTemplates();
     if (sectionId === "students") loadStudents();
     if (sectionId === "classes") loadClasses();
 
@@ -256,7 +326,8 @@ async function logout() {
 async function loadUserInfo() {
   const res = await fetch(`${API_URL}/auth/me`);
   const data = await res.json();
-  document.getElementById("userName").textContent = data.name || data.nome || "Instrutor";
+  document.getElementById("userName").textContent =
+    data.name || data.nome || "Instrutor";
 
   if (data.error) {
     document.cookie = "";
@@ -294,7 +365,7 @@ function renderExerciseCard(exercise, options = {}) {
     onClick = null,
     cardClass = "template-card",
     cardId = null,
-    allowDetailView = true
+    allowDetailView = true,
   } = options;
 
   // Determinar evento de clique apenas para seleção (não abre modal)
@@ -302,38 +373,52 @@ function renderExerciseCard(exercise, options = {}) {
   if (onClick) {
     clickHandler = `onclick="${onClick}" style="cursor: pointer;"`;
   }
-  
+
   const idAttr = cardId ? `id="${cardId}"` : "";
-  
+
   // Ícone de info para abrir modal de detalhes (sempre visível se allowDetailView)
-  const infoIcon = allowDetailView ? `
+  const infoIcon = allowDetailView
+    ? `
     <button class="template-action-btn" 
             title="Ver detalhes do exercício"
                   onclick="event.stopPropagation(); event.preventDefault(); openExerciseDetailModal(${exercise.id}, event); return false;">
       ℹ️
     </button>
-  ` : "";
-  
+  `
+    : "";
+
   return `
     <div class="${cardClass}" ${clickHandler} ${idAttr}>
       <h4>${exercise.name}</h4>
       ${showDescription && exercise.description ? `<p class="exercise-info">${exercise.description}</p>` : ""}
-      ${showStats ? `
+      ${
+        showStats
+          ? `
         <div class="exercise-stats">
           <span>📊 ${exercise.series || 0} séries x ${exercise.repetitions || 0} repetições</span>
           <span>⚖️ ${exercise.weight || 0} kg</span>
         </div>
-      ` : ""}
+      `
+          : ""
+      }
       ${showHint ? `<p class="exercise-hint">Clique para selecionar e personalizar</p>` : ""}
-      ${(showActions || allowDetailView) ? `
+      ${
+        showActions || allowDetailView
+          ? `
         <div class="template-actions" onclick="event.stopPropagation()">
           ${infoIcon}
-          ${showActions ? `
+          ${
+            showActions
+              ? `
             <button class="template-action-btn" title="Editar" onclick="event.stopPropagation(); editTemplate(${exercise.id})">✏️</button>
             <button class="template-action-btn" title="Excluir" onclick="event.stopPropagation(); deleteTemplate(${exercise.id})">🗑️</button>
-          ` : ""}
+          `
+              : ""
+          }
         </div>
-      ` : ""}
+      `
+          : ""
+      }
     </div>
   `;
 }
@@ -347,11 +432,12 @@ window.openExerciseDetailModal = (exerciseId, event) => {
     event.stopPropagation();
     event.preventDefault();
   }
-  
-  const exercise = allExercisesForDetail.find(e => e.id === exerciseId) || 
-                  templates.find(t => t.id === exerciseId) ||
-                  allExercisesForTraining.find(e => e.id === exerciseId);
-  
+
+  const exercise =
+    allExercisesForDetail.find((e) => e.id === exerciseId) ||
+    templates.find((t) => t.id === exerciseId) ||
+    allExercisesForTraining.find((e) => e.id === exerciseId);
+
   if (!exercise) {
     showAlert("Exercício não encontrado", "error");
     return;
@@ -410,7 +496,7 @@ function renderTemplates() {
     filteredTemplates = templates.filter(
       (t) =>
         (t.name || "").toLowerCase().includes(searchTerm) ||
-        (t.description || "").toLowerCase().includes(searchTerm)
+        (t.description || "").toLowerCase().includes(searchTerm),
     );
   }
 
@@ -419,7 +505,7 @@ function renderTemplates() {
   const startIndex = (templatesCurrentPage - 1) * templatesPageSize;
   const paginatedTemplates = filteredTemplates.slice(
     startIndex,
-    startIndex + templatesPageSize
+    startIndex + templatesPageSize,
   );
 
   // Renderizar para Gerenciamento (Editar/Excluir)
@@ -428,20 +514,27 @@ function renderTemplates() {
       list.innerHTML = "<p>Nenhum template encontrado.</p>";
     } else {
       list.innerHTML = paginatedTemplates
-        .map((t) => renderExerciseCard(t, {
-          showActions: true,
-          showDescription: true,
-          showStats: true,
-          showHint: false,
-          onClick: null,
-          allowDetailView: true
-        }))
+        .map((t) =>
+          renderExerciseCard(t, {
+            showActions: true,
+            showDescription: true,
+            showStats: true,
+            showHint: false,
+            onClick: null,
+            allowDetailView: true,
+          }),
+        )
         .join("");
     }
-    renderPagination("templatesPagination", templatesCurrentPage, totalPages, (page) => {
-      templatesCurrentPage = page;
-      renderTemplates();
-    });
+    renderPagination(
+      "templatesPagination",
+      templatesCurrentPage,
+      totalPages,
+      (page) => {
+        templatesCurrentPage = page;
+        renderTemplates();
+      },
+    );
   }
 }
 
@@ -478,7 +571,7 @@ function renderStudents() {
   const startIndex = (studentsCurrentPage - 1) * studentsPageSize;
   const paginatedStudents = filteredStudents.slice(
     startIndex,
-    startIndex + studentsPageSize
+    startIndex + studentsPageSize,
   );
 
   grid.innerHTML = paginatedStudents
@@ -494,10 +587,15 @@ function renderStudents() {
     })
     .join("");
 
-  renderPagination("studentsPagination", studentsCurrentPage, totalPages, (page) => {
-    studentsCurrentPage = page;
-    renderStudents();
-  });
+  renderPagination(
+    "studentsPagination",
+    studentsCurrentPage,
+    totalPages,
+    (page) => {
+      studentsCurrentPage = page;
+      renderStudents();
+    },
+  );
 }
 
 // --- Modal Detalhes do Aluno ---
@@ -543,8 +641,11 @@ async function loadStudentData(studentId) {
     const res = await fetch(`${API_URL}/instructor/students/${studentId}`);
     if (!res.ok) throw new Error("Erro ao carregar aluno");
     const student = await res.json();
-    document.getElementById("studentName").textContent = student.name || student.nome || "Aluno";
-    document.getElementById("studentEmail").textContent = student.email ? `📧 ${student.email}` : "";
+    document.getElementById("studentName").textContent =
+      student.name || student.nome || "Aluno";
+    document.getElementById("studentEmail").textContent = student.email
+      ? `📧 ${student.email}`
+      : "";
     const phoneElement = document.getElementById("studentPhone");
     if (phoneElement) {
       phoneElement.textContent = student.phone ? `📞 ${student.phone}` : "";
@@ -557,13 +658,23 @@ async function loadStudentData(studentId) {
 
 async function loadStudentTrainings(studentId) {
   try {
-    const res = await fetch(`${API_URL}/instructor/students/${studentId}/trainings`);
-    if (!res.ok) throw new Error("Erro ao carregar treinos");
+    const res = await fetch(
+      `${API_URL}/instructor/students/${studentId}/trainings`,
+    );
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(
+        errorData.error || errorData.message || "Erro ao carregar treinos",
+      );
+    }
     studentTrainings = await res.json();
     renderStudentTrainings();
   } catch (e) {
     console.error(e);
-    showStudentAlert("Erro ao carregar treinos", "error");
+    showStudentAlert(e.message || "Erro ao carregar treinos", "error");
+    // Limpar lista para evitar dados antigos
+    studentTrainings = [];
+    renderStudentTrainings();
   }
 }
 
@@ -582,7 +693,7 @@ async function loadExercisesForTraining() {
 function renderStudentTrainings() {
   const grid = document.getElementById("trainingsGrid");
   if (!grid) return;
-  
+
   if (!studentTrainings || studentTrainings.length === 0) {
     grid.innerHTML = "<p>Nenhum treino cadastrado.</p>";
     return;
@@ -622,7 +733,7 @@ function renderPagination(containerId, currentPage, totalPages, onPageChange) {
   }
 
   let paginationHTML = '<div class="pagination-controls">';
-  
+
   // Botão anterior
   if (currentPage > 1) {
     paginationHTML += `<button class="pagination-btn" onclick="(${onPageChange.toString()})(${currentPage - 1})">« Anterior</button>`;
@@ -632,7 +743,7 @@ function renderPagination(containerId, currentPage, totalPages, onPageChange) {
   const maxVisible = 5;
   let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
   let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-  
+
   if (endPage - startPage < maxVisible - 1) {
     startPage = Math.max(1, endPage - maxVisible + 1);
   }
@@ -664,7 +775,7 @@ function renderPagination(containerId, currentPage, totalPages, onPageChange) {
     paginationHTML += `<button class="pagination-btn" onclick="(${onPageChange.toString()})(${currentPage + 1})">Próximo »</button>`;
   }
 
-  paginationHTML += '</div>';
+  paginationHTML += "</div>";
   container.innerHTML = paginationHTML;
 }
 
@@ -674,7 +785,7 @@ document.getElementById("studentsSearch")?.addEventListener("input", (e) => {
   filteredStudents = allStudents.filter(
     (s) =>
       (s.name || s.nome || "").toLowerCase().includes(term) ||
-      (s.email || "").toLowerCase().includes(term)
+      (s.email || "").toLowerCase().includes(term),
   );
   studentsCurrentPage = 1; // Resetar para primeira página
   renderStudents();
@@ -737,7 +848,7 @@ window.deleteTemplate = async (id) => {
     async () => {
       try {
         const res = await fetch(`${API_URL}/instructor/exercises/${id}`, {
-          method: "DELETE"
+          method: "DELETE",
         });
         if (res.ok) {
           showAlert("Template excluído!");
@@ -766,7 +877,12 @@ document.getElementById("exRepetitions")?.addEventListener("input", (e) => {
 });
 
 document.getElementById("exWeight")?.addEventListener("input", (e) => {
-  const sanitized = sanitizeNumberInput(e.target.value, { allowDecimals: true, max: 500, min: 0, step: 0.5 });
+  const sanitized = sanitizeNumberInput(e.target.value, {
+    allowDecimals: true,
+    max: 500,
+    min: 0,
+    step: 0.5,
+  });
   e.target.value = sanitized;
   clearValidationErrors();
 });
@@ -776,7 +892,9 @@ document.getElementById("exDescription")?.addEventListener("input", (e) => {
   const counter = document.getElementById("exDescriptionCounter");
   if (counter) {
     counter.textContent = `${length}/500 caracteres`;
-    counter.className = "char-counter" + (length > 450 ? " warning" : length > 500 ? " error" : "");
+    counter.className =
+      "char-counter" +
+      (length > 450 ? " warning" : length > 500 ? " error" : "");
   }
   clearValidationErrors();
 });
@@ -785,7 +903,7 @@ document
   .getElementById("createExerciseForm")
   .addEventListener("submit", async (e) => {
     e.preventDefault();
-    
+
     // Validação
     const validation = validateExerciseForm();
     if (!validation.valid) {
@@ -795,7 +913,7 @@ document
     }
 
     clearValidationErrors();
-    
+
     const id = document.getElementById("exId").value;
     const data = {
       name: document.getElementById("exName").value.trim(),
@@ -814,7 +932,7 @@ document
       const res = await fetch(url, {
         method: method,
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
@@ -849,7 +967,7 @@ async function loadClasses() {
 
 // Formatar data para dd/mm/yyyy
 function formatDateBR(dateStr) {
-  const [year, month, day] = dateStr.split('-');
+  const [year, month, day] = dateStr.split("-");
   return `${day}/${month}/${year}`;
 }
 
@@ -875,16 +993,18 @@ function convertDateFromBackend(dateStr) {
 
 // CORREÇÃO: Função de filtro de aulas
 function filterClasses() {
-  const searchTerm = document.getElementById("classSearchInput").value.toLowerCase();
-  
+  const searchTerm = document
+    .getElementById("classSearchInput")
+    .value.toLowerCase();
+
   if (searchTerm) {
-    myClasses = allClasses.filter(c => 
-      (c.name || c.nome_aula || "").toLowerCase().includes(searchTerm)
+    myClasses = allClasses.filter((c) =>
+      (c.name || c.nome_aula || "").toLowerCase().includes(searchTerm),
     );
   } else {
     myClasses = [...allClasses];
   }
-  
+
   renderClasses();
 }
 
@@ -899,20 +1019,24 @@ async function renderClasses() {
   const classesWithEnrollments = await Promise.all(
     myClasses.map(async (c) => {
       try {
-        const res = await fetch(`${API_URL}/instructor/classes/${c.id}/participants`);
-        
+        const res = await fetch(
+          `${API_URL}/instructor/classes/${c.id}/participants`,
+        );
+
         if (!res.ok) {
-          console.error(`Erro ao buscar alunos da aula ${c.id}: HTTP ${res.status}`);
-          return { ...c, enrolledCount: '?' }; // Mostrar ? quando houver erro
+          console.error(
+            `Erro ao buscar alunos da aula ${c.id}: HTTP ${res.status}`,
+          );
+          return { ...c, enrolledCount: "?" }; // Mostrar ? quando houver erro
         }
-        
+
         const students = await res.json();
         return { ...c, enrolledCount: students.length || 0 };
       } catch (e) {
         console.error(`Erro ao buscar alunos da aula ${c.id}:`, e);
-        return { ...c, enrolledCount: '?' }; // Mostrar ? quando houver erro
+        return { ...c, enrolledCount: "?" }; // Mostrar ? quando houver erro
       }
-    })
+    }),
   );
 
   container.innerHTML = classesWithEnrollments
@@ -939,10 +1063,10 @@ async function renderClasses() {
 
 window.openCreateClassTab = () => {
   document.querySelector('[data-section="create-class"]').click();
-  
+
   // Setar data mínima como hoje
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById("classDate").setAttribute('min', today);
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("classDate").setAttribute("min", today);
   document.getElementById("classDate").value = today;
 };
 
@@ -951,12 +1075,14 @@ function validateDate(inputElement) {
   const selectedDate = new Date(inputElement.value);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   if (selectedDate < today) {
-    inputElement.setCustomValidity('Por favor, selecione uma data que não seja anterior a hoje.');
+    inputElement.setCustomValidity(
+      "Por favor, selecione uma data que não seja anterior a hoje.",
+    );
     return false;
   } else {
-    inputElement.setCustomValidity(''); // Limpar mensagem de erro
+    inputElement.setCustomValidity(""); // Limpar mensagem de erro
     return true;
   }
 }
@@ -992,7 +1118,7 @@ document
   .getElementById("createClassForm")
   .addEventListener("submit", async (e) => {
     e.preventDefault();
-    
+
     // Validação
     const validation = validateClassForm();
     if (!validation.valid) {
@@ -1002,18 +1128,18 @@ document
     }
 
     clearValidationErrors();
-    
+
     const id = document.getElementById("classId").value;
     const dateInput = document.getElementById("classDate");
     const dateValue = dateInput.value;
-    
+
     // VALIDAÇÃO: Não permitir datas passadas
     if (!validateDate(dateInput)) {
       showAlert("Não é possível agendar aulas para datas passadas!", "error");
       dateInput.reportValidity(); // Mostrar mensagem customizada
       return;
     }
-    
+
     const data = {
       name: document.getElementById("className").value,
       date: convertDateForBackend(dateValue), // Converte YYYY-MM-DD para DD-MM-YYYY
@@ -1083,36 +1209,33 @@ window.cancelClassEdit = () => {
 };
 
 window.deleteClass = async (id) => {
-  showConfirmModal(
-    "Tem certeza que deseja cancelar esta aula?",
-    async () => {
-      try {
-        const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
-          method: "DELETE"
-        });
-        if (res.ok) {
-          showAlert("Aula cancelada!");
-          loadClasses();
-        } else {
-          const err = await res.json();
-          showAlert(err.error || "Erro ao cancelar", "error");
-        }
-      } catch (e) {
-        console.error(e);
-        showAlert("Erro de conexão", "error");
+  showConfirmModal("Tem certeza que deseja cancelar esta aula?", async () => {
+    try {
+      const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        showAlert("Aula cancelada!");
+        loadClasses();
+      } else {
+        const err = await res.json();
+        showAlert(err.error || "Erro ao cancelar", "error");
       }
-    },
-  );
+    } catch (e) {
+      console.error(e);
+      showAlert("Erro de conexão", "error");
+    }
+  });
 };
 
 let currentClassInModal = null;
 
 async function openClassDetailsModal(classId) {
   currentClassInModal = classId;
-  const classData = allClasses.find(c => c.id === classId);
-  
+  const classData = allClasses.find((c) => c.id === classId);
+
   if (!classData) return;
-  
+
   // Preencher dados
   document.getElementById("detailsClassId").value = classData.id;
   document.getElementById("detailsClassName").value = classData.name || classData.nome_aula;
@@ -1121,40 +1244,48 @@ async function openClassDetailsModal(classId) {
   document.getElementById("detailsClassLimit").value = classData.slots_limit || classData.limite_vagas;
   
   // Setar data mínima
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById("detailsClassDate").setAttribute('min', today);
-  
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("detailsClassDate").setAttribute("min", today);
+
   // Buscar alunos inscritos
   try {
-    const res = await fetch(`${API_URL}/instructor/classes/${classId}/participants`);
-    
+    const res = await fetch(
+      `${API_URL}/instructor/classes/${classId}/participants`,
+    );
+
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}: ${res.statusText}`);
     }
-    
+
     const students = await res.json();
-    
+
     const studentsList = document.getElementById("enrolledStudentsList");
     if (!students || students.length === 0) {
-      studentsList.innerHTML = '<p style="color: #666; font-style: italic;">Nenhum aluno inscrito ainda.</p>';
+      studentsList.innerHTML =
+        '<p style="color: #666; font-style: italic;">Nenhum aluno inscrito ainda.</p>';
     } else {
-      studentsList.innerHTML = students.map(s => `
+      studentsList.innerHTML = students
+        .map(
+          (s) => `
         <div style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 0.75rem;">
           <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
-            ${(s.name || s.nome || 'A').charAt(0).toUpperCase()}
+            ${(s.name || s.nome || "A").charAt(0).toUpperCase()}
           </div>
           <div>
-            <div style="font-weight: 500; color: #333;">${s.name || s.nome || 'Sem nome'}</div>
-            <div style="font-size: 0.875rem; color: #666;">${s.email || 'Sem email'}</div>
+            <div style="font-weight: 500; color: #333;">${s.name || s.nome || "Sem nome"}</div>
+            <div style="font-size: 0.875rem; color: #666;">${s.email || "Sem email"}</div>
           </div>
         </div>
-      `).join('');
+      `,
+        )
+        .join("");
     }
   } catch (e) {
     console.error("Erro ao carregar alunos inscritos:", e);
-    document.getElementById("enrolledStudentsList").innerHTML = `<p style="color: #e53e3e;">Erro ao carregar alunos: ${e.message}</p>`;
+    document.getElementById("enrolledStudentsList").innerHTML =
+      `<p style="color: #e53e3e;">Erro ao carregar alunos: ${e.message}</p>`;
   }
-  
+
   document.getElementById("classDetailsModal").classList.add("active");
 }
 
@@ -1184,27 +1315,27 @@ document.getElementById("editClassForm").addEventListener("submit", async (e) =>
     slots_limit: parseInt(document.getElementById("detailsClassLimit").value),
   };
 
-  try {
-    const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+      const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-    if (res.ok) {
-      showAlert("Aula atualizada com sucesso!");
-      closeClassDetailsModal();
-      loadClasses();
-    } else {
-      const err = await res.json();
-      showAlert(err.error || "Erro ao atualizar", "error");
+      if (res.ok) {
+        showAlert("Aula atualizada com sucesso!");
+        closeClassDetailsModal();
+        loadClasses();
+      } else {
+        const err = await res.json();
+        showAlert(err.error || "Erro ao atualizar", "error");
+      }
+    } catch (e) {
+      showAlert("Erro de conexão", "error");
     }
-  } catch (e) {
-    showAlert("Erro de conexão", "error");
-  }
-});
+  });
 
 // Deletar aula do modal
 function deleteClassFromModal() {
@@ -1217,22 +1348,22 @@ loadUserInfo();
 loadTemplates();
 
 // Setar data mínima e adicionar validação customizada ao carregar a página
-window.addEventListener('DOMContentLoaded', () => {
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById("classDate").setAttribute('min', today);
-  
+window.addEventListener("DOMContentLoaded", () => {
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("classDate").setAttribute("min", today);
+
   // Adicionar listeners para validação customizada nos campos de data
   const classDateInput = document.getElementById("classDate");
   const detailsClassDateInput = document.getElementById("detailsClassDate");
-  
+
   if (classDateInput) {
-    classDateInput.addEventListener('input', function() {
+    classDateInput.addEventListener("input", function () {
       validateDate(this);
     });
   }
-  
+
   if (detailsClassDateInput) {
-    detailsClassDateInput.addEventListener('input', function() {
+    detailsClassDateInput.addEventListener("input", function () {
       validateDate(this);
     });
   }
@@ -1244,9 +1375,10 @@ let exerciseSearchFilter = "";
 function renderAvailableExercises() {
   const grid = document.getElementById("availableExercisesGrid");
   if (!grid) return;
-  
+
   if (!allExercisesForTraining || allExercisesForTraining.length === 0) {
-    grid.innerHTML = "<p>Nenhum exercício disponível. Crie exercícios primeiro.</p>";
+    grid.innerHTML =
+      "<p>Nenhum exercício disponível. Crie exercícios primeiro.</p>";
     return;
   }
 
@@ -1267,7 +1399,8 @@ function renderAvailableExercises() {
   }
 
   grid.innerHTML = filteredExercises
-    .map((ex) => `
+    .map(
+      (ex) => `
       <div class="modal-exercise-card" id="ex-card-${ex.id}" 
            onclick="toggleExerciseSelection(${ex.id})"
            style="cursor: pointer;">
@@ -1286,7 +1419,8 @@ function renderAvailableExercises() {
           </button>
         </div>
       </div>
-    `)
+    `,
+    )
     .join("");
 }
 
@@ -1333,7 +1467,7 @@ window.toggleExerciseSelection = (exerciseId) => {
 function renderSelectedExercises() {
   const list = document.getElementById("selectedExercisesList");
   if (!list) return;
-  
+
   if (selectedExercises.length === 0) {
     list.innerHTML = "<p style='color: #666;'>Nenhum exercício selecionado</p>";
     return;
@@ -1341,7 +1475,9 @@ function renderSelectedExercises() {
 
   list.innerHTML = selectedExercises
     .map((sel, idx) => {
-      const exercise = allExercisesForTraining.find((e) => e.id === sel.exerciseId);
+      const exercise = allExercisesForTraining.find(
+        (e) => e.id === sel.exerciseId,
+      );
       if (!exercise) return "";
 
       return `
@@ -1394,7 +1530,7 @@ function generateWeightOptions(currentWeight) {
   const options = [];
   for (let i = 0; i <= 500; i += 2.5) {
     options.push(
-      `<option value="${i}" ${i === currentWeight ? "selected" : ""}>${i} kg</option>`
+      `<option value="${i}" ${i === currentWeight ? "selected" : ""}>${i} kg</option>`,
     );
   }
   return options.join("");
@@ -1403,7 +1539,12 @@ function generateWeightOptions(currentWeight) {
 window.updateExerciseParam = (index, param, value) => {
   if (selectedExercises[index]) {
     if (param === "weight") {
-      const sanitized = sanitizeNumberInput(value, { allowDecimals: true, max: 500, min: 0, step: 0.5 });
+      const sanitized = sanitizeNumberInput(value, {
+        allowDecimals: true,
+        max: 500,
+        min: 0,
+        step: 0.5,
+      });
       selectedExercises[index][param] = parseFloat(sanitized);
     } else if (param === "series") {
       const sanitized = sanitizeNumberInput(value, { max: 20, min: 1 });
@@ -1502,166 +1643,182 @@ window.closeTrainingModal = () => {
 window.deleteTraining = async () => {
   if (!currentTrainingId) return;
 
-  if (!confirm("Tem certeza que deseja deletar este treino?")) return;
+  showConfirmModal("Tem certeza que deseja deletar este treino?", async () => {
+    try {
+      const res = await fetch(
+        `${API_URL}/instructor/trainings/${currentTrainingId}`,
+        {
+          method: "DELETE",
+        },
+      );
 
-  try {
-    const res = await fetch(`${API_URL}/instructor/trainings/${currentTrainingId}`, {
-      method: "DELETE"
-    });
-
-    if (res.ok) {
-      showStudentAlert("Treino deletado com sucesso!");
-      closeTrainingModal();
-      await loadStudentTrainings(currentStudentId);
-    } else {
-      const err = await res.json();
-      showStudentAlert(err.error || "Erro ao deletar treino", "error");
+      if (res.ok) {
+        showStudentAlert("Treino deletado com sucesso!");
+        closeTrainingModal();
+        await loadStudentTrainings(currentStudentId);
+      } else {
+        const err = await res.json();
+        showStudentAlert(err.error || "Erro ao deletar treino", "error");
+      }
+    } catch (e) {
+      console.error(e);
+      showStudentAlert("Erro ao deletar treino", "error");
     }
-  } catch (e) {
-    console.error(e);
-    showStudentAlert("Erro ao deletar treino", "error");
-  }
+  });
 };
 
 // Event listener do formulário de treino
-document.getElementById("trainingForm")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
+document
+  .getElementById("trainingForm")
+  ?.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  // Validação
-  const validation = validateTrainingForm();
-  if (!validation.valid) {
-    validation.errors.forEach(err => {
-      showStudentAlert(err.message, "error");
-    });
-    return;
-  }
-
-  const name = document.getElementById("trainingName").value.trim();
-
-  try {
-    if (isEditingTraining && currentTrainingId) {
-      // Atualizar treino existente
-      const updateRes = await fetch(`${API_URL}/instructor/trainings/${currentTrainingId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ name }),
+    // Validação
+    const validation = validateTrainingForm();
+    if (!validation.valid) {
+      validation.errors.forEach((err) => {
+        showStudentAlert(err.message, "error");
       });
-
-      if (!updateRes.ok) {
-        const err = await updateRes.json();
-        throw new Error(err.error || "Erro ao atualizar treino");
-      }
-
-      // Buscar exercícios atuais do treino
-      const currentRes = await fetch(`${API_URL}/instructor/trainings/${currentTrainingId}`);
-      const currentTraining = await currentRes.json();
-      const currentExerciseIds = currentTraining.exercises
-        ? currentTraining.exercises.map((e) => e.id)
-        : [];
-
-      const newExerciseIds = selectedExercises.map((e) => e.exerciseId);
-
-      // Remover exercícios que não estão mais selecionados
-      for (const exId of currentExerciseIds) {
-        if (!newExerciseIds.includes(exId)) {
-          await fetch(
-            `${API_URL}/instructor/trainings/${currentTrainingId}/exercises/${exId}`,
-            {
-              method: "DELETE"
-            }
-          );
-        }
-      }
-
-      // Adicionar/atualizar exercícios selecionados
-      for (const sel of selectedExercises) {
-        const exists = currentExerciseIds.includes(sel.exerciseId);
-        if (!exists) {
-          await fetch(`${API_URL}/instructor/trainings/${currentTrainingId}/exercises`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ exerciseId: sel.exerciseId }),
-          });
-        }
-
-        // Atualizar parâmetros do exercício no treino
-        await fetch(
-          `${API_URL}/instructor/trainings/${currentTrainingId}/exercises/${sel.exerciseId}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              series: sel.series,
-              repetitions: sel.repetitions,
-              weight: sel.weight,
-            }),
-          }
-        );
-      }
-
-      showStudentAlert("Treino atualizado com sucesso!");
-    } else {
-      // Criar novo treino
-      const createRes = await fetch(`${API_URL}/instructor/trainings`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          name,
-          userIds: [parseInt(currentStudentId)],
-        }),
-      });
-
-      if (!createRes.ok) {
-        const err = await createRes.json();
-        throw new Error(err.error || "Erro ao criar treino");
-      }
-
-      const newTraining = await createRes.json();
-
-      // Adicionar exercícios com parâmetros
-      for (const sel of selectedExercises) {
-        await fetch(`${API_URL}/instructor/trainings/${newTraining.id}/exercises`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ exerciseId: sel.exerciseId }),
-        });
-
-        await fetch(
-          `${API_URL}/instructor/trainings/${newTraining.id}/exercises/${sel.exerciseId}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              series: sel.series,
-              repetitions: sel.repetitions,
-              weight: sel.weight,
-            }),
-          }
-        );
-      }
-
-      showStudentAlert("Treino criado com sucesso!");
+      return;
     }
 
-    closeTrainingModal();
-    await loadStudentTrainings(currentStudentId);
-  } catch (e) {
-    console.error(e);
-    showStudentAlert(e.message || "Erro ao salvar treino", "error");
-  }
-});
+    const name = document.getElementById("trainingName").value.trim();
+
+    try {
+      if (isEditingTraining && currentTrainingId) {
+        // Atualizar treino existente
+        const updateRes = await fetch(
+          `${API_URL}/instructor/trainings/${currentTrainingId}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ name }),
+          },
+        );
+
+        if (!updateRes.ok) {
+          const err = await updateRes.json();
+          throw new Error(err.error || "Erro ao atualizar treino");
+        }
+
+        // Buscar exercícios atuais do treino
+        const currentRes = await fetch(
+          `${API_URL}/instructor/trainings/${currentTrainingId}`,
+        );
+        const currentTraining = await currentRes.json();
+        const currentExerciseIds = currentTraining.exercises
+          ? currentTraining.exercises.map((e) => e.id)
+          : [];
+
+        const newExerciseIds = selectedExercises.map((e) => e.exerciseId);
+
+        // Remover exercícios que não estão mais selecionados
+        for (const exId of currentExerciseIds) {
+          if (!newExerciseIds.includes(exId)) {
+            await fetch(
+              `${API_URL}/instructor/trainings/${currentTrainingId}/exercises/${exId}`,
+              {
+                method: "DELETE",
+              },
+            );
+          }
+        }
+
+        // Adicionar/atualizar exercícios selecionados
+        for (const sel of selectedExercises) {
+          const exists = currentExerciseIds.includes(sel.exerciseId);
+          if (!exists) {
+            await fetch(
+              `${API_URL}/instructor/trainings/${currentTrainingId}/exercises`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ exerciseId: sel.exerciseId }),
+              },
+            );
+          }
+
+          // Atualizar parâmetros do exercício no treino
+          await fetch(
+            `${API_URL}/instructor/trainings/${currentTrainingId}/exercises/${sel.exerciseId}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                series: sel.series,
+                repetitions: sel.repetitions,
+                weight: sel.weight,
+              }),
+            },
+          );
+        }
+
+        showStudentAlert("Treino atualizado com sucesso!");
+      } else {
+        // Criar novo treino
+        const createRes = await fetch(`${API_URL}/instructor/trainings`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            userIds: [parseInt(currentStudentId)],
+          }),
+        });
+
+        if (!createRes.ok) {
+          const err = await createRes.json();
+          throw new Error(err.error || "Erro ao criar treino");
+        }
+
+        const newTraining = await createRes.json();
+
+        // Adicionar exercícios com parâmetros
+        for (const sel of selectedExercises) {
+          await fetch(
+            `${API_URL}/instructor/trainings/${newTraining.id}/exercises`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ exerciseId: sel.exerciseId }),
+            },
+          );
+
+          await fetch(
+            `${API_URL}/instructor/trainings/${newTraining.id}/exercises/${sel.exerciseId}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                series: sel.series,
+                repetitions: sel.repetitions,
+                weight: sel.weight,
+              }),
+            },
+          );
+        }
+
+        showStudentAlert("Treino criado com sucesso!");
+      }
+
+      closeTrainingModal();
+      await loadStudentTrainings(currentStudentId);
+    } catch (e) {
+      console.error(e);
+      showStudentAlert(e.message || "Erro ao salvar treino", "error");
+    }
+  });
 
 loadUserInfo();
 loadTemplates();

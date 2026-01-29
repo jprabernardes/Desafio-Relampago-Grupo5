@@ -54,19 +54,43 @@
                 maxlength="500"
                 rows="4"
               ></textarea>
-              <small class="char-counter" id="exDescriptionCounter">0/500 caracteres</small>
+              <small class="char-counter" id="exDescriptionCounter"
+                >0/500 caracteres</small
+              >
             </div>
             <div class="form-group">
               <label for="exSeries">Séries</label>
-              <input type="number" id="exSeries" placeholder="3" required min="1" max="20" />
+              <input
+                type="number"
+                id="exSeries"
+                placeholder="3"
+                required
+                min="1"
+                max="20"
+              />
             </div>
             <div class="form-group">
               <label for="exRepetitions">Repetições</label>
-              <input type="number" id="exRepetitions" placeholder="12" required min="1" max="100" />
+              <input
+                type="number"
+                id="exRepetitions"
+                placeholder="12"
+                required
+                min="1"
+                max="100"
+              />
             </div>
             <div class="form-group">
               <label for="exWeight">Peso (kg)</label>
-              <input type="number" id="exWeight" placeholder="20" required min="0" max="500" step="0.5" />
+              <input
+                type="number"
+                id="exWeight"
+                placeholder="20"
+                required
+                min="0"
+                max="500"
+                step="0.5"
+              />
             </div>
             <button type="submit" class="btn btn-primary" id="saveBtn">
               Salvar Template
@@ -88,7 +112,7 @@
             id="templatesSearch"
             placeholder="Buscar exercício por nome ou descrição..."
             class="exercise-search-input"
-            style="margin-bottom: 1rem;"
+            style="margin-bottom: 1rem"
           />
           <div id="templatesList" class="templates-grid">
             <p>Carregando...</p>
@@ -163,20 +187,32 @@
 
         <!-- My Classes -->
         <section class="section" id="classes">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 1.5rem;
+            "
+          >
             <h2>Minhas Aulas Agendadas</h2>
             <button class="btn btn-primary" onclick="openCreateClassTab()">
               ➕ Agendar Aula
             </button>
           </div>
-          
-          <div class="form-group" style="max-width: 400px;">
-            <input 
-              type="text" 
-              id="classSearchInput" 
-              placeholder="🔍 Pesquisar aulas..." 
+
+          <div class="form-group" style="max-width: 400px">
+            <input
+              type="text"
+              id="classSearchInput"
+              placeholder="🔍 Pesquisar aulas..."
               oninput="filterClasses()"
-              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;"
+              style="
+                width: 100%;
+                padding: 0.75rem;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+              "
             />
           </div>
 
@@ -187,71 +223,72 @@
       </main>
     </div>
 
-    <!-- Modal de Confirmação -->
-    <div class="modal" id="confirmModal">
-      <div class="modal-content">
+    <!-- Modal de Detalhes da Aula -->
+    <div class="modal" id="classDetailsModal">
+      <div class="modal-content" style="max-width: 600px">
         <div class="modal-header">
-          <h2>Confirmação</h2>
-          <button class="close-btn" onclick="closeConfirmModal()">
+          <h2 id="classDetailsTitle">Detalhes da Aula</h2>
+          <button class="close-btn" onclick="closeClassDetailsModal()">
             &times;
           </button>
         </div>
-        <p id="confirmMessage" style="margin-bottom: 2rem; color: #666">
-          Tem certeza?
-        </p>
-        <div class="form-actions">
-          <button class="btn" onclick="closeConfirmModal()">Não</button>
-          <button class="btn btn-danger" onclick="confirmAction()">
-            Sim, tenho certeza
-          </button>
-        </div>
-      </div>
-    </div>
 
-    <!-- Modal de Detalhes da Aula -->
-    <div class="modal" id="classDetailsModal">
-      <div class="modal-content" style="max-width: 600px;">
-        <div class="modal-header">
-          <h2 id="classDetailsTitle">Detalhes da Aula</h2>
-          <button class="close-btn" onclick="closeClassDetailsModal()">&times;</button>
-        </div>
-        
         <form id="editClassForm">
           <input type="hidden" id="detailsClassId" />
-          
+
           <div class="form-group">
             <label for="detailsClassName">Nome da Aula</label>
             <input type="text" id="detailsClassName" required />
           </div>
-          
+
           <div class="form-group">
             <label for="detailsClassDate">Data</label>
             <input type="date" id="detailsClassDate" required />
           </div>
-          
+
           <div class="form-group">
             <label for="detailsClassTime">Hora</label>
             <input type="time" id="detailsClassTime" required />
           </div>
-          
+
           <div class="form-group">
             <label for="detailsClassLimit">Limite de Vagas</label>
             <input type="number" id="detailsClassLimit" required min="1" />
           </div>
-          
+
           <div class="form-group">
-            <label style="margin-bottom: 1rem; display: block; font-weight: 600;">Alunos Inscritos</label>
-            <div id="enrolledStudentsList" style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb;">
-              <p style="color: #666;">Carregando...</p>
+            <label style="margin-bottom: 1rem; display: block; font-weight: 600"
+              >Alunos Inscritos</label
+            >
+            <div
+              id="enrolledStudentsList"
+              style="
+                max-height: 200px;
+                overflow-y: auto;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                padding: 1rem;
+                background: #f9fafb;
+              "
+            >
+              <p style="color: #666">Carregando...</p>
             </div>
           </div>
-          
+
           <div class="form-actions">
-            <button type="button" class="btn btn-danger" onclick="deleteClassFromModal()">
+            <button
+              type="button"
+              class="btn btn-danger"
+              onclick="deleteClassFromModal()"
+            >
               🗑️ Deletar Aula
             </button>
             <div style="flex: 1"></div>
-            <button type="button" class="btn btn-secondary" onclick="closeClassDetailsModal()">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeClassDetailsModal()"
+            >
               Cancelar
             </button>
             <button type="submit" class="btn btn-primary">
@@ -263,17 +300,26 @@
     </div>
 
     <!-- Modal Detalhes do Aluno -->
-    <div class="modal" id="studentDetailModal" onclick="if(event.target === this) closeStudentDetailModal()">
-      <div class="modal-content student-modal-content" onclick="event.stopPropagation()">
+    <div
+      class="modal"
+      id="studentDetailModal"
+      onclick="if (event.target === this) closeStudentDetailModal();"
+    >
+      <div
+        class="modal-content student-modal-content"
+        onclick="event.stopPropagation()"
+      >
         <div class="modal-header">
           <h2>Detalhes do Aluno</h2>
-          <button class="close-btn" onclick="closeStudentDetailModal()">&times;</button>
+          <button class="close-btn" onclick="closeStudentDetailModal()">
+            &times;
+          </button>
         </div>
-        
+
         <div class="student-header">
           <h1 id="studentName">Carregando...</h1>
           <p id="studentEmail">Carregando...</p>
-          <p id="studentPhone" style="margin-top: 0.5rem; opacity: 0.9;"></p>
+          <p id="studentPhone" style="margin-top: 0.5rem; opacity: 0.9"></p>
         </div>
 
         <div class="alert" id="studentAlert"></div>
@@ -297,61 +343,116 @@
       <div class="modal-content training-modal-content">
         <div class="modal-header">
           <h2 id="modalTitle">Criar Treino</h2>
-          <button class="close-btn" onclick="closeTrainingModal()">&times;</button>
+          <button class="close-btn" onclick="closeTrainingModal()">
+            &times;
+          </button>
         </div>
-        
+
         <form id="trainingForm">
           <input type="hidden" id="trainingId" />
-          
+
           <div class="form-group">
             <label for="trainingName">Nome do Treino</label>
-            <input type="text" id="trainingName" placeholder="Ex: Treino A" required />
-          </div>
-
-          <div class="form-group">
-            <label>Selecione os Exercícios</label>
             <input
               type="text"
-              id="exerciseSearchInput"
-              placeholder="Buscar exercício por nome ou descrição..."
-              style="margin-bottom: 1rem;"
+              id="trainingName"
+              placeholder="Ex: Treino A"
+              required
             />
-            <div class="modal-exercises-grid" id="availableExercisesGrid">
-              <p>Carregando exercícios...</p>
-            </div>
           </div>
 
-          <div class="form-group">
-            <label>Exercícios Selecionados</label>
-            <div class="selected-exercises-list" id="selectedExercisesList">
-              <p style="color: #666;">Nenhum exercício selecionado</p>
+          <div class="training-editor-grid">
+            <!-- Coluna da Esquerda: Selecionados -->
+            <div class="training-column-left">
+              <label class="column-label">Exercícios Selecionados</label>
+              <div class="selected-exercises-list" id="selectedExercisesList">
+                <p style="color: #666; font-style: italic">
+                  Nenhum exercício selecionado
+                </p>
+              </div>
+            </div>
+
+            <!-- Coluna da Direita: Disponíveis -->
+            <div class="training-column-right">
+              <label class="column-label">Adicionar Exercícios</label>
+              <input
+                type="text"
+                id="exerciseSearchInput"
+                placeholder="Buscar exercício..."
+                class="exercise-search-input"
+              />
+              <div class="modal-exercises-grid" id="availableExercisesGrid">
+                <p>Carregando exercícios...</p>
+              </div>
             </div>
           </div>
 
           <div class="form-actions">
-            <button type="button" class="btn btn-secondary" onclick="closeTrainingModal()">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeTrainingModal()"
+            >
               Cancelar
             </button>
-            <button type="button" class="btn btn-danger" id="deleteTrainingBtn" style="display: none;" onclick="deleteTraining()">
+            <button
+              type="button"
+              class="btn btn-danger"
+              id="deleteTrainingBtn"
+              style="display: none"
+              onclick="deleteTraining()"
+            >
               Deletar Treino
             </button>
-            <button type="submit" class="btn btn-primary">
-              Salvar Treino
-            </button>
+            <button type="submit" class="btn btn-primary">Salvar Treino</button>
           </div>
         </form>
       </div>
     </div>
 
     <!-- Modal Detalhes do Exercício -->
-    <div class="modal" id="exerciseDetailModal" onclick="if(event.target === this && !event.target.closest('.modal-content')) closeExerciseDetailModal()">
-      <div class="modal-content" style="max-width: 600px;" onclick="event.stopPropagation()">
+    <div
+      class="modal"
+      id="exerciseDetailModal"
+      onclick="
+        if (event.target === this && !event.target.closest('.modal-content'))
+          closeExerciseDetailModal();
+      "
+    >
+      <div
+        class="modal-content"
+        style="max-width: 600px"
+        onclick="event.stopPropagation()"
+      >
         <div class="modal-header">
           <h2>Detalhes do Exercício</h2>
-          <button class="close-btn" onclick="closeExerciseDetailModal()">&times;</button>
+          <button class="close-btn" onclick="closeExerciseDetailModal()">
+            &times;
+          </button>
         </div>
         <div id="exerciseDetailContent">
           <!-- Conteúdo será preenchido via JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div class="modal" id="confirmModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Confirmação</h2>
+          <button class="close-btn" onclick="closeConfirmModal()">
+            &times;
+          </button>
+        </div>
+        <p id="confirmMessage" style="margin-bottom: 2rem; color: #666">
+          Tem certeza?
+        </p>
+        <div class="form-actions">
+          <button class="btn" onclick="closeConfirmModal()">Não</button>
+          <button class="btn btn-danger" onclick="confirmAction()">
+            Sim, tenho certeza
+          </button>
         </div>
       </div>
     </div>

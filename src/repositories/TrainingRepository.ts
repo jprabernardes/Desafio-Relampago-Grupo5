@@ -42,7 +42,7 @@ export class TrainingRepository {
   findByUserId(userId: number): Promise<Training[]> {
     return new Promise((resolve, reject) => {
       const sql = `
-        SELECT t.*, u.name as instructor_name 
+        SELECT t.id, t.instructor_id, t.name, t.finish, t.completed_date, u.name as instructor_name 
         FROM training t 
         INNER JOIN training_user tu ON t.id = tu.training_id
         LEFT JOIN users u ON t.instructor_id = u.id 
@@ -79,7 +79,7 @@ export class TrainingRepository {
   findByInstructorAndUserId(instructorId: number, userId: number): Promise<Training[]> {
     return new Promise((resolve, reject) => {
       const sql = `
-        SELECT t.*
+        SELECT t.id, t.instructor_id, t.name, t.finish, t.completed_date
         FROM training t
         INNER JOIN training_user tu ON t.id = tu.training_id
         WHERE t.instructor_id = ? AND tu.user_id = ?

@@ -368,6 +368,7 @@ body {
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
+  margin-top: 2rem;
 }
 
 /* Estilos de validação */
@@ -645,4 +646,123 @@ body {
 .pagination-ellipsis {
   padding: 0 0.5rem;
   color: #666;
+}
+
+/* Training Grid Layout */
+.training-editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  height: 60vh; /* Fixed height for scrollable areas */
+}
+
+.column-label {
+  display: block;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 0.75rem;
+}
+
+.training-column-left,
+.training-column-right {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden; /* Contain scrollbars */
+}
+
+/* Scrollable containers override */
+.selected-exercises-list,
+.modal-exercises-grid {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem;
+  background: #f7fafc;
+  margin: 0; /* Reset margins */
+  max-height: none !important; /* Force full height of container */
+}
+
+/* Compact Cards - Selected */
+.exercise-item {
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: white;
+  border: 1px solid #edf2f7;
+  flex-direction: column; /* Stack for compactness */
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.exercise-item-info h4 {
+  font-size: 0.95rem;
+  margin-bottom: 0.1rem;
+  font-weight: 600;
+}
+
+.exercise-item-params {
+  width: 100%;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.param-group label {
+  font-size: 0.7rem;
+  margin-bottom: 0.1rem;
+}
+
+.param-group input, .param-group select {
+  padding: 0.3rem;
+  font-size: 0.85rem;
+  width: 70px;
+}
+
+.remove-exercise-btn {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+  margin-left: auto; /* Push to right */
+}
+
+/* Compact Cards - Available (Override generic styles) */
+.modal-exercise-card {
+  height: auto; /* Remove fixed height */
+  min-height: auto;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.modal-exercise-card h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.95rem;
+  -webkit-line-clamp: 1; /* Limit title lines */
+  max-height: auto;
+}
+
+.modal-exercise-card .exercise-info {
+  font-size: 0.75rem;
+  margin: 0.25rem 0;
+  height: auto;
+  -webkit-line-clamp: 2;
+}
+
+.modal-exercise-card .exercise-stats {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  height: auto;
+  color: #718096;
+}
+
+.modal-exercise-card .exercise-hint {
+  display: none; /* Hide hint to save space */
+}
+
+/* Wider modal for training editor */
+.training-modal-content {
+  max-width: 900px;
+  width: 95%;
+  max-height: 95vh;
 }
