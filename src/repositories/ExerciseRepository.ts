@@ -12,8 +12,8 @@ export class ExerciseRepository {
         exercise.weight,
         exercise.series
       ];
-      
-      db.run(sql, params, function(err) {
+
+      db.run(sql, params, function (err) {
         if (err) {
           reject(err);
         } else {
@@ -35,6 +35,17 @@ export class ExerciseRepository {
   findById(id: number): Promise<Exercise | undefined> {
     return new Promise((resolve, reject) => {
       db.get('SELECT * FROM exercise WHERE id = ?', [id], (err, row: Exercise) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+  }
+
+  findByName(normalizedName: string): Promise<Exercise | undefined> {
+    return new Promise((resolve, reject) => {
+      // Remove spaces from DB name and compare with normalized input
+      const sql = "SELECT * FROM exercise WHERE LOWER(REPLACE(name, ' ', '')) = ?";
+      db.get(sql, [normalizedName], (err, row: Exercise) => {
         if (err) reject(err);
         else resolve(row);
       });

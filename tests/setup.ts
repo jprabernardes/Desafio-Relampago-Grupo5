@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-dotenv.config({ path: path.resolve(__dirname, '../.env.test') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env.test') });
 
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test_secret_key_for_integration_tests';

@@ -391,34 +391,31 @@ function renderExerciseCard(exercise, options = {}) {
     <div class="${cardClass}" ${clickHandler} ${idAttr}>
       <h4>${exercise.name}</h4>
       ${showDescription && exercise.description ? `<p class="exercise-info">${exercise.description}</p>` : ""}
-      ${
-        showStats
-          ? `
+      ${showStats
+      ? `
         <div class="exercise-stats">
           <span>📊 ${exercise.series || 0} séries x ${exercise.repetitions || 0} repetições</span>
           <span>⚖️ ${exercise.weight || 0} kg</span>
         </div>
       `
-          : ""
-      }
+      : ""
+    }
       ${showHint ? `<p class="exercise-hint">Clique para selecionar e personalizar</p>` : ""}
-      ${
-        showActions || allowDetailView
-          ? `
+      ${showActions || allowDetailView
+      ? `
         <div class="template-actions" onclick="event.stopPropagation()">
           ${infoIcon}
-          ${
-            showActions
-              ? `
+          ${showActions
+        ? `
             <button class="template-action-btn" title="Editar" onclick="event.stopPropagation(); editTemplate(${exercise.id})">✏️</button>
             <button class="template-action-btn" title="Excluir" onclick="event.stopPropagation(); deleteTemplate(${exercise.id})">🗑️</button>
           `
-              : ""
-          }
+        : ""
+      }
         </div>
       `
-          : ""
-      }
+      : ""
+    }
     </div>
   `;
 }
@@ -485,6 +482,55 @@ let templatesCurrentPage = 1;
 let templatesPageSize = 12;
 let studentsCurrentPage = 1;
 let studentsPageSize = 12;
+
+// Variable page size based on screen width
+function updatePageSize() {
+  // Estimation of available width
+  // Sidebar: 250px (only if visible? assuming yes for instructor dashboard on desktop)
+  let sidebarWidth = 0;
+  if (window.innerWidth > 768) {
+    sidebarWidth = 250;
+  }
+
+  // Padding: 2rem left + 2rem right = approx 64px
+  const containerPadding = 64;
+  // Safety margin and scrollbar
+  const availableWidth = window.innerWidth - sidebarWidth - containerPadding - 20;
+
+  const cardMinWidth = 200; // from CSS minmax(200px, 1fr)
+  const gap = 16; // 1rem
+
+  // Calculate max columns: width = (n * card) + ((n-1) * gap)
+  // n = (width + gap) / (card + gap)
+  let columns = Math.floor((availableWidth + gap) / (cardMinWidth + gap));
+  if (columns < 1) columns = 1;
+
+  // Decide rows based on screen height or fixed number?
+  // Let's iterate until we find a product (cols * rows) >= 20, keeping rows reasonable (e.g. 3-5)
+  // Or just fix rows to 5 which gives 20 items for 4 cols.
+  const rows = 5;
+
+  const oldSize = templatesPageSize;
+  templatesPageSize = columns * rows;
+
+  // Lower bound check
+  if (templatesPageSize < 6) templatesPageSize = 6;
+
+  // Rerender if size changed
+  if (oldSize !== templatesPageSize) {
+    const maxPage = Math.ceil(templates.length / templatesPageSize) || 1;
+    if (templatesCurrentPage > maxPage) templatesCurrentPage = maxPage;
+    renderTemplates();
+  }
+}
+let resizeTimeout;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(updatePageSize, 200);
+});
+
+// Initial call
+updatePageSize();
 
 function renderTemplates() {
   const list = document.getElementById("templatesList");
@@ -562,7 +608,7 @@ function renderStudents() {
 
   if (!filteredStudents || filteredStudents.length === 0) {
     grid.innerHTML = "<p>Nenhum aluno encontrado.</p>";
-    renderPagination("studentsPagination", 1, 1, () => {});
+    renderPagination("studentsPagination", 1, 1, () => { });
     return;
   }
 
@@ -1371,12 +1417,12 @@ function renderAvailableExercises() {
   // Filtrar exercícios baseado na busca
   const filteredExercises = exerciseSearchFilter
     ? allExercisesForTraining.filter((ex) => {
-        const searchTerm = exerciseSearchFilter.toLowerCase();
-        return (
-          (ex.name || "").toLowerCase().includes(searchTerm) ||
-          (ex.description || "").toLowerCase().includes(searchTerm)
-        );
-      })
+      const searchTerm = exerciseSearchFilter.toLowerCase();
+      return (
+        (ex.name || "").toLowerCase().includes(searchTerm) ||
+        (ex.description || "").toLowerCase().includes(searchTerm)
+      );
+    })
     : allExercisesForTraining;
 
   if (filteredExercises.length === 0) {
