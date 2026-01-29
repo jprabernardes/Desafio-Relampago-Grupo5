@@ -72,6 +72,9 @@ export const createTables = (): Promise<void> => {
         CREATE TABLE IF NOT EXISTS exercise_training (
           exercise_id INTEGER NOT NULL,
           training_id INTEGER NOT NULL,
+          series INTEGER,
+          repetitions INTEGER,
+          weight REAL,
           PRIMARY KEY (exercise_id, training_id),
           FOREIGN KEY (exercise_id) REFERENCES exercise(id) ON DELETE CASCADE,
           FOREIGN KEY (training_id) REFERENCES training(id) ON DELETE CASCADE
@@ -247,12 +250,192 @@ export const createDefaultUsers = async (): Promise<void> => {
 
 
 /**
+ * Creates default exercises with predefined values.
+ */
+export const createDefaultExercises = async (): Promise<void> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const defaultExercises = [
+        {
+          name: 'Supino Reto com Barra',
+          description: 'Exercício composto para peitoral, com auxílio de tríceps e ombros.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        },
+        {
+          name: 'Supino Inclinado com Halteres',
+          description: 'Exercício com foco na parte superior do peitoral, exigindo maior estabilização.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        },
+        {
+          name: 'Crucifixo em Máquina',
+          description: 'Exercício de isolamento para o peitoral com movimento guiado.',
+          weight: 5,
+          series: 3,
+          repetitions: 12
+        },
+        {
+          name: 'Puxada Frontal na Polia',
+          description: 'Exercício para dorsais, simulando o movimento da barra fixa.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        },
+        {
+          name: 'Remada Baixa na Polia',
+          description: 'Exercício que trabalha dorsais, romboides e bíceps.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        },
+        {
+          name: 'Agachamento Livre',
+          description: 'Exercício composto para membros inferiores, com foco em quadríceps, glúteos e core.',
+          weight: 5,
+          series: 4,
+          repetitions: 8
+        },
+        {
+          name: 'Leg Press 45',
+          description: 'Exercício em máquina para membros inferiores, com foco em quadríceps e glúteos.',
+          weight: 5,
+          series: 3,
+          repetitions: 12
+        },
+        {
+          name: 'Cadeira Extensora',
+          description: 'Exercício de isolamento para o quadríceps.',
+          weight: 5,
+          series: 3,
+          repetitions: 12
+        },
+        {
+          name: 'Mesa Flexora',
+          description: 'Exercício de isolamento para os músculos posteriores da coxa.',
+          weight: 5,
+          series: 3,
+          repetitions: 12
+        },
+        {
+          name: 'Desenvolvimento com Halteres',
+          description: 'Exercício para ombros, com foco nas porções anterior e medial do deltoide.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        },
+        {
+          name: 'Elevação Lateral',
+          description: 'Exercício de isolamento para a porção medial dos ombros.',
+          weight: 5,
+          series: 3,
+          repetitions: 12
+        },
+        {
+          name: 'Rosca Direta com Barra',
+          description: 'Exercício clássico para o bíceps braquial.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        },
+        {
+          name: 'Tríceps Pulley',
+          description: 'Exercício de isolamento para o tríceps em polia alta.',
+          weight: 5,
+          series: 3,
+          repetitions: 12
+        },
+        {
+          name: 'Abdominal Crunch',
+          description: 'Exercício básico para o reto abdominal.',
+          weight: 5,
+          series: 3,
+          repetitions: 15
+        },
+        {
+          name: 'Prancha Isométrica',
+          description: 'Exercício isométrico para estabilização do core.',
+          weight: 5,
+          series: 3,
+          repetitions: 30
+        },
+        {
+          name: 'Rosca Martelo',
+          description: 'Exercício para bíceps e antebraço, trabalhando a porção lateral do braço.',
+          weight: 5,
+          series: 3,
+          repetitions: 12
+        },
+        {
+          name: 'Tríceps Testa',
+          description: 'Exercício de isolamento para tríceps realizado deitado com halteres ou barra.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        },
+        {
+          name: 'Levantamento Terra',
+          description: 'Exercício composto fundamental que trabalha toda a cadeia posterior, glúteos e core.',
+          weight: 5,
+          series: 4,
+          repetitions: 8
+        },
+        {
+          name: 'Panturrilha em Pé',
+          description: 'Exercício de isolamento para os músculos da panturrilha (gastrocnêmio e sóleo).',
+          weight: 5,
+          series: 3,
+          repetitions: 15
+        },
+        {
+          name: 'Stiff',
+          description: 'Exercício para posterior de coxa e glúteos, realizado com barra ou halteres.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        }
+      ];
+
+      for (const exercise of defaultExercises) {
+        await new Promise<void>((res, rej) => {
+          db.run(
+            `INSERT OR IGNORE INTO exercise (name, description, repetitions, weight, series)
+             VALUES (?, ?, ?, ?, ?)`,
+            [exercise.name, exercise.description, exercise.repetitions, exercise.weight, exercise.series],
+            function (err) {
+              if (err) {
+                rej(err);
+              } else {
+                if (this.changes > 0) {
+                  console.log(`✅ Exercício "${exercise.name}" criado`);
+                } else {
+                  console.log(`ℹ️  Exercício "${exercise.name}" já existe`);
+                }
+                res();
+              }
+            }
+          );
+        });
+      }
+
+      console.log(`✅ ${defaultExercises.length} exercícios padrão processados.`);
+      resolve();
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+/**
  * Initializes the database connection and sets up the initial schema.
  */
 export const initializeDatabase = async (): Promise<void> => {
   try {
     await createTables();
     await createDefaultUsers();
+    await createDefaultExercises();
     console.log('✅ Database initialized successfully!');
   } catch (error) {
     console.error('❌ Error initializing database:', error);

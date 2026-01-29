@@ -1,4 +1,4 @@
-let currentTab = "all";
+let currentTab = "alunos";
 let allUsers = [];
 let filteredUsers = [];
 
@@ -76,14 +76,6 @@ async function loadData() {
       phone: u.phone,
     }));
 
-    document.getElementById("totalUsers").textContent = allUsers.length;
-    document.getElementById("totalStudents").textContent =
-      metrics.totalStudents || 0;
-    document.getElementById("totalInstructors").textContent =
-      metrics.totalInstructors || 0;
-    document.getElementById("totalReceptionists").textContent =
-      metrics.totalReceptionists || 0;
-
     renderUsers(allUsers);
   } catch (error) {
     console.error("Erro:", error);
@@ -157,21 +149,12 @@ function updateTableHeaders(tipo) {
         <th>Ações</th>
       </tr>
     `;
-  } else if (tipo === "funcionarios") {
-    tableHead.innerHTML = `
-      <tr>
-        <th>Nome</th>
-        <th>Email</th>
-        <th>Função</th>
-        <th>Ações</th>
-      </tr>
-    `;
   } else {
+    // funcionarios
     tableHead.innerHTML = `
       <tr>
         <th>Nome</th>
         <th>Email</th>
-        <th>CPF</th>
         <th>Função</th>
         <th>Ações</th>
       </tr>
@@ -179,7 +162,7 @@ function updateTableHeaders(tipo) {
   }
 }
 
-async function loadTab(tipo = "all") {
+async function loadTab(tipo = "alunos") {
   currentTab = tipo;
 
   // Atualizar navegação ativa
@@ -191,8 +174,6 @@ async function loadTab(tipo = "all") {
     document.getElementById("navAlunos").classList.add("active");
   } else if (tipo === "funcionarios") {
     document.getElementById("navFuncionarios").classList.add("active");
-  } else {
-    document.getElementById("navDashboard").classList.add("active");
   }
 
   let roles = null;
@@ -212,9 +193,9 @@ async function loadTab(tipo = "all") {
       break;
 
     default:
-      roles = null;
-      title = "Usuários do Sistema";
-      updateTableHeaders("all");
+      roles = ["aluno"]; // Default para alunos
+      title = "Alunos";
+      updateTableHeaders("alunos");
       break;
   }
 
@@ -564,4 +545,4 @@ phoneInputs.forEach((id) => {
   }
 });
 
-loadData();
+loadTab('alunos');

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - Instrutor</title>
-    <link rel="stylesheet" href="dashboard-instructor.css" />
+    <link rel="stylesheet" href="./css/dashboard-instructor.css" />
   </head>
   <body>
     <div class="container">
@@ -14,6 +14,7 @@
           <div class="nav-item active" data-section="create-exercise">
             🏋️ Criar Exercício
           </div>
+          <div class="nav-item" data-section="students">👥 Alunos</div>
           <div class="nav-item" data-section="assign-workout">
             📋 Atribuir Treino
           </div>
@@ -49,24 +50,26 @@
             </div>
             <div class="form-group">
               <label for="exDescription">Descrição</label>
-              <input
-                type="text"
+              <textarea
                 id="exDescription"
                 placeholder="Ex: Exercício para peitoral"
                 required
-              />
+                maxlength="500"
+                rows="4"
+              ></textarea>
+              <small class="char-counter" id="exDescriptionCounter">0/500 caracteres</small>
             </div>
             <div class="form-group">
               <label for="exSeries">Séries</label>
-              <input type="number" id="exSeries" placeholder="3" required min="1" />
+              <input type="number" id="exSeries" placeholder="3" required min="1" max="20" />
             </div>
             <div class="form-group">
               <label for="exRepetitions">Repetições</label>
-              <input type="number" id="exRepetitions" placeholder="12" required min="1" />
+              <input type="number" id="exRepetitions" placeholder="12" required min="1" max="100" />
             </div>
             <div class="form-group">
               <label for="exWeight">Peso (kg)</label>
-              <input type="number" id="exWeight" placeholder="20" required min="0" step="0.5" />
+              <input type="number" id="exWeight" placeholder="20" required min="0" max="500" step="0.5" />
             </div>
             <button type="submit" class="btn btn-primary" id="saveBtn">
               Salvar Template
@@ -83,9 +86,34 @@
           </form>
 
           <h3 style="margin-top: 2rem">Templates Cadastrados</h3>
+          <input
+            type="text"
+            id="templatesSearch"
+            placeholder="Buscar exercício por nome ou descrição..."
+            class="exercise-search-input"
+            style="margin-bottom: 1rem;"
+          />
           <div id="templatesList" class="templates-grid">
             <p>Carregando...</p>
           </div>
+          <div id="templatesPagination" class="pagination"></div>
+        </section>
+
+        <!-- Students -->
+        <section class="section" id="students">
+          <h2>Alunos</h2>
+          <div class="form-group">
+            <label for="studentsSearch">Pesquisar aluno (nome ou email)</label>
+            <input
+              type="text"
+              id="studentsSearch"
+              placeholder="Digite para filtrar..."
+            />
+          </div>
+          <div id="studentsGrid" class="students-grid">
+            <p>Carregando...</p>
+          </div>
+          <div id="studentsPagination" class="pagination"></div>
         </section>
 
         <!-- Assign Workout -->
@@ -108,20 +136,27 @@
             </div>
 
             <div class="form-group">
-              <label for="trainingType">Tipo de Treino</label>
-              <select id="trainingType" required>
-                <option value="">Selecione o tipo</option>
-                <option value="A">Treino A</option>
-                <option value="B">Treino B</option>
-                <option value="C">Treino C</option>
-              </select>
+              <label for="trainingNameAssign">Nome do Treino</label>
+              <input
+                type="text"
+                id="trainingNameAssign"
+                placeholder="Ex: Treino A"
+                required
+              />
             </div>
 
             <div class="form-group">
               <label>Selecione os Exercícios (Templates)</label>
+              <input
+                type="text"
+                id="assignExerciseSearch"
+                placeholder="Buscar exercício por nome ou descrição..."
+                class="exercise-search-input"
+              />
               <div id="assignTemplatesList" class="templates-grid">
                 <p>Carregando templates...</p>
               </div>
+              <div id="assignTemplatesPagination" class="pagination"></div>
             </div>
 
             <button type="submit" class="btn btn-primary">Salvar Treino</button>
@@ -277,6 +312,100 @@
       </div>
     </div>
 
-    <script src="dashboard-instructor.js"></script>
+    <!-- Modal Detalhes do Aluno -->
+    <div class="modal" id="studentDetailModal" onclick="if(event.target === this) closeStudentDetailModal()">
+      <div class="modal-content student-modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Detalhes do Aluno</h2>
+          <button class="close-btn" onclick="closeStudentDetailModal()">&times;</button>
+        </div>
+        
+        <div class="student-header">
+          <h1 id="studentName">Carregando...</h1>
+          <p id="studentEmail">Carregando...</p>
+          <p id="studentPhone" style="margin-top: 0.5rem; opacity: 0.9;"></p>
+        </div>
+
+        <div class="alert" id="studentAlert"></div>
+
+        <div class="trainings-section">
+          <div class="trainings-header">
+            <h2>Treinos</h2>
+            <button class="btn btn-primary" onclick="openCreateTrainingModal()">
+              ➕ Criar Treino
+            </button>
+          </div>
+          <div id="trainingsGrid" class="trainings-grid">
+            <p>Carregando treinos...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Criar/Editar Treino -->
+    <div class="modal" id="trainingModal">
+      <div class="modal-content training-modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Criar Treino</h2>
+          <button class="close-btn" onclick="closeTrainingModal()">&times;</button>
+        </div>
+        
+        <form id="trainingForm">
+          <input type="hidden" id="trainingId" />
+          
+          <div class="form-group">
+            <label for="trainingName">Nome do Treino</label>
+            <input type="text" id="trainingName" placeholder="Ex: Treino A" required />
+          </div>
+
+          <div class="form-group">
+            <label>Selecione os Exercícios</label>
+            <input
+              type="text"
+              id="exerciseSearchInput"
+              placeholder="Buscar exercício por nome ou descrição..."
+              style="margin-bottom: 1rem;"
+            />
+            <div class="modal-exercises-grid" id="availableExercisesGrid">
+              <p>Carregando exercícios...</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Exercícios Selecionados</label>
+            <div class="selected-exercises-list" id="selectedExercisesList">
+              <p style="color: #666;">Nenhum exercício selecionado</p>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeTrainingModal()">
+              Cancelar
+            </button>
+            <button type="button" class="btn btn-danger" id="deleteTrainingBtn" style="display: none;" onclick="deleteTraining()">
+              Deletar Treino
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Salvar Treino
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Detalhes do Exercício -->
+    <div class="modal" id="exerciseDetailModal" onclick="if(event.target === this && !event.target.closest('.modal-content')) closeExerciseDetailModal()">
+      <div class="modal-content" style="max-width: 600px;" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Detalhes do Exercício</h2>
+          <button class="close-btn" onclick="closeExerciseDetailModal()">&times;</button>
+        </div>
+        <div id="exerciseDetailContent">
+          <!-- Conteúdo será preenchido via JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <script src="./js/dashboard-instructor.js"></script>
   </body>
 </html>
