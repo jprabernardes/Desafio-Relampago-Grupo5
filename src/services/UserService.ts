@@ -35,7 +35,7 @@ export class UserService {
       const profile: any = await this.studentProfileRepository.findByUserId(user.id);
       return {
         ...user,
-        plan_type: profile?.plan_type || 'mensal'
+        planType: profile?.plan_type || 'mensal'
       };
     }
     return user;
@@ -166,26 +166,27 @@ export class UserService {
     planType?: 'mensal' | 'trimestral' | 'semestral' | 'anual'
   ): Promise<void> {
     
-    // Check permissions
-    if (updaterRole !== 'administrador') {
-        if (updaterRole === 'recepcionista') {
-            // Receptionist logic: fetch target user to check role
-            const targetUser = await this.userRepository.findById(id);
-            if (!targetUser) {
-                throw new Error('Usuário não encontrado.');
-            }
-            if (targetUser.role !== 'aluno' && targetUser.role !== 'instrutor') {
-                throw new Error('Acesso negado: Recepcionistas só podem editar Alunos e Instrutores.');
-            }
-            // Prevent changing role
-            if (data.role && data.role !== targetUser.role) {
-                 throw new Error('Acesso negado: Recepcionistas não podem alterar o tipo de usuário.');
-            }
-        } else {
-            throw new Error('Apenas administrador ou recepcionista pode atualizar usuários.');
-        }
+    // Verificar se usuário existe
+    const existingUser = await this.userRepository.findById(id);
+    if (!existingUser) {
+      throw new Error('Usuário não encontrado.');
     }
 
+    // Check permissions
+    if (updaterRole !== 'admin' && updaterRole !== 'administrador') {
+      if (updaterRole === 'recepcionista') {
+        if (existingUser.role !== 'aluno' && existingUser.role !== 'instrutor') {
+          throw new Error('Acesso negado: Recepcionistas só podem editar Alunos e Instrutores.');
+        }
+        if (data.role && data.role !== existingUser.role) {
+          throw new Error('Acesso negado: Recepcionistas não podem alterar o tipo de usuário.');
+        }
+      } else {
+        throw new Error('Apenas administrador ou recepcionista pode atualizar usuários.');
+      }
+    }
+
+    // Validações
     if (data.email && !isValidEmail(data.email)) {
       throw new Error('Email inválido.');
     }
@@ -198,14 +199,16 @@ export class UserService {
       throw new Error('Telefone inválido. Use o formato (XX)XXXXXXXXX.');
     }
 
+    if (data.document && !isValidCPF(data.document)) {
+      throw new Error('CPF inválido. Deve conter 11 dígitos numéricos.');
+    }
+
     if (data.password) {
       data.password = await hashPassword(data.password);
     }
 
-    // Atualizar dados do usuário
     await this.userRepository.update(id, data);
 
-    // Se forneceu planType, atualizar student_profile
     if (planType) {
       const user = await this.userRepository.findById(id);
       if (user && user.role === 'aluno') {
@@ -215,17 +218,18 @@ export class UserService {
   }
 
   async delete(id: number, deleterRole: string) {
+    const existingUser = await this.userRepository.findById(id);
+    if (!existingUser) {
+      throw new Error('Usuário não encontrado.');
+    }
+
     if (deleterRole !== 'administrador') {
       if (deleterRole === 'recepcionista') {
-        const targetUser = await this.userRepository.findById(id);
-        if (!targetUser) {
-            throw new Error('Usuário não encontrado.');
-        }
-        if (targetUser.role !== 'aluno' && targetUser.role !== 'instrutor') {
-            throw new Error('Acesso negado: Recepcionistas só podem deletar Alunos e Instrutores.');
+        if (existingUser.role !== 'aluno' && existingUser.role !== 'instrutor') {
+          throw new Error('Acesso negado: Recepcionistas só podem deletar Alunos e Instrutores.');
         }
       } else {
-         throw new Error('Apenas administrador ou recepcionista pode deletar usuários.');
+        throw new Error('Apenas administrador ou recepcionista pode deletar usuários.');
       }
     }
 

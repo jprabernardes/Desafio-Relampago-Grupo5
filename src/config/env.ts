@@ -5,8 +5,12 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const config = {
-  port: process.env.PORT || 3000, // Porta do servidor
-  jwtSecret: process.env.JWT_SECRET || 'secret_key_change_in_production', // Chave secreta para JWT
-  dbPath: process.env.DB_PATH || './academia.db', // Caminho do banco de dados SQLite
-  nodeEnv: process.env.NODE_ENV || 'development' // Ambiente de execução
+  port: process.env.PORT || 3000,
+  jwtSecret: process.env.NODE_ENV === 'test' 
+    ? 'test_secret_key_for_integration_tests'
+    : (process.env.JWT_SECRET || 'secret_key_change_in_production'),
+  dbPath: process.env.NODE_ENV === 'test'
+    ? ':memory:'
+    : (process.env.DB_PATH || './academia.db'),
+  nodeEnv: process.env.NODE_ENV || 'development'
 };
