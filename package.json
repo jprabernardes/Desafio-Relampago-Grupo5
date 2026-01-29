@@ -4,6 +4,7 @@
   "description": "Sistema de gerenciamento de academia com 4 roles",
   "main": "dist/server.js",
   "scripts": {
+    "build": "tsc",
     "dev": "ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
