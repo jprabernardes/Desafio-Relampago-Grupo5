@@ -26,6 +26,12 @@ export class ExerciseService {
       throw new Error('Séries deve ser um número positivo.');
     }
 
+    const normalizedName = exercise.name.toLowerCase().replace(/\s+/g, '');
+    const existing = await this.repository.findByName(normalizedName);
+    if (existing) {
+      throw new Error('Já existe um exercício com este nome.');
+    }
+
     return this.repository.create(exercise);
   }
 
