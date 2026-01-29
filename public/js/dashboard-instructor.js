@@ -853,6 +853,26 @@ function formatDateBR(dateStr) {
   return `${day}/${month}/${year}`;
 }
 
+// Converte data do input HTML (YYYY-MM-DD) para formato backend (DD-MM-YYYY)
+function convertDateForBackend(dateStr) {
+  if (!dateStr) return '';
+  console.log("convertDateForBackend - INPUT:", dateStr);
+  const [year, month, day] = dateStr.split('-');
+  const result = `${day}-${month}-${year}`;
+  console.log("convertDateForBackend - OUTPUT:", result);
+  return result;
+}
+
+// Converte data do backend (DD-MM-YYYY) para input HTML (YYYY-MM-DD)
+function convertDateFromBackend(dateStr) {
+  if (!dateStr) return '';
+  console.log("convertDateFromBackend - INPUT:", dateStr);
+  const [day, month, year] = dateStr.split('-');
+  const result = `${year}-${month}-${day}`;
+  console.log("convertDateFromBackend - OUTPUT:", result);
+  return result;
+}
+
 // CORREÇÃO: Função de filtro de aulas
 function filterClasses() {
   const searchTerm = document.getElementById("classSearchInput").value.toLowerCase();
@@ -996,7 +1016,7 @@ document
     
     const data = {
       name: document.getElementById("className").value,
-      date: dateValue,
+      date: convertDateForBackend(dateValue), // Converte YYYY-MM-DD para DD-MM-YYYY
       time: document.getElementById("classTime").value,
       slots_limit: parseInt(document.getElementById("classLimit").value),
     };
@@ -1096,7 +1116,7 @@ async function openClassDetailsModal(classId) {
   // Preencher dados
   document.getElementById("detailsClassId").value = classData.id;
   document.getElementById("detailsClassName").value = classData.name || classData.nome_aula;
-  document.getElementById("detailsClassDate").value = classData.date || classData.data;
+  document.getElementById("detailsClassDate").value = convertDateFromBackend(classData.date || classData.data);
   document.getElementById("detailsClassTime").value = classData.time || classData.hora;
   document.getElementById("detailsClassLimit").value = classData.slots_limit || classData.limite_vagas;
   
@@ -1159,7 +1179,7 @@ document.getElementById("editClassForm").addEventListener("submit", async (e) =>
   
   const data = {
     name: document.getElementById("detailsClassName").value,
-    date: dateValue,
+    date: convertDateForBackend(dateValue), // Converte YYYY-MM-DD para DD-MM-YYYY
     time: document.getElementById("detailsClassTime").value,
     slots_limit: parseInt(document.getElementById("detailsClassLimit").value),
   };
