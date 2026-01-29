@@ -1,257 +1,280 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FitManager - Login</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
 
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FitManager - Login</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-      .login-container {
-        background: white;
-        padding: 3rem;
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        width: 100%;
-        max-width: 400px;
-      }
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-      .logo {
-        text-align: center;
-        margin-bottom: 2rem;
-      }
+    .login-container {
+      background: white;
+      padding: 3rem;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 400px;
+    }
 
-      .logo h1 {
-        font-size: 2.5rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.5rem;
-      }
+    .logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
 
-      .logo p {
-        color: #666;
-        font-size: 0.9rem;
-      }
+    .logo h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
 
-      .form-group {
-        margin-bottom: 1.5rem;
-      }
+    .logo p {
+      color: #666;
+      font-size: 0.9rem;
+    }
 
-      .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        color: #333;
-        font-weight: 500;
-      }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
 
-      .form-group input {
-        width: 100%;
-        padding: 0.75rem;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
-        font-size: 1rem;
-        transition: border-color 0.3s;
-      }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #333;
+      font-weight: 500;
+    }
 
-      .form-group input:focus {
-        outline: none;
-        border-color: #667eea;
-      }
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
 
-      .btn {
-        width: 100%;
-        padding: 0.875rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: transform 0.2s;
-      }
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
 
-      .btn:hover {
-        transform: translateY(-2px);
-      }
+    .btn {
+      width: 100%;
+      padding: 0.875rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
 
-      .btn:active {
-        transform: translateY(0);
-      }
+    .btn:hover {
+      transform: translateY(-2px);
+    }
 
-      .alert {
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-        display: none;
-      }
+    .btn:active {
+      transform: translateY(0);
+    }
 
-      .alert.error {
-        background: #fee;
-        color: #c33;
-        border: 1px solid #fcc;
-      }
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      display: none;
+    }
 
-      .alert.show {
-        display: block;
-      }
+    .alert.error {
+      background: #fee;
+      color: #c33;
+      border: 1px solid #fcc;
+    }
 
-      .demo-users {
-        margin-top: 2rem;
-        padding-top: 2rem;
-        border-top: 1px solid #e0e0e0;
-      }
+    .alert.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
 
-      .demo-users h3 {
-        font-size: 0.9rem;
-        color: #666;
-        margin-bottom: 1rem;
-      }
+    .alert.show {
+      display: block;
+    }
 
-      .demo-user {
-        background: #f5f5f5;
-        padding: 0.75rem;
-        border-radius: 8px;
-        margin-bottom: 0.5rem;
-        font-size: 0.85rem;
-        cursor: pointer;
-        transition: background 0.2s;
-      }
+    .demo-users {
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid #e0e0e0;
+    }
 
-      .demo-user:hover {
-        background: #e8e8e8;
-      }
+    .demo-users h3 {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 1rem;
+    }
 
-      .demo-user strong {
-        color: #667eea;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="login-container">
-      <div class="logo">
-        <h1>💪 FitManager</h1>
-        <p>Sistema de Gerenciamento de Academia</p>
-      </div>
+    .demo-user {
+      background: #f5f5f5;
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
 
-      <div id="alert" class="alert"></div>
+    .demo-user:hover {
+      background: #e8e8e8;
+    }
 
-      <form id="loginForm">
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="email" required placeholder="seu@email.com" />
-        </div>
+    .demo-user strong {
+      color: #667eea;
+    }
+  </style>
+</head>
 
-        <div class="form-group">
-          <label>Senha</label>
-          <input type="password" id="senha" required placeholder="••••••" />
-        </div>
-
-        <button type="submit" class="btn">Entrar</button>
-      </form>
-
-      <div class="demo-users">
-        <h3>👤 Usuários de Teste (clique para preencher):</h3>
-        <div
-          class="demo-user"
-          onclick="fillLogin('admin@academia.com', 'admin123')"
-        >
-          <strong>Admin:</strong> admin@academia.com / admin123
-        </div>
-        <div
-          class="demo-user"
-          onclick="fillLogin('maria@academia.com', 'senha123')"
-        >
-          <strong>Recepcionista:</strong> maria@academia.com / senha123
-        </div>
-        <div
-          class="demo-user"
-          onclick="fillLogin('carlos@academia.com', 'senha123')"
-        >
-          <strong>Instrutor:</strong> carlos@academia.com / senha123
-        </div>
-        <div
-          class="demo-user"
-          onclick="fillLogin('joao@academia.com', 'senha123')"
-        >
-          <strong>Aluno:</strong> joao@academia.com / senha123
-        </div>
-      </div>
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <h1>💪 FitManager</h1>
+      <p>Sistema de Gerenciamento de Academia</p>
     </div>
 
-    <script>
-      const API_URL = "/api";
+    <div id="alert" class="alert"></div>
 
-      function fillLogin(email, senha) {
-        document.getElementById("email").value = email;
-        document.getElementById("senha").value = senha;
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" required placeholder="seu@email.com" />
+      </div>
+
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="senha" required placeholder="••••••" />
+        <div style="text-align: right; margin-top: 0.5rem;">
+          <a href="#" onclick="forgotPassword()"
+            style="color: #667eea; text-decoration: none; font-size: 0.9rem;">Esqueci minha senha</a>
+        </div>
+      </div>
+
+      <button type="submit" class="btn">Entrar</button>
+    </form>
+
+    <div class="demo-users">
+      <h3>👤 Usuários de Teste (clique para preencher):</h3>
+      <div class="demo-user" onclick="fillLogin('admin@academia.com', 'admin123')">
+        <strong>Admin:</strong> admin@academia.com / admin123
+      </div>
+      <div class="demo-user" onclick="fillLogin('maria@academia.com', 'senha123')">
+        <strong>Recepcionista:</strong> maria@academia.com / senha123
+      </div>
+      <div class="demo-user" onclick="fillLogin('carlos@academia.com', 'senha123')">
+        <strong>Instrutor:</strong> carlos@academia.com / senha123
+      </div>
+      <div class="demo-user" onclick="fillLogin('joao@academia.com', 'senha123')">
+        <strong>Aluno:</strong> joao@academia.com / senha123
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "/api";
+
+    function fillLogin(email, senha) {
+      document.getElementById("email").value = email;
+      document.getElementById("senha").value = senha;
+    }
+
+    function forgotPassword() {
+      const email = document.getElementById("email").value;
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+      if (!email || !emailRegex.test(email)) {
+        showAlert("Insira seu email", "error");
+        return;
+      }
+      showAlert("Informações para recuperação de senha foram enviados para o seu email", "success");
+    }
+
+    let alertTimeout;
+
+    function showAlert(message, type = "error") {
+      const alert = document.getElementById("alert");
+      alert.textContent = message;
+      alert.className = `alert ${type} show`;
+
+      if (alertTimeout) {
+        clearTimeout(alertTimeout);
       }
 
-      function showAlert(message, type = "error") {
-        const alert = document.getElementById("alert");
-        alert.textContent = message;
-        alert.className = `alert ${type} show`;
-        setTimeout(() => alert.classList.remove("show"), 5000);
-      }
+      alertTimeout = setTimeout(() => {
+        alert.classList.remove("show");
+        alertTimeout = null;
+      }, 10000);
+    }
 
-      document
-        .getElementById("loginForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
+    document
+      .getElementById("loginForm")
+      .addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-          const email = document.getElementById("email").value;
-          const password = document.getElementById("senha").value;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("senha").value;
 
-          try {
-            const response = await fetch(`${API_URL}/auth/login`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email, password }),
-            });
+        try {
+          const response = await fetch(`${API_URL}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
 
-            const data = await response.json();
+          const data = await response.json();
 
-            if (response.ok) {
+          if (response.ok) {
 
-              // Redirecionar baseado no perfil (role)
-              const role = data.user.role;
-              switch (role) {
-                case "administrador":
-                  window.location.href = "/dashboard-admin.html";
-                  break;
-                case "recepcionista":
-                  window.location.href = "/dashboard-receptionist.html";
-                  break;
-                case "instrutor":
-                  window.location.href = "dashboard-instructor.html";
-                  break;
-                case "aluno":
-                  window.location.href = "/dashboard-student.html";
-                  break;
-                default:
-                  showAlert("Role desconhecido");
-              }
-            } else {
-              showAlert(data.error || "Erro ao fazer login");
+            // Redirecionar baseado no perfil (role)
+            const role = data.user.role;
+            switch (role) {
+              case "administrador":
+                window.location.href = "/dashboard-admin.html";
+                break;
+              case "recepcionista":
+                window.location.href = "/dashboard-receptionist.html";
+                break;
+              case "instrutor":
+                window.location.href = "dashboard-instructor.html";
+                break;
+              case "aluno":
+                window.location.href = "/dashboard-student.html";
+                break;
+              default:
+                showAlert("Role desconhecido");
             }
-          } catch (error) {
-            showAlert("Erro ao conectar com o servidor");
+          } else {
+            showAlert(data.error || "Erro ao fazer login");
           }
-        });
-    </script>
-  </body>
+        } catch (error) {
+          showAlert("Erro ao conectar com o servidor");
+        }
+      });
+  </script>
+</body>
+
 </html>
