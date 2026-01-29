@@ -25,13 +25,13 @@ export const createTables = (): Promise<void> => {
       // Migration check for phone column (for existing databases)
       db.all("PRAGMA table_info(users)", (err, rows: any[]) => {
         if (!err && rows) {
-            const hasPhone = rows.some(r => r.name === 'phone');
-            if (!hasPhone) {
-                db.run("ALTER TABLE users ADD COLUMN phone TEXT", (err) => {
-                    if (err) console.error("Error adding phone column:", err);
-                    else console.log("✅ Phone column added to users table.");
-                });
-            }
+          const hasPhone = rows.some(r => r.name === 'phone');
+          if (!hasPhone) {
+            db.run("ALTER TABLE users ADD COLUMN phone TEXT", (err) => {
+              if (err) console.error("Error adding phone column:", err);
+              else console.log("✅ Phone column added to users table.");
+            });
+          }
         }
       });
 
@@ -83,10 +83,10 @@ export const createTables = (): Promise<void> => {
         // Migration to add columns if they don't exist
         db.all("PRAGMA table_info(exercise_training)", (err, rows: any[]) => {
           if (!err && rows) {
-             const columns = rows.map(r => r.name);
-             if (!columns.includes('series')) db.run("ALTER TABLE exercise_training ADD COLUMN series INTEGER");
-             if (!columns.includes('repetitions')) db.run("ALTER TABLE exercise_training ADD COLUMN repetitions INTEGER");
-             if (!columns.includes('weight')) db.run("ALTER TABLE exercise_training ADD COLUMN weight REAL");
+            const columns = rows.map(r => r.name);
+            if (!columns.includes('series')) db.run("ALTER TABLE exercise_training ADD COLUMN series INTEGER");
+            if (!columns.includes('repetitions')) db.run("ALTER TABLE exercise_training ADD COLUMN repetitions INTEGER");
+            if (!columns.includes('weight')) db.run("ALTER TABLE exercise_training ADD COLUMN weight REAL");
           }
         });
       });
@@ -410,23 +410,26 @@ export const createDefaultExercises = async (): Promise<void> => {
 
       for (const exercise of defaultExercises) {
         await new Promise<void>((res, rej) => {
-          db.run(
-            `INSERT OR IGNORE INTO exercise (name, description, repetitions, weight, series)
-             VALUES (?, ?, ?, ?, ?)`,
-            [exercise.name, exercise.description, exercise.repetitions, exercise.weight, exercise.series],
-            function (err) {
-              if (err) {
-                rej(err);
-              } else {
-                if (this.changes > 0) {
+          // Check if exists first
+          db.get('SELECT id FROM exercise WHERE name = ?', [exercise.name], (err, row) => {
+            if (err) return rej(err);
+
+            if (row) {
+              console.log(`ℹ️  Exercício "${exercise.name}" já existe`);
+              res();
+            } else {
+              db.run(
+                `INSERT INTO exercise (name, description, repetitions, weight, series)
+                 VALUES (?, ?, ?, ?, ?)`,
+                [exercise.name, exercise.description, exercise.repetitions, exercise.weight, exercise.series],
+                function (err) {
+                  if (err) return rej(err);
                   console.log(`✅ Exercício "${exercise.name}" criado`);
-                } else {
-                  console.log(`ℹ️  Exercício "${exercise.name}" já existe`);
+                  res();
                 }
-                res();
-              }
+              );
             }
-          );
+          });
         });
       }
 
