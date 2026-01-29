@@ -82,10 +82,30 @@ export class TrainingController {
   addExercise = async (req: Request, res: Response): Promise<Response> => {
     try {
       const instructorId = (req as any).user.id;
-      const { exerciseId } = req.body;
+      const { exerciseId, series, repetitions, weight } = req.body;
       await this.trainingService.findById(Number(req.params.id), instructorId);
-      await this.exerciseService.addToTraining(Number(req.params.id), exerciseId);
+      await this.exerciseService.addToTrainingWithParams(Number(req.params.id), exerciseId, {
+        series,
+        repetitions,
+        weight
+      });
       return res.status(200).json({ message: 'Exercício associado ao treino com sucesso.' });
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
+    }
+  };
+
+  updateExerciseInTraining = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const instructorId = (req as any).user.id;
+      const trainingId = Number(req.params.id);
+      const exerciseId = Number(req.params.exerciseId);
+      const { series, repetitions, weight } = req.body;
+
+      await this.trainingService.findById(trainingId, instructorId);
+      await this.exerciseService.updateInTraining(trainingId, exerciseId, { series, repetitions, weight });
+
+      return res.status(200).json({ message: 'Exercício do treino atualizado com sucesso.' });
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
     }
@@ -128,6 +148,26 @@ export class TrainingController {
       const instructorId = (req as any).user.id;
       const students = await this.trainingService.getStudentsFromTrainings(instructorId);
       return res.status(200).json(students);
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
+    }
+  };
+
+  findTrainingsByStudentForInstructor = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const instructorId = (req as any).user.id;
+      const studentId = Number(req.params.studentId);
+      const trainings = await this.trainingService.findByInstructorAndUserId(instructorId, studentId);
+      
+      // Incluir exercícios para cada treino
+      const trainingsWithExercises = await Promise.all(
+        trainings.map(async (t) => {
+          const exercises = await this.exerciseService.findByTrainingId(t.id!);
+          return { ...t, exercises };
+        })
+      );
+      
+      return res.status(200).json(trainingsWithExercises);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
     }

@@ -42,6 +42,10 @@ export class TrainingService {
     return await this.trainingRepository.findByInstructorId(instructorId);
   }
 
+  async findByInstructorAndUserId(instructorId: number, userId: number): Promise<Training[]> {
+    return await this.trainingRepository.findByInstructorAndUserId(instructorId, userId);
+  }
+
   async findById(id: number, instructorId: number): Promise<Training | undefined> {
     const training = await this.trainingRepository.findById(id);
     if (training && training.instructor_id !== instructorId) {

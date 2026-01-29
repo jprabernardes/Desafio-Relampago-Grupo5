@@ -78,6 +78,26 @@ export class ExerciseService {
     await this.repository.addToTraining(trainingId, exerciseId);
   }
 
+  async addToTrainingWithParams(
+    trainingId: number,
+    exerciseId: number,
+    params?: { series?: number; repetitions?: number; weight?: number }
+  ): Promise<void> {
+    const exercise = await this.repository.findById(exerciseId);
+    if (!exercise) {
+      throw new Error('Exercício não encontrado.');
+    }
+    await this.repository.addToTraining(trainingId, exerciseId, params);
+  }
+
+  async updateInTraining(
+    trainingId: number,
+    exerciseId: number,
+    params: { series?: number; repetitions?: number; weight?: number }
+  ): Promise<void> {
+    await this.repository.updateInTraining(trainingId, exerciseId, params);
+  }
+
   async removeFromTraining(trainingId: number, exerciseId: number): Promise<void> {
     await this.repository.removeFromTraining(trainingId, exerciseId);
   }
