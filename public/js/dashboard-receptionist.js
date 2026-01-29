@@ -5,27 +5,12 @@ let allUsers = [];
 let filteredUsers = [];
 
 const API_URL = "/api";
-const token = localStorage.getItem("token");
-const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-// --- Auth & Access Control ---
-
-if (!token) {
-  window.location.href = "/";
+async function loadUserInfo() {
+  const res = await fetch(`${API_URL}/auth/me`);
+  const data = await res.json();
+  return data;
 }
-
-// Ensure user is receptionist
-if (user.role && user.role !== "recepcionista") {
-  alert("Acesso negado. Você não é recepcionista.");
-  logout();
-}
-
-// Display Name
-const displayName = user.name || user.nome || "Recepcionista";
-document.getElementById("userName").textContent = displayName;
-document.getElementById("userAvatar").textContent = displayName
-  .charAt(0)
-  .toUpperCase();
 
 // --- Modal Logic ---
 let pendingConfirmAction = null;
@@ -52,6 +37,32 @@ function confirmAction() {
 
 // Load Tab
 async function loadTab(tab) {
+
+  try {
+    const userData = await loadUserInfo();
+    if (userData.error) {
+        document.cookie = "";
+        window.location.href = "/";
+    }
+
+    // Ensure user is receptionist
+    if (userData.role && userData.role !== "recepcionista") {
+      alert("Acesso negado. Você não é recepcionista.");
+      logout();
+    }
+
+    // Display Name
+    const displayName = userData.name || userData.nome || "Recepcionista";
+    document.getElementById("userName").textContent = displayName;
+    document.getElementById("userAvatar").textContent = displayName
+      .charAt(0)
+      .toUpperCase();
+
+  } catch (error) {
+    console.error("Erro:", error);
+    window.location.href = "/";
+  }
+
   currentTab = tab;
 
   // UI Updates
@@ -121,9 +132,7 @@ function updateTableHeaders(type) {
 // Load Metrics
 async function loadMetrics() {
   try {
-    const response = await fetch(`${API_URL}/receptionist/metrics`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await fetch(`${API_URL}/receptionist/metrics`);
     if (!response.ok) throw new Error("Erro ao carregar métricas");
     const data = await response.json();
 
@@ -147,9 +156,7 @@ async function loadUsers(type) {
   else if (type === "instructors") endpoint = "/receptionist/instructors";
 
   try {
-    const res = await fetch(`${API_URL}${endpoint}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetch(`${API_URL}${endpoint}`);
 
     if (!res.ok) throw new Error("Erro ao buscar dados");
 
@@ -273,7 +280,6 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(body),
     });
@@ -356,8 +362,7 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
     const res = await fetch(`${API_URL}/users/${id}`, {
       method: "PUT",
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify(body),
     });
@@ -411,8 +416,8 @@ function showEditAlert(msg, type) {
   el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
 }
 
-function logout() {
-  localStorage.removeItem("token");
+async function logout() {
+  await fetch(`${API_URL}/auth/logout`, { method: "DELETE" });
   window.location.href = "/";
 }
 

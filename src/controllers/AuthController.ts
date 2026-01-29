@@ -17,6 +17,13 @@ export class AuthController {
     try {
       const { email, password } = req.body;
       const result = await this.authService.login(email, password);
+
+      res.cookie('token', result.token, {
+        httpOnly: true,
+        sameSite: 'strict', 
+        maxAge: 1000 * 60 * 60 * 24, // expira em um dia
+      });
+
       return res.status(200).json(result);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -44,4 +51,16 @@ export class AuthController {
       return res.status(400).json({ error: error.message });
     }
   };
+
+  logout = async (req: Request, res: Response): Promise<Response> => {
+    // Remove o cookie "token" definindo expiração no passado
+    res.clearCookie("token", {
+      httpOnly: true,
+      sameSite: "strict",
+      path: "/", // precisa ser o mesmo path usado no login
+    });
+
+    return res.status(200).json({ message: "Logout realizado com sucesso." });
+  };
+
 }

@@ -3,8 +3,6 @@ let allUsers = [];
 let filteredUsers = [];
 
 const API_URL = "/api";
-const token = localStorage.getItem("token");
-const user = JSON.parse(localStorage.getItem("user") || "{}");
 
 // Lógica do Modal de Confirmação
 let pendingConfirmAction = null;
@@ -27,30 +25,41 @@ function confirmAction() {
   closeConfirmModal();
 }
 
-if (!token || user.role !== "administrador") {
-  window.location.href = "/";
+async function loadUserInfo() {
+  const res = await fetch(`${API_URL}/auth/me`);
+  const data = await res.json();
+  return data;
 }
-
-// Adaptador: backend usa 'name', frontend usa 'nome'
-document.getElementById("userName").textContent =
-  user.name || user.nome || "Admin";
-document.getElementById("userAvatar").textContent = (
-  user.name ||
-  user.nome ||
-  "A"
-)
-  .charAt(0)
-  .toUpperCase();
 
 async function loadData() {
   try {
+
+    const userData = await loadUserInfo();
+    if (userData.error) {
+        document.cookie = "";
+        window.location.href = "/";
+    }
+
+    // Ensure user is admistrator
+    if (userData.role && userData.role !== "administrador") {
+      alert("Acesso negado. Você não é administrador.");
+      logout();
+    }
+
+    // Adaptador: backend usa 'name', frontend usa 'nome'
+    document.getElementById("userName").textContent =
+      userData.name || userData.nome || "Admin";
+    document.getElementById("userAvatar").textContent = (
+      userData.name ||
+      userData.nome ||
+      "A"
+    )
+      .charAt(0)
+      .toUpperCase();
+
     const [usersRes, metricsRes] = await Promise.all([
-      fetch(`${API_URL}/users`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      fetch(`${API_URL}/users/dashboard`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
+      fetch(`${API_URL}/users`),
+      fetch(`${API_URL}/users/dashboard`),
     ]);
 
     const rawUsers = await usersRes.json();
@@ -213,11 +222,7 @@ async function loadTab(tipo = "all") {
   document.getElementById("searchInput").value = "";
 
   try {
-    const res = await fetch(`${API_URL}/users`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const res = await fetch(`${API_URL}/users`);
 
     if (!res.ok) {
       throw new Error("Erro ao buscar usuários");
@@ -383,7 +388,6 @@ async function deleteUser(id) {
   try {
     const res = await fetch(`${API_URL}/users/${id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (res.ok) {
@@ -430,7 +434,6 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ ...data, planType }),
     });
@@ -505,7 +508,6 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(data),
     });
@@ -526,8 +528,8 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
   }
 });
 
-function logout() {
-  localStorage.clear();
+async function logout() {
+  await fetch(`${API_URL}/auth/logout`, { method: "DELETE" });
   window.location.href = "/";
 }
 

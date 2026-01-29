@@ -1,5 +1,4 @@
 const API_URL = "/api";
-let token = localStorage.getItem("token");
 
 // Lógica do Modal de Confirmação
 let pendingConfirmAction = null;
@@ -21,8 +20,6 @@ function confirmAction() {
   }
   closeConfirmModal();
 }
-
-if (!token) window.location.href = "/";
 
 // Navegação
 document.querySelectorAll(".nav-item").forEach((item) => {
@@ -54,17 +51,17 @@ function showAlert(msg, type = "success") {
   setTimeout(() => el.classList.remove("show"), 3000);
 }
 
-function logout() {
-  localStorage.removeItem("token");
+async function logout() {
+  await fetch(`${API_URL}/auth/logout`, { method: "DELETE" });
   window.location.href = "/";
 }
 
 async function loadUserInfo() {
-  const res = await fetch(`${API_URL}/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(`${API_URL}/auth/me`);
   const data = await res.json();
   document.getElementById("userName").textContent = data.name || data.nome || "Instrutor";
+
+  return data;
 }
 
 // --- Templates ---
@@ -72,9 +69,20 @@ let templates = [];
 
 async function loadTemplates() {
   try {
-    const res = await fetch(`${API_URL}/instructor/exercises`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+
+    const userData = await loadUserInfo();
+    if (userData.error) {
+        document.cookie = "";
+        window.location.href = "/";
+    }
+
+    // Ensure user is instructor
+    if (userData.role && userData.role !== "instrutor") {
+      alert("Acesso negado. Você não é instrutor.");
+      logout();
+    }
+
+    const res = await fetch(`${API_URL}/instructor/exercises`);
     templates = await res.json();
     renderTemplates();
   } catch (e) {
@@ -151,8 +159,7 @@ window.deleteTemplate = async (id) => {
     async () => {
       try {
         const res = await fetch(`${API_URL}/instructor/exercises/${id}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
+          method: "DELETE"
         });
         if (res.ok) {
           showAlert("Template excluído!");
@@ -189,8 +196,7 @@ document
       const res = await fetch(url, {
         method: method,
         headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(data),
       });
@@ -231,9 +237,7 @@ document
     }
 
     try {
-      const res = await fetch(`${API_URL}/instructor/students`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(`${API_URL}/instructor/students`);
       
       if (!res.ok) throw new Error("Erro ao buscar alunos");
 
@@ -297,7 +301,6 @@ document
       const createRes = await fetch(`${API_URL}/instructor/trainings`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(trainingData),
@@ -315,7 +318,6 @@ document
         const exerciseRes = await fetch(`${API_URL}/instructor/trainings/${training.id}/exercises`, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ exerciseId }),
@@ -345,9 +347,7 @@ let allClasses = [];
 
 async function loadClasses() {
   try {
-    const res = await fetch(`${API_URL}/instructor/classes`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetch(`${API_URL}/instructor/classes`);
     myClasses = await res.json();
     allClasses = [...myClasses]; // Cópia para filtro
     renderClasses();
@@ -388,9 +388,7 @@ async function renderClasses() {
   const classesWithEnrollments = await Promise.all(
     myClasses.map(async (c) => {
       try {
-        const res = await fetch(`${API_URL}/instructor/classes/${c.id}/participants`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(`${API_URL}/instructor/classes/${c.id}/participants`);
         
         if (!res.ok) {
           console.error(`Erro ao buscar alunos da aula ${c.id}: HTTP ${res.status}`);
@@ -486,7 +484,6 @@ document
       const res = await fetch(url, {
         method: method,
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
@@ -545,8 +542,7 @@ window.deleteClass = async (id) => {
     async () => {
       try {
         const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
+          method: "DELETE"
         });
         if (res.ok) {
           showAlert("Aula cancelada!");
@@ -585,9 +581,7 @@ async function openClassDetailsModal(classId) {
   
   // Buscar alunos inscritos
   try {
-    const res = await fetch(`${API_URL}/instructor/classes/${classId}/participants`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetch(`${API_URL}/instructor/classes/${classId}/participants`);
     
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -651,7 +645,6 @@ document.getElementById("editClassForm").addEventListener("submit", async (e) =>
     const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
@@ -677,7 +670,6 @@ function deleteClassFromModal() {
   deleteClass(parseInt(classId));
 }
 
-loadUserInfo();
 loadTemplates();
 
 // Setar data mínima e adicionar validação customizada ao carregar a página

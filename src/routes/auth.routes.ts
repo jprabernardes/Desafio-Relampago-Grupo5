@@ -8,6 +8,7 @@ const authController = new AuthController();
 
 // Rotas públicas
 router.post('/login', authController.login);
+router.delete("/logout", authController.logout);
 
 // Rotas protegidas
 router.get('/me', authMiddleware, authController.me);
