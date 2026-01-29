@@ -230,7 +230,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     const sectionId = item.getAttribute("data-section");
     document.getElementById(sectionId).classList.add("active");
 
-    if (sectionId === "create-exercise" || sectionId === "assign-workout")
+    if (sectionId === "create-exercise")
       loadTemplates();
     if (sectionId === "students") loadStudents();
     if (sectionId === "classes") loadClasses();
@@ -397,14 +397,11 @@ window.closeExerciseDetailModal = () => {
 let templatesSearchFilter = "";
 let templatesCurrentPage = 1;
 let templatesPageSize = 12;
-let assignTemplatesSearchFilter = "";
-let assignTemplatesCurrentPage = 1;
 let studentsCurrentPage = 1;
 let studentsPageSize = 12;
 
 function renderTemplates() {
   const list = document.getElementById("templatesList");
-  const assignList = document.getElementById("assignTemplatesList");
 
   // Filtrar templates para gerenciamento
   let filteredTemplates = templates;
@@ -436,54 +433,13 @@ function renderTemplates() {
           showDescription: true,
           showStats: true,
           showHint: false,
-          onClick: `event.stopPropagation(); toggleSelection(this, ${t.id})`,
+          onClick: null,
           allowDetailView: true
         }))
         .join("");
     }
     renderPagination("templatesPagination", templatesCurrentPage, totalPages, (page) => {
       templatesCurrentPage = page;
-      renderTemplates();
-    });
-  }
-
-  // Filtrar templates para atribuição
-  let filteredAssignTemplates = templates;
-  if (assignTemplatesSearchFilter) {
-    const searchTerm = assignTemplatesSearchFilter.toLowerCase();
-    filteredAssignTemplates = templates.filter(
-      (t) =>
-        (t.name || "").toLowerCase().includes(searchTerm) ||
-        (t.description || "").toLowerCase().includes(searchTerm)
-    );
-  }
-
-  // Paginar templates para atribuição
-  const assignTotalPages = Math.ceil(filteredAssignTemplates.length / templatesPageSize);
-  const assignStartIndex = (assignTemplatesCurrentPage - 1) * templatesPageSize;
-  const paginatedAssignTemplates = filteredAssignTemplates.slice(
-    assignStartIndex,
-    assignStartIndex + templatesPageSize
-  );
-
-  // Renderizar para Atribuição (Apenas Seleção)
-  if (assignList) {
-    if (paginatedAssignTemplates.length === 0) {
-      assignList.innerHTML = "<p>Nenhum exercício encontrado.</p>";
-    } else {
-      assignList.innerHTML = paginatedAssignTemplates
-        .map((t) => renderExerciseCard(t, {
-          showActions: false,
-          showDescription: true,
-          showStats: true,
-          showHint: false,
-          onClick: `event.stopPropagation(); toggleSelection(this, ${t.id})`,
-          allowDetailView: true
-        }))
-        .join("");
-    }
-    renderPagination("assignTemplatesPagination", assignTemplatesCurrentPage, assignTotalPages, (page) => {
-      assignTemplatesCurrentPage = page;
       renderTemplates();
     });
   }
@@ -734,13 +690,6 @@ if (templatesSearchInput) {
   });
 }
 
-// Busca de templates na aba de atribuir treino
-document.getElementById("assignExerciseSearch")?.addEventListener("input", (e) => {
-  assignTemplatesSearchFilter = e.target.value;
-  assignTemplatesCurrentPage = 1; // Resetar para primeira página
-  renderTemplates();
-});
-
 // Lógica de Edição/Exclusão
 window.editTemplate = (id) => {
   const t = templates.find((x) => x.id === id);
@@ -880,138 +829,6 @@ document
       }
     } catch (e) {
       showAlert("Erro de conexão", "error");
-    }
-  });
-
-// --- Atribuição ---
-let selectedTemplateIds = [];
-
-window.toggleSelection = (el, id) => {
-  el.classList.toggle("selected");
-  if (el.classList.contains("selected")) {
-    selectedTemplateIds.push(id);
-  } else {
-    selectedTemplateIds = selectedTemplateIds.filter((tid) => tid !== id);
-  }
-};
-
-// Buscar Aluno (CORRIGIDO: busca por Nome, Email OU CPF)
-document
-  .getElementById("studentSearch")
-  .addEventListener("input", async (e) => {
-    const term = e.target.value;
-    if (term.length < 3) {
-      document.getElementById("studentSelect").style.display = "none";
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_URL}/instructor/students`);
-      
-      if (!res.ok) throw new Error("Erro ao buscar alunos");
-
-      const allStudents = await res.json();
-      
-      // Mapear para garantir que temos os campos corretos
-      const studentsWithNames = allStudents.map(s => ({
-        id: s.id,
-        name: s.name || s.nome || `Aluno ${s.id}`,
-        email: s.email || "",
-        document: s.document || s.cpf || ""
-      }));
-      
-      const filtered = studentsWithNames.filter(
-        (s) => {
-          return s.name.toLowerCase().includes(term.toLowerCase()) ||
-                 s.email.toLowerCase().includes(term.toLowerCase()) ||
-                 s.document.includes(term);
-        }
-      );
-
-      const select = document.getElementById("studentSelect");
-      
-      if (filtered.length === 0) {
-        select.innerHTML = '<option disabled>Nenhum aluno encontrado</option>';
-        select.style.display = "block";
-      } else {
-        select.innerHTML = filtered
-          .map(
-            (s) => `<option value="${s.id}">${s.name} - CPF: ${s.document || 'N/A'}</option>`
-          )
-          .join("");
-        select.style.display = "block";
-      }
-    } catch (e) {
-      console.error("Erro na busca de alunos:", e);
-      const select = document.getElementById("studentSelect");
-      select.innerHTML = '<option disabled>Erro ao buscar alunos</option>';
-      select.style.display = "block";
-    }
-  });
-
-document
-  .getElementById("assignWorkoutForm")
-  .addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const studentId = document.getElementById("studentSelect").value;
-    const trainingName = document.getElementById("trainingNameAssign")?.value.trim() || "";
-    
-    if (!trainingName) {
-      showAlert("Nome do treino é obrigatório", "error");
-      return;
-    }
-
-    if (!studentId) return showAlert("Selecione um aluno", "error");
-    if (selectedTemplateIds.length === 0)
-      return showAlert("Selecione exercícios", "error");
-
-    try {
-      // 1. Criar o treino
-      const trainingData = {
-        name: trainingName,
-        userIds: [parseInt(studentId)]
-      };
-
-      const createRes = await fetch(`${API_URL}/instructor/trainings`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(trainingData),
-      });
-
-      if (!createRes.ok) {
-        const err = await createRes.json();
-        throw new Error(err.error || "Erro ao criar treino");
-      }
-
-      const training = await createRes.json();
-
-      // 2. Adicionar exercícios ao treino
-      for (const exerciseId of selectedTemplateIds) {
-        const exerciseRes = await fetch(`${API_URL}/instructor/trainings/${training.id}/exercises`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ exerciseId }),
-        });
-
-        if (!exerciseRes.ok) {
-          console.warn(`Erro ao adicionar exercício ${exerciseId}`);
-        }
-      }
-
-      showAlert("Treino atribuído com sucesso!");
-      selectedTemplateIds = [];
-      document
-        .querySelectorAll(".template-card.selected")
-        .forEach((el) => el.classList.remove("selected"));
-      document.getElementById("assignWorkoutForm").reset();
-      document.getElementById("studentSelect").style.display = "none";
-    } catch (e) {
-      console.error(e);
-      showAlert(e.message || "Erro ao atribuir treino", "error");
     }
   });
 

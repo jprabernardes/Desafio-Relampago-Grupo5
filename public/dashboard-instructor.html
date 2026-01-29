@@ -15,9 +15,6 @@
             🏋️ Criar Exercício
           </div>
           <div class="nav-item" data-section="students">👥 Alunos</div>
-          <div class="nav-item" data-section="assign-workout">
-            📋 Atribuir Treino
-          </div>
           <div class="nav-item" data-section="create-class">➕ Criar Aula</div>
           <div class="nav-item" data-section="classes">📅 Minhas Aulas</div>
         </nav>
@@ -114,53 +111,6 @@
             <p>Carregando...</p>
           </div>
           <div id="studentsPagination" class="pagination"></div>
-        </section>
-
-        <!-- Assign Workout -->
-        <section class="section" id="assign-workout">
-          <h2>Atribuir Treino ao Aluno</h2>
-          <form id="assignWorkoutForm">
-            <div class="form-group">
-              <label for="studentSearch">Buscar Aluno (Nome, Email ou CPF)</label>
-              <input
-                type="text"
-                id="studentSearch"
-                placeholder="Digite para buscar..."
-              />
-              <select
-                id="studentSelect"
-                style="margin-top: 0.5rem; display: none"
-                required
-                size="5"
-              ></select>
-            </div>
-
-            <div class="form-group">
-              <label for="trainingNameAssign">Nome do Treino</label>
-              <input
-                type="text"
-                id="trainingNameAssign"
-                placeholder="Ex: Treino A"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Selecione os Exercícios (Templates)</label>
-              <input
-                type="text"
-                id="assignExerciseSearch"
-                placeholder="Buscar exercício por nome ou descrição..."
-                class="exercise-search-input"
-              />
-              <div id="assignTemplatesList" class="templates-grid">
-                <p>Carregando templates...</p>
-              </div>
-              <div id="assignTemplatesPagination" class="pagination"></div>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Salvar Treino</button>
-          </form>
         </section>
 
         <!-- Create Class -->
