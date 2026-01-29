@@ -226,9 +226,6 @@
             const data = await response.json();
 
             if (response.ok) {
-              // Salvar token e dados do usuário
-              localStorage.setItem("token", data.token);
-              localStorage.setItem("user", JSON.stringify(data.user));
 
               // Redirecionar baseado no perfil (role)
               const role = data.user.role;

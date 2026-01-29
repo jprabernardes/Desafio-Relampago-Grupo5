@@ -1,5 +1,4 @@
 const API_URL = "/api";
-let token = localStorage.getItem("token");
 
 // ========== FUNÇÕES DE VALIDAÇÃO E SANITIZAÇÃO ==========
 
@@ -218,8 +217,6 @@ function confirmAction() {
   closeConfirmModal();
 }
 
-if (!token) window.location.href = "/";
-
 // Navegação
 document.querySelectorAll(".nav-item").forEach((item) => {
   item.addEventListener("click", () => {
@@ -251,17 +248,26 @@ function showAlert(msg, type = "success") {
   setTimeout(() => el.classList.remove("show"), 3000);
 }
 
-function logout() {
-  localStorage.removeItem("token");
+async function logout() {
+  await fetch(`${API_URL}/auth/logout`, { method: "DELETE" });
   window.location.href = "/";
 }
 
 async function loadUserInfo() {
-  const res = await fetch(`${API_URL}/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(`${API_URL}/auth/me`);
   const data = await res.json();
   document.getElementById("userName").textContent = data.name || data.nome || "Instrutor";
+
+  if (data.error) {
+    document.cookie = "";
+    window.location.href = "/";
+  }
+
+  // Ensure user is instructor
+  if (data.role && data.role !== "instrutor") {
+    alert("Acesso negado. Você não é instrutor.");
+    logout();
+  }
 }
 
 // --- Templates ---
@@ -269,9 +275,7 @@ let templates = [];
 
 async function loadTemplates() {
   try {
-    const res = await fetch(`${API_URL}/instructor/exercises`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetch(`${API_URL}/instructor/exercises`);
     templates = await res.json();
     allExercisesForDetail = templates; // Para uso no modal de detalhes
     renderTemplates();
@@ -491,9 +495,7 @@ let filteredStudents = [];
 
 async function loadStudents() {
   try {
-    const res = await fetch(`${API_URL}/instructor/students`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetch(`${API_URL}/instructor/students`);
     if (!res.ok) throw new Error("Erro ao carregar alunos");
     allStudents = await res.json();
     filteredStudents = allStudents;
@@ -582,9 +584,7 @@ window.closeStudentDetailModal = function () {
 
 async function loadStudentData(studentId) {
   try {
-    const res = await fetch(`${API_URL}/instructor/students/${studentId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetch(`${API_URL}/instructor/students/${studentId}`);
     if (!res.ok) throw new Error("Erro ao carregar aluno");
     const student = await res.json();
     document.getElementById("studentName").textContent = student.name || student.nome || "Aluno";
@@ -601,9 +601,7 @@ async function loadStudentData(studentId) {
 
 async function loadStudentTrainings(studentId) {
   try {
-    const res = await fetch(`${API_URL}/instructor/students/${studentId}/trainings`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetch(`${API_URL}/instructor/students/${studentId}/trainings`);
     if (!res.ok) throw new Error("Erro ao carregar treinos");
     studentTrainings = await res.json();
     renderStudentTrainings();
@@ -615,9 +613,7 @@ async function loadStudentTrainings(studentId) {
 
 async function loadExercisesForTraining() {
   try {
-    const res = await fetch(`${API_URL}/instructor/exercises`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetch(`${API_URL}/instructor/exercises`);
     if (!res.ok) throw new Error("Erro ao carregar exercícios");
     allExercisesForTraining = await res.json();
     allExercisesForDetail = allExercisesForTraining; // Para uso no modal de detalhes
@@ -792,8 +788,7 @@ window.deleteTemplate = async (id) => {
     async () => {
       try {
         const res = await fetch(`${API_URL}/instructor/exercises/${id}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
+          method: "DELETE"
         });
         if (res.ok) {
           showAlert("Template excluído!");
@@ -870,8 +865,7 @@ document
       const res = await fetch(url, {
         method: method,
         headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(data),
       });
@@ -912,9 +906,7 @@ document
     }
 
     try {
-      const res = await fetch(`${API_URL}/instructor/students`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(`${API_URL}/instructor/students`);
       
       if (!res.ok) throw new Error("Erro ao buscar alunos");
 
@@ -983,7 +975,6 @@ document
       const createRes = await fetch(`${API_URL}/instructor/trainings`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(trainingData),
@@ -1001,8 +992,7 @@ document
         const exerciseRes = await fetch(`${API_URL}/instructor/trainings/${training.id}/exercises`, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({ exerciseId }),
         });
@@ -1031,9 +1021,7 @@ let allClasses = [];
 
 async function loadClasses() {
   try {
-    const res = await fetch(`${API_URL}/instructor/classes`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetch(`${API_URL}/instructor/classes`);
     myClasses = await res.json();
     allClasses = [...myClasses]; // Cópia para filtro
     renderClasses();
@@ -1074,9 +1062,7 @@ async function renderClasses() {
   const classesWithEnrollments = await Promise.all(
     myClasses.map(async (c) => {
       try {
-        const res = await fetch(`${API_URL}/instructor/classes/${c.id}/participants`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(`${API_URL}/instructor/classes/${c.id}/participants`);
         
         if (!res.ok) {
           console.error(`Erro ao buscar alunos da aula ${c.id}: HTTP ${res.status}`);
@@ -1207,7 +1193,6 @@ document
       const res = await fetch(url, {
         method: method,
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
@@ -1266,8 +1251,7 @@ window.deleteClass = async (id) => {
     async () => {
       try {
         const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
+          method: "DELETE"
         });
         if (res.ok) {
           showAlert("Aula cancelada!");
@@ -1305,9 +1289,7 @@ async function openClassDetailsModal(classId) {
   
   // Buscar alunos inscritos
   try {
-    const res = await fetch(`${API_URL}/instructor/classes/${classId}/participants`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetch(`${API_URL}/instructor/classes/${classId}/participants`);
     
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -1369,8 +1351,7 @@ document.getElementById("editClassForm").addEventListener("submit", async (e) =>
     const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       body: JSON.stringify(data),
     });
@@ -1637,9 +1618,7 @@ window.openEditTrainingModal = async (trainingId) => {
     }
 
     // Carregar detalhes completos do treino (com exercícios e parâmetros)
-    const res = await fetch(`${API_URL}/instructor/trainings/${trainingId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetch(`${API_URL}/instructor/trainings/${trainingId}`);
     if (!res.ok) throw new Error("Erro ao carregar treino");
 
     const fullTraining = await res.json();
@@ -1690,8 +1669,7 @@ window.deleteTraining = async () => {
 
   try {
     const res = await fetch(`${API_URL}/instructor/trainings/${currentTrainingId}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
+      method: "DELETE"
     });
 
     if (res.ok) {
@@ -1729,8 +1707,7 @@ document.getElementById("trainingForm")?.addEventListener("submit", async (e) =>
       const updateRes = await fetch(`${API_URL}/instructor/trainings/${currentTrainingId}`, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({ name }),
       });
@@ -1741,9 +1718,7 @@ document.getElementById("trainingForm")?.addEventListener("submit", async (e) =>
       }
 
       // Buscar exercícios atuais do treino
-      const currentRes = await fetch(`${API_URL}/instructor/trainings/${currentTrainingId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const currentRes = await fetch(`${API_URL}/instructor/trainings/${currentTrainingId}`);
       const currentTraining = await currentRes.json();
       const currentExerciseIds = currentTraining.exercises
         ? currentTraining.exercises.map((e) => e.id)
@@ -1757,8 +1732,7 @@ document.getElementById("trainingForm")?.addEventListener("submit", async (e) =>
           await fetch(
             `${API_URL}/instructor/trainings/${currentTrainingId}/exercises/${exId}`,
             {
-              method: "DELETE",
-              headers: { Authorization: `Bearer ${token}` },
+              method: "DELETE"
             }
           );
         }
@@ -1771,8 +1745,7 @@ document.getElementById("trainingForm")?.addEventListener("submit", async (e) =>
           await fetch(`${API_URL}/instructor/trainings/${currentTrainingId}/exercises`, {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
+              "Content-Type": "application/json"
             },
             body: JSON.stringify({ exerciseId: sel.exerciseId }),
           });
@@ -1784,8 +1757,7 @@ document.getElementById("trainingForm")?.addEventListener("submit", async (e) =>
           {
             method: "PUT",
             headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
+              "Content-Type": "application/json"
             },
             body: JSON.stringify({
               series: sel.series,
@@ -1802,8 +1774,7 @@ document.getElementById("trainingForm")?.addEventListener("submit", async (e) =>
       const createRes = await fetch(`${API_URL}/instructor/trainings`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           name,
@@ -1823,8 +1794,7 @@ document.getElementById("trainingForm")?.addEventListener("submit", async (e) =>
         await fetch(`${API_URL}/instructor/trainings/${newTraining.id}/exercises`, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({ exerciseId: sel.exerciseId }),
         });
@@ -1834,8 +1804,7 @@ document.getElementById("trainingForm")?.addEventListener("submit", async (e) =>
           {
             method: "PUT",
             headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
+              "Content-Type": "application/json"
             },
             body: JSON.stringify({
               series: sel.series,

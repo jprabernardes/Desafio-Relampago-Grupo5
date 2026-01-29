@@ -527,10 +527,7 @@
             const response = await fetch(
               `${API_URL}/student/classes/${classId}/cancel`,
               {
-                method: "DELETE",
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
+                method: "DELETE"
               },
             );
 
@@ -550,13 +547,6 @@
           }
         },
       );
-    }
-    let token = localStorage.getItem("token");
-    let currentUserId = null;
-
-    // Verificar autenticação
-    if (!token) {
-      window.location.href = "/";
     }
 
     // Navegação
@@ -595,11 +585,7 @@
     // Carregar informações do usuário
     async function loadUserInfo() {
       try {
-        const response = await fetch(`${API_URL}/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(`${API_URL}/auth/me`);
 
         if (!response.ok) throw new Error("Não autorizado");
 
@@ -624,11 +610,7 @@
     // Carregar treinos do aluno
     async function loadWorkouts() {
       try {
-        const response = await fetch(`${API_URL}/student/workouts`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(`${API_URL}/student/workouts`);
 
         if (!response.ok) throw new Error("Erro ao carregar treinos");
 
@@ -682,7 +664,6 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ workout_id: workoutId }),
         });
@@ -754,8 +735,8 @@
     async function loadAvailableClasses() {
       try {
         const [classesRes, myClassesRes] = await Promise.all([
-          fetch(`${API_URL}/student/classes`, { headers: { Authorization: `Bearer ${token}` } }),
-          fetch(`${API_URL}/student/my-classes`, { headers: { Authorization: `Bearer ${token}` } })
+          fetch(`${API_URL}/student/classes`),
+          fetch(`${API_URL}/student/my-classes`)
         ]);
 
         if (!classesRes.ok || !myClassesRes.ok) throw new Error("Erro ao carregar dados das aulas");
@@ -878,10 +859,7 @@
         const response = await fetch(
           `${API_URL}/student/classes/${classId}/enroll`,
           {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            method: "POST"
           },
         );
 
@@ -910,11 +888,7 @@
     // Carregar minhas inscrições
     async function loadMyClasses() {
       try {
-        const response = await fetch(`${API_URL}/student/my-classes`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(`${API_URL}/student/my-classes`);
 
         if (!response.ok) throw new Error("Erro ao carregar inscrições");
 
@@ -975,10 +949,7 @@
             const response = await fetch(
               `${API_URL}/student/classes/${classId}/cancel`,
               {
-                method: "DELETE",
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
+                method: "DELETE"
               },
             );
 
@@ -1001,10 +972,11 @@
     }
 
     // Logout
-    function logout() {
-      localStorage.removeItem("token");
+    async function logout() {
+      await fetch(`${API_URL}/auth/logout`, { method: "DELETE" });
       window.location.href = "/";
     }
+
 
     // Inicializar
     loadUserInfo();

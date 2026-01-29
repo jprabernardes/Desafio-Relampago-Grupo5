@@ -2,6 +2,8 @@
 import express, { Application } from 'express';
 import path from 'path';
 import routes from './routes';
+import cookieParser from 'cookie-parser';
+
 import { errorMiddleware } from './middlewares/error.middleware';
 
 /**
@@ -9,6 +11,9 @@ import { errorMiddleware } from './middlewares/error.middleware';
  */
 export const createApp = (): Application => {
   const app = express();
+
+  // Middleware para lidar com cookies
+  app.use(cookieParser());
 
   // Middlewares globais para processamento de JSON e URL encoded
   app.use(express.json());
