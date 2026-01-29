@@ -72,7 +72,7 @@ async function loadData() {
       email: u.email,
       cpf: u.document,
       role: u.role,
-      tipo_plano: u.plan_type || "mensal",
+      tipo_plano: u.planType || u.plan_type || "mensal",
       phone: u.phone,
     }));
 
@@ -218,7 +218,7 @@ async function loadTab(tipo = "alunos") {
       email: u.email,
       cpf: u.document,
       role: u.role,
-      tipo_plano: u.plan_type || "mensal",
+      tipo_plano: u.planType || u.plan_type || "mensal",
       phone: u.phone,
     }));
 
