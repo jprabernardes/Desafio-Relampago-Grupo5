@@ -96,7 +96,12 @@ async function loadWorkouts() {
   try {
     const response = await fetch(`${API_URL}/student/workouts`);
 
-    if (!response.ok) throw new Error("Erro ao carregar treinos");
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.error || errorData.message || "Erro ao carregar treinos",
+      );
+    }
 
     const workouts = await response.json();
     const container = document.getElementById("workoutsList");
@@ -111,21 +116,22 @@ async function loadWorkouts() {
       .map(
         (workout) => `
             <div class="workout-card">
-              <h3>Treino ${workout.name}</h3>
+              <h3>${workout.name}</h3>
               <p><strong>Instrutor:</strong> ${workout.instructor_name || workout.instructor_id}</p>
               <div class="exercises-list">
-                ${Array.isArray(workout.exercises)
-            ? workout.exercises
-              .map(
-                (ex) => `
+                ${
+                  Array.isArray(workout.exercises)
+                    ? workout.exercises
+                        .map(
+                          (ex) => `
                     <div style="margin-bottom: 4px;">
                       <strong>${ex.name}</strong>: ${ex.series}x${ex.repetitions} - ${ex.weight || ""}
                     </div>
                   `,
-              )
-              .join("")
-            : `<pre>${workout.exercises}</pre>`
-          }
+                        )
+                        .join("")
+                    : `<pre>${workout.exercises}</pre>`
+                }
               </div>
               <div class="workout-actions">
                 <button class="btn btn-primary" onclick="printWorkout(${workout.id})">🖨️ Imprimir (Check-in)</button>
@@ -488,7 +494,7 @@ loadWorkouts();
 
 let currentDate = new Date();
 let checkinHistory = []; // Mock data store
-let classHistory = [];   // Mock data store
+let classHistory = []; // Mock data store
 
 async function loadCalendar() {
   // Mock fetching history data (simulating API calls)
@@ -509,10 +515,30 @@ async function loadHistoryData() {
   // Simulating check-ins (random dates in current month/past months)
   const today = new Date();
   checkinHistory = [
-    { date: new Date(today.getFullYear(), today.getMonth(), 5), type: 'workout', name: 'Treino A', exercises: ['Supino', 'Agachamento'] },
-    { date: new Date(today.getFullYear(), today.getMonth(), 12), type: 'workout', name: 'Treino B', exercises: ['Leg Press', 'Extensora'] },
-    { date: new Date(today.getFullYear(), today.getMonth(), 15), type: 'workout', name: 'Treino A', exercises: ['Supino', 'Agachamento'] },
-    { date: new Date(today.getFullYear(), today.getMonth(), 20), type: 'workout', name: 'Treino C', exercises: ['Esteira', 'Abdominais'] }
+    {
+      date: new Date(today.getFullYear(), today.getMonth(), 5),
+      type: "workout",
+      name: "Treino A",
+      exercises: ["Supino", "Agachamento"],
+    },
+    {
+      date: new Date(today.getFullYear(), today.getMonth(), 12),
+      type: "workout",
+      name: "Treino B",
+      exercises: ["Leg Press", "Extensora"],
+    },
+    {
+      date: new Date(today.getFullYear(), today.getMonth(), 15),
+      type: "workout",
+      name: "Treino A",
+      exercises: ["Supino", "Agachamento"],
+    },
+    {
+      date: new Date(today.getFullYear(), today.getMonth(), 20),
+      type: "workout",
+      name: "Treino C",
+      exercises: ["Esteira", "Abdominais"],
+    },
   ];
 
   // Simulating class attendance
@@ -521,11 +547,14 @@ async function loadHistoryData() {
     const response = await fetch(`${API_URL}/student/my-classes`);
     if (response.ok) {
       const myClasses = await response.json();
-      classHistory = myClasses.map(cls => ({
+      classHistory = myClasses.map((cls) => ({
         date: new Date(cls.date),
-        type: 'class',
+        type: "class",
         title: cls.title,
-        time: new Date(cls.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        time: new Date(cls.date).toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       }));
     }
   } catch (e) {
@@ -535,25 +564,29 @@ async function loadHistoryData() {
 
 function updateStats() {
   // Count total checks in history (mock + real if we had it)
-  document.getElementById('totalCheckins').textContent = checkinHistory.length;
-  document.getElementById('totalClasses').textContent = classHistory.filter(c => c.date < new Date()).length;
+  document.getElementById("totalCheckins").textContent = checkinHistory.length;
+  document.getElementById("totalClasses").textContent = classHistory.filter(
+    (c) => c.date < new Date(),
+  ).length;
 }
 
 function renderCalendar(date) {
-  const grid = document.getElementById('calendarGrid');
-  const monthLabel = document.getElementById('currentMonthLabel');
-  grid.innerHTML = '';
+  const grid = document.getElementById("calendarGrid");
+  const monthLabel = document.getElementById("currentMonthLabel");
+  grid.innerHTML = "";
 
   const year = date.getFullYear();
   const month = date.getMonth();
 
-  monthLabel.textContent = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase());
+  monthLabel.textContent = date
+    .toLocaleDateString("pt-BR", { month: "long", year: "numeric" })
+    .replace(/^\w/, (c) => c.toUpperCase());
 
   // Calendar Header (Days of Week)
-  const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  daysOfWeek.forEach(day => {
-    const div = document.createElement('div');
-    div.className = 'calendar-header';
+  const daysOfWeek = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  daysOfWeek.forEach((day) => {
+    const div = document.createElement("div");
+    div.className = "calendar-header";
     div.textContent = day;
     grid.appendChild(div);
   });
@@ -563,33 +596,37 @@ function renderCalendar(date) {
 
   // Empty cells for previous month
   for (let i = 0; i < firstDayOfMonth; i++) {
-    const div = document.createElement('div');
-    div.className = 'calendar-day empty';
+    const div = document.createElement("div");
+    div.className = "calendar-day empty";
     grid.appendChild(div);
   }
 
   // Days
   for (let d = 1; d <= daysInMonth; d++) {
     const dayDate = new Date(year, month, d);
-    const div = document.createElement('div');
-    div.className = 'calendar-day';
+    const div = document.createElement("div");
+    div.className = "calendar-day";
 
     // Check if today
     const today = new Date();
     if (dayDate.toDateString() === today.toDateString()) {
-      div.classList.add('today');
+      div.classList.add("today");
     }
 
     div.innerHTML = `<span class="day-number">${d}</span>`;
 
     // Add Markers
-    const dayCheckins = checkinHistory.filter(c => c.date.toDateString() === dayDate.toDateString());
-    const dayClasses = classHistory.filter(c => c.date.toDateString() === dayDate.toDateString());
+    const dayCheckins = checkinHistory.filter(
+      (c) => c.date.toDateString() === dayDate.toDateString(),
+    );
+    const dayClasses = classHistory.filter(
+      (c) => c.date.toDateString() === dayDate.toDateString(),
+    );
 
     if (dayCheckins.length > 0 || dayClasses.length > 0) {
-      if (dayCheckins.length > 0) div.classList.add('has-activity');
-      const markers = document.createElement('div');
-      markers.className = 'day-markers';
+      if (dayCheckins.length > 0) div.classList.add("has-activity");
+      const markers = document.createElement("div");
+      markers.className = "day-markers";
 
       if (dayCheckins.length > 0) {
         markers.innerHTML += `<span class="check-mark">✔</span>`; // Green checkmark
@@ -613,32 +650,39 @@ function changeMonth(delta) {
 }
 
 function openCalendarModal(date, workouts, classes) {
-  const modal = document.getElementById('calendarModal');
-  const dateTitle = document.getElementById('calendarModalDate');
-  const body = document.getElementById('calendarModalBody');
+  const modal = document.getElementById("calendarModal");
+  const dateTitle = document.getElementById("calendarModalDate");
+  const body = document.getElementById("calendarModalBody");
 
-  dateTitle.textContent = date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
-  body.innerHTML = '';
+  dateTitle.textContent = date.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  body.innerHTML = "";
 
   if (workouts.length === 0 && classes.length === 0) {
-    body.innerHTML = '<p style="text-align:center; color:#666;">Nenhuma atividade registrada.</p>';
+    body.innerHTML =
+      '<p style="text-align:center; color:#666;">Nenhuma atividade registrada.</p>';
   } else {
     // Render Workouts
-    workouts.forEach(w => {
-      const div = document.createElement('div');
-      div.className = 'modal-list-item workout';
-      const exercisesList = Array.isArray(w.exercises) ? w.exercises.join(', ') : w.exercises;
+    workouts.forEach((w) => {
+      const div = document.createElement("div");
+      div.className = "modal-list-item workout";
+      const exercisesList = Array.isArray(w.exercises)
+        ? w.exercises.join(", ")
+        : w.exercises;
       div.innerHTML = `
-                <h4>💪 Check-in: ${w.name || 'Treino'}</h4>
+                <h4>💪 Check-in: ${w.name || "Treino"}</h4>
                 <p>Exercícios: ${exercisesList}</p>
             `;
       body.appendChild(div);
     });
 
     // Render Classes
-    classes.forEach(c => {
-      const div = document.createElement('div');
-      div.className = 'modal-list-item class';
+    classes.forEach((c) => {
+      const div = document.createElement("div");
+      div.className = "modal-list-item class";
       div.innerHTML = `
                 <h4>🏋️ Aula: ${c.title}</h4>
                 <p>Horário: ${c.time}</p>
@@ -647,9 +691,9 @@ function openCalendarModal(date, workouts, classes) {
     });
   }
 
-  modal.classList.add('active');
+  modal.classList.add("active");
 }
 
 function closeCalendarModal() {
-  document.getElementById('calendarModal').classList.remove('active');
+  document.getElementById("calendarModal").classList.remove("active");
 }
