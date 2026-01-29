@@ -22,9 +22,6 @@ function confirmAction() {
   closeConfirmModal();
 }
 
-// ... (existing code)
-
-
 let currentUserId = null;
 
 // Verificar autenticação
