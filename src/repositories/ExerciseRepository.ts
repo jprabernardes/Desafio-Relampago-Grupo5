@@ -93,7 +93,13 @@ export class ExerciseRepository {
   findByTrainingId(trainingId: number): Promise<Exercise[]> {
     return new Promise((resolve, reject) => {
       const sql = `
-        SELECT e.* 
+        SELECT 
+          e.id,
+          e.name,
+          e.description,
+          COALESCE(et.repetitions, e.repetitions) as repetitions,
+          COALESCE(et.weight, e.weight) as weight,
+          COALESCE(et.series, e.series) as series
         FROM exercise e
         INNER JOIN exercise_training et ON e.id = et.exercise_id
         WHERE et.training_id = ?
@@ -105,11 +111,81 @@ export class ExerciseRepository {
     });
   }
 
-  addToTraining(trainingId: number, exerciseId: number): Promise<void> {
+  addToTraining(
+    trainingId: number,
+    exerciseId: number,
+    params?: { series?: number; repetitions?: number; weight?: number }
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
+      // 1) Ensure association exists
       db.run(
         'INSERT OR IGNORE INTO exercise_training (training_id, exercise_id) VALUES (?, ?)',
         [trainingId, exerciseId],
+        (err) => {
+          if (err) return reject(err);
+
+          // 2) If params provided, update association fields
+          if (!params) return resolve();
+
+          const fields: string[] = [];
+          const values: any[] = [];
+          if (params.series !== undefined) {
+            fields.push('series = ?');
+            values.push(params.series);
+          }
+          if (params.repetitions !== undefined) {
+            fields.push('repetitions = ?');
+            values.push(params.repetitions);
+          }
+          if (params.weight !== undefined) {
+            fields.push('weight = ?');
+            values.push(params.weight);
+          }
+
+          if (fields.length === 0) return resolve();
+
+          values.push(trainingId, exerciseId);
+          db.run(
+            `UPDATE exercise_training SET ${fields.join(', ')} WHERE training_id = ? AND exercise_id = ?`,
+            values,
+            (e2) => {
+              if (e2) reject(e2);
+              else resolve();
+            }
+          );
+        }
+      );
+    });
+  }
+
+  updateInTraining(
+    trainingId: number,
+    exerciseId: number,
+    params: { series?: number; repetitions?: number; weight?: number }
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const fields: string[] = [];
+      const values: any[] = [];
+
+      if (params.series !== undefined) {
+        fields.push('series = ?');
+        values.push(params.series);
+      }
+      if (params.repetitions !== undefined) {
+        fields.push('repetitions = ?');
+        values.push(params.repetitions);
+      }
+      if (params.weight !== undefined) {
+        fields.push('weight = ?');
+        values.push(params.weight);
+      }
+
+      if (fields.length === 0) return resolve();
+
+      values.push(trainingId, exerciseId);
+      db.run(
+        `UPDATE exercise_training SET ${fields.join(', ')} WHERE training_id = ? AND exercise_id = ?`,
+        values,
         (err) => {
           if (err) reject(err);
           else resolve();
