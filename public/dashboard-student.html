@@ -23,6 +23,9 @@
         <div class="nav-item" data-section="my-classes">
           📅 Minhas Inscrições
         </div>
+        <div class="nav-item" data-section="calendar">
+          🗓️ Calendário
+        </div>
       </nav>
       <button class="logout-btn" onclick="logout()">🚪 Sair</button>
     </aside>
@@ -63,6 +66,32 @@
           <p>Carregando...</p>
         </div>
       </section>
+
+      <!-- Calendar Section -->
+      <section class="section" id="calendar">
+        <h2>Calendário de Atividades</h2>
+
+        <div class="calendar-stats">
+          <div class="stat-card">
+            <h3>Check-ins</h3>
+            <span id="totalCheckins">0</span>
+          </div>
+          <div class="stat-card">
+            <h3>Aulas</h3>
+            <span id="totalClasses">0</span>
+          </div>
+        </div>
+
+        <div class="calendar-controls">
+          <button class="btn btn-secondary" onclick="changeMonth(-1)">❮ Anterior</button>
+          <h3 id="currentMonthLabel">Janeiro 2024</h3>
+          <button class="btn btn-secondary" onclick="changeMonth(1)">Próximo ❯</button>
+        </div>
+
+        <div class="calendar-grid" id="calendarGrid">
+          <!-- Calendar will be populated by JS -->
+        </div>
+      </section>
     </main>
   </div>
 
@@ -95,6 +124,21 @@
       </div>
       <div class="form-actions" id="modalClassActions">
         <!-- Botão será inserido dinamicamente -->
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="calendarModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="calendarModalDate">Detalhes do Dia</h2>
+        <button class="close-btn" onclick="closeCalendarModal()">&times;</button>
+      </div>
+      <div id="calendarModalBody">
+        <!-- Details will be populated by JS -->
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-secondary" onclick="closeCalendarModal()">Fechar</button>
       </div>
     </div>
   </div>
