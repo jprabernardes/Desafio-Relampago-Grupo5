@@ -3,7 +3,7 @@
 let currentTab = "overview";
 let allUsers = [];
 let filteredUsers = [];
-let paginator = null; // ⭐ NOVO: Instância do paginador
+let paginator = null;
 
 const API_URL = "/api";
 
@@ -150,7 +150,7 @@ async function loadMetrics() {
   }
 }
 
-// ⭐ MODIFICADO: Load Users com Paginação
+// MODIFICADO: Load Users com Paginação
 async function loadUsers(type) {
   let endpoint = "";
   if (type === "students") endpoint = "/receptionist/students";
@@ -175,14 +175,12 @@ async function loadUsers(type) {
 
     filteredUsers = [...allUsers];
 
-    // ⭐ NOVO: Inicializar ou atualizar paginador
     if (!paginator) {
       paginator = new Paginator(filteredUsers, 10, renderTablePage);
     } else {
       paginator.updateItems(filteredUsers);
     }
 
-    // ⭐ NOVO: Ir para primeira página e renderizar controles
     paginator.goToPage(1);
     paginator.render('paginationContainer');
 
@@ -193,7 +191,6 @@ async function loadUsers(type) {
   }
 }
 
-// ⭐ NOVO: Função para renderizar página de usuários
 function renderTablePage(pageItems) {
   const tbody = document.getElementById("usersTable");
   
@@ -235,7 +232,6 @@ function renderTablePage(pageItems) {
   }
 }
 
-// ⭐ MODIFICADO: Search com Paginação
 function handleSearch() {
   const term = document.getElementById("searchInput").value.toLowerCase().trim();
   
@@ -249,7 +245,6 @@ function handleSearch() {
     );
   }
   
-  // ⭐ NOVO: Atualizar paginação
   if (paginator) {
     paginator.updateItems(filteredUsers);
     paginator.render('paginationContainer');

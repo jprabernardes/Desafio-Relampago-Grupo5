@@ -51,17 +51,6 @@ async function seedExercises() {
 
   for (const ex of exercises) {
     try {
-      // Verifica se já existe (simplificado pelo nome)
-      // O repo não expõe findByName direto facilmente sem instanciar service ou usar query custom, 
-      // mas user service tem lógica de duplicata. Vamos tentar criar e ignorar erro ou usar repo.
-      // O ExerciseService tem validação. Vamos usar Repository direto para ser mais rápido/flexível.
-      // SQL insert vai falhar se tiver constraints, mas aqui não tem unique no nome no schema (só validação no service).
-      // Melhor verificar antes pro log ficar limpo.
-      // Como não temos acesso fácil ao "findByName" aqui sem importar service, vamos assumir criação.
-      // Mas espere, ExerciseService tem findByName logic. Vamos usar o service methods se possivel?
-      // O service joga erro. Vamos usar o repository create e catch error se for o caso, MAS o schema não tem unique constraint no name,
-      // a validação está no service. Se usarmos repo direto, pode duplicar.
-      // Vamos checar todos os exercícios antes.
       const allExercises = await exerciseRepository.findAll();
       const exists = allExercises.some(e => e.name.toLowerCase() === ex.name.toLowerCase());
 
@@ -69,7 +58,6 @@ async function seedExercises() {
         await exerciseRepository.create(ex as Exercise);
         console.log(`  + Exercício criado: ${ex.name}`);
       } else {
-        // console.log(`  . Exercício já existe: ${ex.name}`);
       }
     } catch (e: any) {
       console.error(`  Erro ao criar exercício ${ex.name}:`, e.message);
@@ -151,16 +139,12 @@ async function seedClasses() {
 async function seedEnrollments() {
   console.log('\n--- 3. Matriculando Alunos em Aulas ---');
 
-  // Idempotency check: check if we have many enrollments
-  // Count enrollments is not directly exposed in repo, but we can check if a sample class is full or check checks.
-  // Checking directly counts via SQL would be ideal but relying on repo:
   const classes = await gymClassRepository.findAll();
   const allUsers = await userService.findAll();
   const students = allUsers.filter((u: any) => u.role === 'aluno');
 
   if (classes.length === 0 || students.length === 0) return;
 
-  // Simple check: check first class enrollments
   if (classes.length > 0) {
     const sample = await enrollmentRepository.findByClassId(classes[0].id!);
     if (sample.length > 0) {
@@ -210,7 +194,6 @@ async function seedTrainings() {
 
   if (students.length === 0 || instructores.length === 0 || exercises.length === 0) return;
 
-  // Idempotency check
   const sampleStudent = students[0];
   if (sampleStudent.id) {
     const existingTrainings = await trainingRepository.findByUserId(sampleStudent.id);
@@ -273,13 +256,9 @@ async function seedHistoryCheckIns() {
   const allUsers = await userService.findAll();
   const students = allUsers.filter((u: any) => u.role === 'aluno');
 
-  // Pegar treinos existentes para vincular (opcional, pode ser null, mas vamos tentar vincular)
-  // Para simplificar, vamos vincular treinos aleatórios que o aluno TENHA, ou null.
-
   let checkInCount = 0;
   const today = new Date();
 
-  // Idempotency: check total checkins
   const totalCheckins = await checkInRepository.countAll();
   let targetStudents = students;
 
@@ -316,12 +295,6 @@ async function seedHistoryCheckIns() {
 
     // Iterar últimos 30 dias
     for (let d = 30; d >= 0; d--) {
-      // Pula se frequência aleatória não bater, EXCETO se for o João com freq 6 (vai passar quase sempre)
-      // Usar Math.random() > (freq/7) significa:
-      // freq=1 -> 1/7 (~14%) chance de checkin? NÃO!
-      // Math.random() (0..1) > (1/7 = 0.14) -> 86% das vezes é TRUE (continue/pula) -> 14% de chance de TER checkin.
-      // Math.random() > (6/7 = 0.85) -> 15% das vezes é TRUE (pula) -> 85% chance de TER checkin.
-      // A logica está correta para "frequency days a week".
       if (Math.random() > (frequency / 7)) continue;
 
       const date = new Date(today);
@@ -329,9 +302,6 @@ async function seedHistoryCheckIns() {
 
       const dateStr = date.toISOString().split('T')[0];
       const timeStr = `${10 + Math.floor(Math.random() * 10)}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`; // entre 10h e 20h
-      // Checkin at needs full ISO string usually or whatever DB expects. 
-      // setup.ts says: checkin_at TEXT DEFAULT CURRENT_TIMESTAMP.
-      // CheckInRepository uses provided string.
       const fullDate = `${dateStr}T${timeStr}:00Z`;
 
       const trainingId = userTrainings.length > 0
@@ -360,7 +330,7 @@ export async function runSeed() {
     console.log('--- Iniciando Geração de Dados (Completa) ---');
     console.log('='.repeat(50));
 
-    // Verificar quantos usuários já existem (mantendo lógica original)
+    // Verificar quantos usuários já existem
     try {
       const existingUsers = await userService.findAll();
       console.log(`\nUsuários existentes no banco: ${existingUsers.length}`);
@@ -368,7 +338,7 @@ export async function runSeed() {
       console.log('Não foi possível verificar usuários existentes');
     }
 
-    // 1. Busca usuários aleatórios da API (Mantido do original, mas encapsulado melhor se quisesse, vou manter inline pra não quebrar muito)
+    // 1. Busca usuários aleatórios da API 
     console.log('\nBuscando nomes e emails reais da API...');
 
     // Se já tiver muitos usuários (>10), assume que users já foram seedados e pula essa parte pesada

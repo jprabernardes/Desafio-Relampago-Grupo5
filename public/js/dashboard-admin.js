@@ -1,6 +1,6 @@
 // public/js/dashboard-admin.js
 
-let paginator = null; // ⭐ Instância do paginador
+let paginator = null;
 let currentTab = "alunos";
 let allUsers = [];
 let filteredUsers = [];
@@ -80,7 +80,6 @@ async function loadData() {
 
     filteredUsers = [...allUsers];
 
-    // ⭐ NOVO: Inicializar paginador
     if (!paginator) {
       paginator = new Paginator(filteredUsers, 10, renderTablePage);
     } else {
@@ -94,7 +93,6 @@ async function loadData() {
   }
 }
 
-// ⭐ NOVO: Função para renderizar página de usuários
 function renderTablePage(pageItems) {
   const tbody = document.getElementById("usersTable");
 
@@ -278,7 +276,6 @@ async function loadTab(tipo = "alunos") {
       ? allUsers.filter((u) => roles.includes(u.role))
       : allUsers;
 
-    // ⭐ NOVO: Atualizar paginação
     if (!paginator) {
       paginator = new Paginator(filteredUsers, 10, renderTablePage);
     } else {
@@ -294,7 +291,7 @@ async function loadTab(tipo = "alunos") {
   }
 }
 
-// ⭐ MODIFICADO: Pesquisa com Paginação
+// MODIFICADO: Pesquisa com Paginação
 function handleSearch() {
   const searchTerm = document.getElementById("searchInput").value.toLowerCase();
 
@@ -319,7 +316,6 @@ function handleSearch() {
     filteredUsers = baseUsers;
   }
 
-  // ⭐ NOVO: Atualizar paginação
   if (paginator) {
     paginator.updateItems(filteredUsers);
     paginator.render('paginationContainer');
