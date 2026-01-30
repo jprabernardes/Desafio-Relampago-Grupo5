@@ -155,20 +155,23 @@ export class TrainingController {
 
   findTrainingsByStudentForInstructor = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const instructorId = (req as any).user.id;
       const studentId = Number(req.params.studentId);
-      const trainings = await this.trainingService.findByInstructorAndUserId(instructorId, studentId);
       
-      // Incluir exercícios para cada treino
+      const trainings = await this.trainingService.findByUserId(studentId);
+      
       const trainingsWithExercises = await Promise.all(
         trainings.map(async (t) => {
           const exercises = await this.exerciseService.findByTrainingId(t.id!);
-          return { ...t, exercises };
+          return { 
+            ...t, 
+            exercises
+          };
         })
       );
       
       return res.status(200).json(trainingsWithExercises);
     } catch (error: any) {
+      console.error('[TrainingController] Erro ao buscar treinos:', error);
       return res.status(400).json({ error: error.message });
     }
   };
