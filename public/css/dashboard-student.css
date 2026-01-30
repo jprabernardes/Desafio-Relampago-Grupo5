@@ -554,3 +554,94 @@ body {
   font-size: 0.9rem;
   color: #718096;
 }
+/* Refactored styles */
+.modal-location-icon {
+  font-size: 1.2rem;
+}
+
+.modal-location-text {
+  font-weight: 500;
+}
+
+.modal-section-title {
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.modal-description-text {
+  color: #718096;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.modal-status-container {
+  padding-top: 1rem;
+  border-top: 1px solid #edf2f7;
+  margin-bottom: 1.5rem;
+}
+
+.confirm-modal-message {
+  margin-bottom: 2rem;
+  color: #666;
+}
+
+.modal-section-wrapper {
+  margin-top: 1.5rem;
+}
+
+/* JS Dynamic Classes */
+.card-title {
+  margin-bottom: 0.75rem;
+}
+
+.card-subtitle {
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+  color: #4a5568;
+}
+
+.workout-exercise-item {
+  margin-bottom: 6px;
+  padding-left: 10px;
+  border-left: 2px solid #edf2f7;
+}
+
+.btn-full {
+  width: 100%;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.card-location {
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+}
+
+.card-date {
+  font-size: 0.9rem;
+  color: #4a5568;
+}
+
+.class-card-past {
+  border-left: 5px solid #dc3545;
+}
+
+.class-card-future {
+  border-left: 5px solid #28a745;
+}
+
+.flex-col-full {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.mt-auto-pt-4 {
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.text-center {
+  text-align: center;
+}

@@ -1,6 +1,6 @@
 // public/js/dashboard-receptionist.js
 
-let currentTab = "overview";
+let currentTab = "students";
 let allUsers = [];
 let filteredUsers = [];
 let paginator = null;
@@ -38,12 +38,11 @@ function confirmAction() {
 
 // Load Tab
 async function loadTab(tab) {
-
   try {
     const userData = await loadUserInfo();
     if (userData.error) {
-        document.cookie = "";
-        window.location.href = "/";
+      document.cookie = "";
+      window.location.href = "/";
     }
 
     // Ensure user is receptionist
@@ -58,7 +57,6 @@ async function loadTab(tab) {
     document.getElementById("userAvatar").textContent = displayName
       .charAt(0)
       .toUpperCase();
-
   } catch (error) {
     console.error("Erro:", error);
     window.location.href = "/";
@@ -71,40 +69,32 @@ async function loadTab(tab) {
     .querySelectorAll(".nav-item")
     .forEach((i) => i.classList.remove("active"));
   document.getElementById("usersTable").innerHTML =
-    '<tr><td colspan="5" style="text-align: center; padding: 2rem;">Carregando...</td></tr>';
+    '<tr><td colspan="5" class="text-center-padded">Carregando...</td></tr>';
 
   if (tab === "students") {
     document.getElementById("navAlunos").classList.add("active");
-    document.getElementById("statsSection").style.display = "none";
     document.querySelector(".table-container").style.display = "block";
     document.getElementById("tableTitle").textContent = "Gerenciar Alunos";
 
-    document.getElementById("searchInput").style.display = "block";
+    document.getElementById("searchInput").classList.remove("hidden");
     document.getElementById("searchInput").value = "";
-    document.getElementById("addBtn").style.display = "block";
+    document.getElementById("addBtn").classList.remove("hidden");
     document.getElementById("addBtn").textContent = "+ Adicionar Aluno";
 
     updateTableHeaders("students");
     await loadUsers("students");
   } else if (tab === "instructors") {
     document.getElementById("navInstrutores").classList.add("active");
-    document.getElementById("statsSection").style.display = "none";
     document.querySelector(".table-container").style.display = "block";
     document.getElementById("tableTitle").textContent = "Gerenciar Instrutores";
 
-    document.getElementById("searchInput").style.display = "block";
+    document.getElementById("searchInput").classList.remove("hidden");
     document.getElementById("searchInput").value = "";
-    document.getElementById("addBtn").style.display = "block";
+    document.getElementById("addBtn").classList.remove("hidden");
     document.getElementById("addBtn").textContent = "+ Adicionar Instrutor";
 
     updateTableHeaders("instructors");
     await loadUsers("instructors");
-  } else {
-    // Overview
-    document.getElementById("navDashboard").classList.add("active");
-    document.getElementById("statsSection").style.display = "grid";
-    document.querySelector(".table-container").style.display = "none";
-    loadMetrics();
   }
 }
 
@@ -127,26 +117,6 @@ function updateTableHeaders(type) {
                 <th>Ações</th>
             </tr>
         `;
-  }
-}
-
-// Load Metrics
-async function loadMetrics() {
-  try {
-    const response = await fetch(`${API_URL}/receptionist/metrics`);
-    if (!response.ok) throw new Error("Erro ao carregar métricas");
-    const data = await response.json();
-
-    document.getElementById("totalStudents").textContent =
-      data.totalStudents || 0;
-    document.getElementById("totalInstructors").textContent =
-      data.totalInstructors || 0;
-    document.getElementById("totalCheckins").textContent =
-      data.totalCheckins || 0;
-    document.getElementById("checkinsToday").textContent =
-      data.checkinsToday || 0;
-  } catch (error) {
-    console.error("Erro metrics:", error);
   }
 }
 
@@ -182,21 +152,20 @@ async function loadUsers(type) {
     }
 
     paginator.goToPage(1);
-    paginator.render('paginationContainer');
-
+    paginator.render("paginationContainer");
   } catch (err) {
     console.error(err);
     document.getElementById("usersTable").innerHTML =
-      `<tr><td colspan="5" style="color: red; text-align: center;">Erro: ${err.message}</td></tr>`;
+      `<tr><td colspan="5" class="text-error-center">Erro: ${err.message}</td></tr>`;
   }
 }
 
 function renderTablePage(pageItems) {
   const tbody = document.getElementById("usersTable");
-  
+
   if (pageItems.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #666;">Nenhum registro encontrado.</td></tr>';
+      '<tr><td colspan="5" class="text-center-padded-gray">Nenhum registro encontrado.</td></tr>';
     return;
   }
 
@@ -233,8 +202,11 @@ function renderTablePage(pageItems) {
 }
 
 function handleSearch() {
-  const term = document.getElementById("searchInput").value.toLowerCase().trim();
-  
+  const term = document
+    .getElementById("searchInput")
+    .value.toLowerCase()
+    .trim();
+
   if (!term) {
     filteredUsers = [...allUsers];
   } else {
@@ -244,10 +216,10 @@ function handleSearch() {
         u.email.toLowerCase().includes(term),
     );
   }
-  
+
   if (paginator) {
     paginator.updateItems(filteredUsers);
-    paginator.render('paginationContainer');
+    paginator.render("paginationContainer");
   }
 }
 
@@ -261,9 +233,11 @@ function openAddModal() {
 
   // Toggle Fields based on Tab
   const isStudent = currentTab === "students";
-  document.getElementById("addTipoPlanoGroup").style.display = isStudent
-    ? "block"
-    : "none";
+  if (isStudent) {
+    document.getElementById("addTipoPlanoGroup").classList.remove("hidden");
+  } else {
+    document.getElementById("addTipoPlanoGroup").classList.add("hidden");
+  }
   document.getElementById("addTipoPlano").required = isStudent;
 }
 
@@ -328,13 +302,16 @@ function openEditModal(id) {
   document.getElementById("editUserId").value = id;
   document.getElementById("editNome").value = userToEdit.nome;
   document.getElementById("editEmail").value = userToEdit.email;
+  document.getElementById("editCpf").value = userToEdit.cpf || "";
   document.getElementById("editTelefone").value = userToEdit.phone || "";
   document.getElementById("editAlertContainer").innerHTML = "";
 
   const isStudent = currentTab === "students";
-  document.getElementById("editTipoPlanoGroup").style.display = isStudent
-    ? "block"
-    : "none";
+  if (isStudent) {
+    document.getElementById("editTipoPlanoGroup").classList.remove("hidden");
+  } else {
+    document.getElementById("editTipoPlanoGroup").classList.add("hidden");
+  }
 
   if (isStudent) {
     document.getElementById("editTipoPlano").value =
@@ -355,8 +332,9 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
   const name = document.getElementById("editNome").value;
   const email = document.getElementById("editEmail").value;
   const phone = document.getElementById("editTelefone").value;
+  const documentStr = document.getElementById("editCpf").value;
 
-  let body = { name, email, phone };
+  let body = { name, email, phone, document: documentStr };
 
   if (currentTab === "students") {
     body.planType = document.getElementById("editTipoPlano").value;
@@ -366,7 +344,7 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
     const res = await fetch(`${API_URL}/users/${id}`, {
       method: "PUT",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
     });
@@ -396,7 +374,7 @@ function confirmDeleteUser() {
 async function deleteUser(id) {
   try {
     const res = await fetch(`${API_URL}/users/${id}`, {
-      method: "DELETE"
+      method: "DELETE",
     });
 
     if (res.ok) {
@@ -450,4 +428,4 @@ phoneInputs.forEach((id) => {
 });
 
 // Init
-loadTab("overview");
+loadTab("students");

@@ -261,6 +261,16 @@ td {
   color: #065f46;
 }
 
+.plan-trimestral {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.plan-semestral {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
 /* Modal */
 .modal {
   display: none;
@@ -451,4 +461,42 @@ td {
   .stats-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Refactored styles */
+.hidden {
+  display: none !important;
+}
+
+.flex-center-gap {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.confirm-modal-message {
+  margin-bottom: 2rem;
+  color: #666;
+}
+
+.btn-danger-white {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* JS Dynamic Classes */
+.text-error-center {
+  color: red;
+  text-align: center;
+}
+
+.text-center-padded-gray {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.text-center-padded {
+  text-align: center;
+  padding: 2rem;
 }

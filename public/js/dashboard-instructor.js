@@ -391,31 +391,34 @@ function renderExerciseCard(exercise, options = {}) {
     <div class="${cardClass}" ${clickHandler} ${idAttr}>
       <h4>${exercise.name}</h4>
       ${showDescription && exercise.description ? `<p class="exercise-info">${exercise.description}</p>` : ""}
-      ${showStats
-      ? `
+      ${
+        showStats
+          ? `
         <div class="exercise-stats">
           <span>📊 ${exercise.series || 0} séries x ${exercise.repetitions || 0} repetições</span>
           <span>⚖️ ${exercise.weight || 0} kg</span>
         </div>
       `
-      : ""
-    }
+          : ""
+      }
       ${showHint ? `<p class="exercise-hint">Clique para selecionar e personalizar</p>` : ""}
-      ${showActions || allowDetailView
-      ? `
+      ${
+        showActions || allowDetailView
+          ? `
         <div class="template-actions" onclick="event.stopPropagation()">
           ${infoIcon}
-          ${showActions
-        ? `
+          ${
+            showActions
+              ? `
             <button class="template-action-btn" title="Editar" onclick="event.stopPropagation(); editTemplate(${exercise.id})">✏️</button>
             <button class="template-action-btn" title="Excluir" onclick="event.stopPropagation(); deleteTemplate(${exercise.id})">🗑️</button>
           `
-        : ""
-      }
+              : ""
+          }
         </div>
       `
-      : ""
-    }
+          : ""
+      }
     </div>
   `;
 }
@@ -444,30 +447,30 @@ window.openExerciseDetailModal = (exerciseId, event) => {
   if (!content) return;
 
   content.innerHTML = `
-    <div style="padding: 1rem 0;">
-      <h3 style="color: #333; margin-bottom: 1rem; font-size: 1.5rem;">${exercise.name}</h3>
-      
-      <div style="margin-bottom: 1.5rem;">
-        <h4 style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">Descrição</h4>
-        <p style="color: #333; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%; hyphens: auto; overflow: hidden;">${exercise.description || "Sem descrição"}</p>
-      </div>
+      <div class="modal-exercise-detail-container">
+        <h3 class="modal-exercise-title">${exerciseData.name}</h3>
+        
+        <div class="modal-exercise-section">
+          <p class="modal-exercise-label">Descrição</p>
+          <p class="modal-exercise-desc">${exerciseData.description || "Sem descrição."}</p>
+        </div>
 
-      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem;">
-        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Séries</div>
-          <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">${exercise.series || 0}</div>
-        </div>
-        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Repetições</div>
-          <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">${exercise.repetitions || 0}</div>
-        </div>
-        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Peso</div>
-          <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">${exercise.weight || 0} kg</div>
+        <div class="modal-exercise-stats-grid">
+          <div class="modal-stat-box">
+            <p class="modal-stat-label">Séries</p>
+            <p class="modal-stat-value">${exerciseData.series || 0}</p>
+          </div>
+          <div class="modal-stat-box">
+            <p class="modal-stat-label">Repetições</p>
+            <p class="modal-stat-value">${exerciseData.repetitions || 0}</p>
+          </div>
+          <div class="modal-stat-box">
+            <p class="modal-stat-label">Carga (kg)</p>
+            <p class="modal-stat-value">${exerciseData.weight || 0}</p>
+          </div>
         </div>
       </div>
-    </div>
-  `;
+    `;
 
   document.getElementById("exerciseDetailModal").classList.add("active");
 };
@@ -495,7 +498,8 @@ function updatePageSize() {
   // Padding: 2rem left + 2rem right = approx 64px
   const containerPadding = 64;
   // Safety margin and scrollbar
-  const availableWidth = window.innerWidth - sidebarWidth - containerPadding - 20;
+  const availableWidth =
+    window.innerWidth - sidebarWidth - containerPadding - 20;
 
   const cardMinWidth = 200; // from CSS minmax(200px, 1fr)
   const gap = 16; // 1rem
@@ -524,7 +528,7 @@ function updatePageSize() {
   }
 }
 let resizeTimeout;
-window.addEventListener('resize', () => {
+window.addEventListener("resize", () => {
   clearTimeout(resizeTimeout);
   resizeTimeout = setTimeout(updatePageSize, 200);
 });
@@ -608,7 +612,7 @@ function renderStudents() {
 
   if (!filteredStudents || filteredStudents.length === 0) {
     grid.innerHTML = "<p>Nenhum aluno encontrado.</p>";
-    renderPagination("studentsPagination", 1, 1, () => { });
+    renderPagination("studentsPagination", 1, 1, () => {});
     return;
   }
 
@@ -1019,9 +1023,9 @@ function formatDateBR(dateStr) {
 
 // Converte data do input HTML (YYYY-MM-DD) para formato backend (DD-MM-YYYY)
 function convertDateForBackend(dateStr) {
-  if (!dateStr) return '';
+  if (!dateStr) return "";
   console.log("convertDateForBackend - INPUT:", dateStr);
-  const [year, month, day] = dateStr.split('-');
+  const [year, month, day] = dateStr.split("-");
   const result = `${day}-${month}-${year}`;
   console.log("convertDateForBackend - OUTPUT:", result);
   return result;
@@ -1029,9 +1033,9 @@ function convertDateForBackend(dateStr) {
 
 // Converte data do backend (DD-MM-YYYY) para input HTML (YYYY-MM-DD)
 function convertDateFromBackend(dateStr) {
-  if (!dateStr) return '';
+  if (!dateStr) return "";
   console.log("convertDateFromBackend - INPUT:", dateStr);
-  const [day, month, year] = dateStr.split('-');
+  const [day, month, year] = dateStr.split("-");
   const result = `${year}-${month}-${day}`;
   console.log("convertDateFromBackend - OUTPUT:", result);
   return result;
@@ -1088,15 +1092,13 @@ async function renderClasses() {
   container.innerHTML = classesWithEnrollments
     .map(
       (c) => `
-          <div style="background:#fff; padding:1.5rem; margin-bottom:1rem; border-radius:8px; border:1px solid #eee; cursor: pointer; transition: all 0.2s;" 
-               onmouseover="this.style.borderColor='#667eea'" 
-               onmouseout="this.style.borderColor='#eee'"
+          <div class="class-card-item" 
                onclick="openClassDetailsModal(${c.id})">
-              <div style="display: flex; justify-content: space-between; align-items: start;">
-                  <div style="flex: 1;">
-                      <h3 style="color:#333; margin-bottom:0.5rem;">${c.name || c.nome_aula}</h3>
-                      <p style="color:#666;">📅 ${formatDateBR(c.date || c.data)} &nbsp; ⏰ ${c.time || c.hora} </p>
-                      <p style="color:#667eea; font-weight: 500; margin-top: 0.5rem;">
+              <div class="flex-between-start">
+                  <div class="flex-1">
+                      <h3 class="class-card-title">${c.name || c.nome_aula}</h3>
+                      <p class="class-card-info">📅 ${formatDateBR(c.date || c.data)} &nbsp; ⏰ ${c.time || c.hora} </p>
+                      <p class="class-card-enrollment">
                           👥 ${c.enrolledCount}/${c.slots_limit || c.limite_vagas} alunos inscritos
                       </p>
                   </div>
@@ -1284,11 +1286,16 @@ async function openClassDetailsModal(classId) {
 
   // Preencher dados
   document.getElementById("detailsClassId").value = classData.id;
-  document.getElementById("detailsClassName").value = classData.name || classData.nome_aula;
-  document.getElementById("detailsClassDate").value = convertDateFromBackend(classData.date || classData.data);
-  document.getElementById("detailsClassTime").value = classData.time || classData.hora;
-  document.getElementById("detailsClassLimit").value = classData.slots_limit || classData.limite_vagas;
-  
+  document.getElementById("detailsClassName").value =
+    classData.name || classData.nome_aula;
+  document.getElementById("detailsClassDate").value = convertDateFromBackend(
+    classData.date || classData.data,
+  );
+  document.getElementById("detailsClassTime").value =
+    classData.time || classData.hora;
+  document.getElementById("detailsClassLimit").value =
+    classData.slots_limit || classData.limite_vagas;
+
   // Setar data mínima
   const today = new Date().toISOString().split("T")[0];
   document.getElementById("detailsClassDate").setAttribute("min", today);
@@ -1308,18 +1315,18 @@ async function openClassDetailsModal(classId) {
     const studentsList = document.getElementById("enrolledStudentsList");
     if (!students || students.length === 0) {
       studentsList.innerHTML =
-        '<p style="color: #666; font-style: italic;">Nenhum aluno inscrito ainda.</p>';
+        '<p class="text-gray-italic">Nenhum aluno inscrito ainda.</p>';
     } else {
       studentsList.innerHTML = students
         .map(
           (s) => `
-        <div style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 0.75rem;">
-          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+        <div class="student-list-item">
+          <div class="student-avatar-small">
             ${(s.name || s.nome || "A").charAt(0).toUpperCase()}
           </div>
           <div>
-            <div style="font-weight: 500; color: #333;">${s.name || s.nome || "Sem nome"}</div>
-            <div style="font-size: 0.875rem; color: #666;">${s.email || "Sem email"}</div>
+            <div class="student-name">${s.name || s.nome || "Sem nome"}</div>
+            <div class="student-email">${s.email || "Sem email"}</div>
           </div>
         </div>
       `,
@@ -1329,7 +1336,7 @@ async function openClassDetailsModal(classId) {
   } catch (e) {
     console.error("Erro ao carregar alunos inscritos:", e);
     document.getElementById("enrolledStudentsList").innerHTML =
-      `<p style="color: #e53e3e;">Erro ao carregar alunos: ${e.message}</p>`;
+      `<p class="text-error">Erro ao carregar alunos: ${e.message}</p>`;
   }
 
   document.getElementById("classDetailsModal").classList.add("active");
@@ -1341,25 +1348,27 @@ function closeClassDetailsModal() {
 }
 
 // Submit do formulário de edição no modal
-document.getElementById("editClassForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  
-  const id = document.getElementById("detailsClassId").value;
-  const dateInput = document.getElementById("detailsClassDate");
-  const dateValue = dateInput.value;
-  
-  if (!validateDate(dateInput)) {
-    showAlert("Não é possível agendar aulas para datas passadas!", "error");
-    dateInput.reportValidity(); // Mostrar mensagem customizada
-    return;
-  }
-  
-  const data = {
-    name: document.getElementById("detailsClassName").value,
-    date: convertDateForBackend(dateValue), // Converte YYYY-MM-DD para DD-MM-YYYY
-    time: document.getElementById("detailsClassTime").value,
-    slots_limit: parseInt(document.getElementById("detailsClassLimit").value),
-  };
+document
+  .getElementById("editClassForm")
+  .addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const id = document.getElementById("detailsClassId").value;
+    const dateInput = document.getElementById("detailsClassDate");
+    const dateValue = dateInput.value;
+
+    if (!validateDate(dateInput)) {
+      showAlert("Não é possível agendar aulas para datas passadas!", "error");
+      dateInput.reportValidity(); // Mostrar mensagem customizada
+      return;
+    }
+
+    const data = {
+      name: document.getElementById("detailsClassName").value,
+      date: convertDateForBackend(dateValue), // Converte YYYY-MM-DD para DD-MM-YYYY
+      time: document.getElementById("detailsClassTime").value,
+      slots_limit: parseInt(document.getElementById("detailsClassLimit").value),
+    };
 
     try {
       const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
@@ -1431,12 +1440,12 @@ function renderAvailableExercises() {
   // Filtrar exercícios baseado na busca
   const filteredExercises = exerciseSearchFilter
     ? allExercisesForTraining.filter((ex) => {
-      const searchTerm = exerciseSearchFilter.toLowerCase();
-      return (
-        (ex.name || "").toLowerCase().includes(searchTerm) ||
-        (ex.description || "").toLowerCase().includes(searchTerm)
-      );
-    })
+        const searchTerm = exerciseSearchFilter.toLowerCase();
+        return (
+          (ex.name || "").toLowerCase().includes(searchTerm) ||
+          (ex.description || "").toLowerCase().includes(searchTerm)
+        );
+      })
     : allExercisesForTraining;
 
   if (filteredExercises.length === 0) {
@@ -1515,7 +1524,7 @@ function renderSelectedExercises() {
   if (!list) return;
 
   if (selectedExercises.length === 0) {
-    list.innerHTML = "<p style='color: #666;'>Nenhum exercício selecionado</p>";
+    list.innerHTML = "<p class='text-gray'>Nenhum exercício selecionado</p>";
     return;
   }
 
