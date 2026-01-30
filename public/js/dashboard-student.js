@@ -23,6 +23,13 @@ function confirmAction() {
 }
 
 let currentUserId = null;
+let allWorkouts = []; // Cache para os treinos do aluno
+
+const GYM_INFO = {
+  name: "💪 FITMANAGER ACADEMIA",
+  address: "Rua Exemplo, 123",
+  phone: "(11) 99999-9999"
+};
 
 // Verificar autenticação
 // A verificação é feita via cookie pelo navegador, se falhar a API retorna 401/403
@@ -104,6 +111,7 @@ async function loadWorkouts() {
     }
 
     const workouts = await response.json();
+    allWorkouts = workouts; // Salva no cache global
     const container = document.getElementById("workoutsList");
 
     if (workouts.length === 0) {
@@ -128,7 +136,7 @@ async function loadWorkouts() {
                 (ex) => `
                       <div style="margin-bottom: 6px; padding-left: 10px; border-left: 2px solid #edf2f7;">
                         <strong>${ex.name}</strong><br>
-                        ${ex.series}x${ex.repetitions} ${ex.weight ? `• ${ex.weight}` : ""}
+                        ${ex.series}x${ex.repetitions} ${ex.weight ? `• ${ex.weight}KG` : ""}
                       </div>
                     `,
               )
@@ -155,7 +163,7 @@ async function loadWorkouts() {
 // Imprimir treino (registra check-in)
 async function printWorkout(workoutId) {
   try {
-    // Registrar check-in
+    // Registrar check-in na API
     const response = await fetch(`${API_URL}/student/checkin`, {
       method: "POST",
       headers: {
@@ -169,49 +177,99 @@ async function printWorkout(workoutId) {
       const errorMessage =
         error.error || error.message || "Erro ao registrar check-in";
 
-      // Se o erro for de check-in duplicado, permite imprimir mesmo assim
       if (errorMessage.includes("Você já fez check-in hoje")) {
         showAlert("Você já fez check-in hoje. Imprimindo...", "warning");
       } else {
         throw new Error(errorMessage);
       }
     } else {
-      // Só mostra msg de sucesso se retornou 200 OK
       showAlert("Check-in registrado com sucesso!", "success");
     }
 
-    // Imprimir apenas o treino específico
-    const workoutContent = document
-      .querySelector(
-        `.workout-card button[onclick="printWorkout(${workoutId})"]`,
-      )
-      .closest(".workout-card").innerHTML;
+    // NOVA LÓGICA DE IMPRESSÃO (48 COLUNAS - DESIGN CLEAN)
+    const workout = allWorkouts.find((w) => w.id === workoutId);
+    if (!workout) throw new Error("Treino não encontrado para impressão.");
 
-    // Remover o botão de impressão do conteúdo a ser impresso
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = workoutContent;
-    const btn = tempDiv.querySelector(".workout-actions");
-    if (btn) btn.remove();
+    const studentName = document.getElementById("userName").textContent;
 
-    const printWindow = window.open("", "", "height=600,width=800");
-    printWindow.document.write("<html><head><title>Imprimir Treino</title>");
-    printWindow.document.write("<style>");
-    printWindow.document.write(
-      "body { font-family: sans-serif; padding: 20px; }",
-    );
-    printWindow.document.write(
-      ".workout-card { border: 1px solid #ccc; padding: 20px; border-radius: 8px; }",
-    );
-    printWindow.document.write("h3 { margin-top: 0; color: #333; }");
-    printWindow.document.write("</style>");
-    printWindow.document.write("</head><body>");
-    printWindow.document.write('<div class="workout-card">');
-    printWindow.document.write(tempDiv.innerHTML);
-    printWindow.document.write("</div>");
-    printWindow.document.write("</body></html>");
+    const printWindow = window.open("", "", "height=600,width=400");
+    printWindow.document.write(`
+        <html>
+        <head>
+          <title>Imprimir Treino</title>
+          <style>
+            @page { margin: 0; }
+            body { 
+              width: 260px; 
+              font-family: 'Courier New', Courier, monospace; 
+              font-size: 11px;
+              margin: 0; padding: 15px;
+              color: #000;
+              line-height: 1.5;
+            }
+            .header { text-align: center; margin-bottom: 12px; }
+            .gym-name { font-size: 16px; font-weight: 900; display: block; border-bottom: 2px solid #000; margin-bottom: 5px; }
+            .gym-sub { font-size: 8px; text-transform: uppercase; font-weight: bold; }
+            
+            .divider { text-align: center; margin: 10px 0; border-top: 1px dashed #000; }
+            
+            .info-section { text-align: left; font-size: 10px; margin-bottom: 10px; }
+            .label { font-weight: bold; text-transform: uppercase; }
+            
+            .workout-title { text-align: center; font-size: 13px; font-weight: bold; background: #000; color: #fff; padding: 3px; margin: 10px 0; }
+            
+            .exercise-item { border-bottom: 1px solid #ccc; padding: 6px 0; }
+            .ex-header { font-weight: bold; font-size: 12px; display: block; }
+            .ex-details { font-size: 12px; margin-top: 2px; font-weight: bold; color: #333; }
+            
+            .footer { text-align: center; margin-top: 20px; font-size: 9px; }
+            .footer-line { border-top: 1px solid #000; margin: 10px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <span class="gym-name">${GYM_INFO.name}</span>
+            <span class="gym-sub">${GYM_INFO.address.toUpperCase()}</span><br>
+            <span class="gym-sub">TEL: ${GYM_INFO.phone}</span>
+          </div>
+
+          <div class="info-section">
+            <span class="label">ALUNO:</span> ${studentName.toUpperCase()}<br>
+            <span class="label">INSTRUTOR:</span> ${(workout.instructor_name || workout.instructor_id).toString().toUpperCase()}<br>
+            <span class="label">DATA :</span> ${new Date().toLocaleDateString("pt-BR")}
+          </div>
+
+          <div class="workout-title">${workout.name.toUpperCase()}</div>
+
+          <div class="section">
+            ${Array.isArray(workout.exercises) && workout.exercises.length > 0
+        ? workout.exercises
+          .map(
+            (ex) => `
+              <div class="exercise-item">
+                <span class="ex-header">${ex.name}</span>
+                <div class="ex-details">
+                  ${ex.series} x ${ex.repetitions}${ex.weight ? ` - ${ex.weight}KG` : ""}
+                </div>
+              </div>
+            `,
+          )
+          .join("")
+        : '<div style="text-align:center;">Sem exercícios cadastrados.</div>'
+      }
+          </div>
+
+          <div class="footer">
+            <div class="footer-line"></div>
+            <strong>BOM TREINO!</strong><br>
+            FitManager Pro - Gestão Inteligente
+          </div>
+        </body>
+        </html>
+    `);
+
     printWindow.document.close();
     printWindow.focus();
-    // Pequeno delay para garantir que estilos carreguem
     setTimeout(() => {
       printWindow.print();
       printWindow.close();
