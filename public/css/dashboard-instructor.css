@@ -180,6 +180,10 @@ body {
   border: 1px solid #eee;
   cursor: pointer;
   transition: all 0.2s;
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .student-card:hover {
@@ -191,11 +195,19 @@ body {
 .student-card h4 {
   color: #333;
   margin-bottom: 0.35rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .student-card p {
   color: #666;
   font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 /* Cards de exercício unificados */
 .template-card,

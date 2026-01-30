@@ -47,20 +47,14 @@ export class TrainingService {
   }
 
   async findById(id: number, instructorId: number): Promise<Training | undefined> {
-    const training = await this.trainingRepository.findById(id);
-    if (training && training.instructor_id !== instructorId) {
-      throw new Error('Você não tem permissão para acessar este treino.');
-    }
-    return training;
+   
+    return await this.trainingRepository.findById(id);
   }
 
   async update(id: number, training: Partial<Training>, instructorId: number): Promise<void> {
     const existing = await this.trainingRepository.findById(id);
     if (!existing) {
       throw new Error('Treino não encontrado.');
-    }
-    if (existing.instructor_id !== instructorId) {
-      throw new Error('Você só pode editar seus próprios treinos.');
     }
 
     await this.trainingRepository.update(id, training);
@@ -71,10 +65,7 @@ export class TrainingService {
     if (!existing) {
       throw new Error('Treino não encontrado.');
     }
-    if (existing.instructor_id !== instructorId) {
-      throw new Error('Você só pode deletar seus próprios treinos.');
-    }
-
+    // Qualquer instrutor pode deletar qualquer treino
     await this.trainingRepository.delete(id);
   }
 
@@ -83,9 +74,7 @@ export class TrainingService {
     if (!training) {
       throw new Error('Treino não encontrado.');
     }
-    if (training.instructor_id !== instructorId) {
-      throw new Error('Você só pode adicionar alunos aos seus próprios treinos.');
-    }
+    // Qualquer instrutor pode adicionar alunos a qualquer treino
 
     const user = await this.userRepository.findById(userId);
     if (!user) {
@@ -103,9 +92,7 @@ export class TrainingService {
     if (!training) {
       throw new Error('Treino não encontrado.');
     }
-    if (training.instructor_id !== instructorId) {
-      throw new Error('Você só pode remover alunos dos seus próprios treinos.');
-    }
+    // Qualquer instrutor pode remover alunos de qualquer treino
 
     await this.trainingRepository.removeUser(trainingId, userId);
   }

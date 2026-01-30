@@ -571,42 +571,29 @@ async function loadCalendar() {
   updateStats();
 }
 
+
 async function loadHistoryData() {
-  // Mocking history based on some "random" or static data for demo
-  // We can use the 'workouts' loaded earlier to simulate check-ins
-  // And 'myEnrollmentIds' to simulate class attendance (assuming past classes were attended)
+  // Carregar check-ins reais da API
+  try {
+    const checkinResponse = await fetch(`${API_URL}/student/checkins`);
+    if (checkinResponse.ok) {
+      const checkins = await checkinResponse.json();
+      checkinHistory = checkins.map((checkin) => ({
+        date: new Date(checkin.check_in_time || checkin.checkinTime || checkin.date),
+        type: "workout",
+        name: checkin.training_name || checkin.trainingName || "Treino",
+        exercises: [], // Pode ser expandido se necessário
+      }));
+    } else {
+      console.warn("Não foi possível carregar check-ins");
+      checkinHistory = [];
+    }
+  } catch (e) {
+    console.error("Erro ao carregar histórico de check-ins", e);
+    checkinHistory = [];
+  }
 
-  // Simulating check-ins (random dates in current month/past months)
-  const today = new Date();
-  checkinHistory = [
-    {
-      date: new Date(today.getFullYear(), today.getMonth(), 5),
-      type: "workout",
-      name: "Treino A",
-      exercises: ["Supino", "Agachamento"],
-    },
-    {
-      date: new Date(today.getFullYear(), today.getMonth(), 12),
-      type: "workout",
-      name: "Treino B",
-      exercises: ["Leg Press", "Extensora"],
-    },
-    {
-      date: new Date(today.getFullYear(), today.getMonth(), 15),
-      type: "workout",
-      name: "Treino A",
-      exercises: ["Supino", "Agachamento"],
-    },
-    {
-      date: new Date(today.getFullYear(), today.getMonth(), 20),
-      type: "workout",
-      name: "Treino C",
-      exercises: ["Esteira", "Abdominais"],
-    },
-  ];
-
-  // Simulating class attendance
-  // Use 'myClasses' from the earlier fetch if available, or fetch again
+  // Carregar aulas inscritas
   try {
     const response = await fetch(`${API_URL}/student/my-classes`);
     if (response.ok) {
@@ -620,18 +607,20 @@ async function loadHistoryData() {
           minute: "2-digit",
         }),
       }));
+    } else {
+      console.warn("Não foi possível carregar histórico de aulas");
+      classHistory = [];
     }
   } catch (e) {
     console.error("Erro ao carregar histórico de aulas para o calendário", e);
+    classHistory = [];
   }
 }
 
 function updateStats() {
   // Count total checks in history (mock + real if we had it)
   document.getElementById("totalCheckins").textContent = checkinHistory.length;
-  document.getElementById("totalClasses").textContent = classHistory.filter(
-    (c) => c.date < new Date(),
-  ).length;
+  document.getElementById("totalClasses").textContent = classHistory.length;
 }
 
 function renderCalendar(date) {
