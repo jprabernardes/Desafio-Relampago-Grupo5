@@ -1,6 +1,7 @@
 // src/database/setup.ts
 import db from './db';
 import bcrypt from 'bcrypt';
+import runSeed from './seed';
 
 /**
  * Creates all necessary tables in the database.
@@ -149,7 +150,17 @@ export const createTables = (): Promise<void> => {
     });
   });
 };
-
+/**
+ * Função para contar usuários e decidir se precisa de seed
+ */
+const countUsers = (): Promise<number> => {
+  return new Promise((resolve, reject) => {
+    db.get("SELECT COUNT(*) as count FROM users", (err, row: any) => {
+      if (err) reject(err);
+      else resolve(row.count);
+    });
+  });
+};
 /**
  * Creates default users with proper student_profile for students.
  */
@@ -446,9 +457,26 @@ export const createDefaultExercises = async (): Promise<void> => {
  */
 export const initializeDatabase = async (): Promise<void> => {
   try {
+    // 1. Garante que as tabelas existam
     await createTables();
+    
+    // 2. Cria os usuários essenciais (Admin, Maria, Carlos)
     await createDefaultUsers();
+    
+    // 3. Cria os exercícios base
     await createDefaultExercises();
+
+    // 4. VERIFICAÇÃO DE SEED AUTOMÁTICO
+    const userCount = await countUsers();
+    
+    // Se só existirem os 4 usuários padrão, rodamos o seed para criar os 300 extras
+    if (userCount <= 4) {
+      console.log('🌱 Banco de dados com poucos registros. Iniciando Seed automático...');
+      await runSeed();
+    } else {
+      console.log(`📊 O banco já possui ${userCount} usuários. Seed automático ignorado.`);
+    }
+
     console.log('✅ Database initialized successfully!');
   } catch (error) {
     console.error('❌ Error initializing database:', error);

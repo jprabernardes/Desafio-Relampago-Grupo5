@@ -1,3 +1,6 @@
+// public/js/dashboard-admin.js
+
+let paginator = null;
 let currentTab = "alunos";
 let allUsers = [];
 let filteredUsers = [];
@@ -33,19 +36,18 @@ async function loadUserInfo() {
 
 async function loadData() {
   try {
-
     const userData = await loadUserInfo();
     if (userData.error) {
-        document.cookie = "";
-        window.location.href = "/";
+      document.cookie = "";
+      window.location.href = "/";
     }
 
-    // Ensure user is admistrator
+    // Ensure user is administrator
     if (userData.role && userData.role !== "administrador") {
       alert("Acesso negado. Você não é administrador.");
       logout();
     }
-  
+
     // Adaptador: backend usa 'name', frontend usa 'nome'
     document.getElementById("userName").textContent =
       userData.name || userData.nome || "Admin";
@@ -76,18 +78,33 @@ async function loadData() {
       phone: u.phone,
     }));
 
-    renderUsers(allUsers);
+    filteredUsers = [...allUsers];
+
+    if (!paginator) {
+      paginator = new Paginator(filteredUsers, 10, renderTablePage);
+    } else {
+      paginator.updateItems(filteredUsers);
+    }
+
+    paginator.goToPage(1);
+    paginator.render('paginationContainer');
   } catch (error) {
     console.error("Erro:", error);
   }
 }
 
-function renderUsers(users) {
+function renderTablePage(pageItems) {
   const tbody = document.getElementById("usersTable");
+
+  if (pageItems.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #666;">Nenhum registro encontrado.</td></tr>';
+    return;
+  }
 
   if (currentTab === "alunos") {
     // Mostrar: Nome, Email, Tipo de Plano, Ações
-    tbody.innerHTML = users
+    tbody.innerHTML = pageItems
       .map(
         (u) => `
       <tr>
@@ -95,7 +112,7 @@ function renderUsers(users) {
         <td>${u.email}</td>
         <td><span class="plan-badge plan-${u.tipo_plano || "mensal"}">${u.tipo_plano || "Mensal"}</span></td>
         <td>
-           <button class="btn btn-primary" onclick="openEditModal(${u.id})">Editar</button>
+           <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
         </td>
       </tr>
     `,
@@ -103,7 +120,7 @@ function renderUsers(users) {
       .join("");
   } else if (currentTab === "funcionarios") {
     // Mostrar: Nome, Email, Função, Ações
-    tbody.innerHTML = users
+    tbody.innerHTML = pageItems
       .map(
         (u) => `
       <tr>
@@ -111,7 +128,7 @@ function renderUsers(users) {
         <td>${u.email}</td>
         <td><span class="role-badge role-${u.role}">${u.role === "instrutor" ? "Instrutor" : "Recepcionista"}</span></td>
         <td>
-           <button class="btn btn-primary" onclick="openEditModal(${u.id})">Editar</button>
+           <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
         </td>
       </tr>
     `,
@@ -119,7 +136,7 @@ function renderUsers(users) {
       .join("");
   } else {
     // Dashboard padrão
-    tbody.innerHTML = users
+    tbody.innerHTML = pageItems
       .map(
         (u) => `
       <tr>
@@ -128,7 +145,7 @@ function renderUsers(users) {
         <td>${u.cpf}</td>
         <td><span class="role-badge role-${u.role}">${u.role}</span></td>
         <td>
-          <button class="btn btn-primary" onclick="openEditModal(${u.id})">Editar</button>
+          <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
         </td>
       </tr>
     `,
@@ -164,6 +181,35 @@ function updateTableHeaders(tipo) {
 
 async function loadTab(tipo = "alunos") {
   currentTab = tipo;
+
+  try {
+    // Carregar informações do usuário logado
+    const userData = await loadUserInfo();
+    if (userData.error) {
+      document.cookie = "";
+      window.location.href = "/";
+      return;
+    }
+
+    // Ensure user is administrator
+    if (userData.role && userData.role !== "administrador") {
+      alert("Acesso negado. Você não é administrador.");
+      logout();
+      return;
+    }
+
+    // Exibir nome e avatar do usuário
+    const displayName = userData.name || userData.nome || "Admin";
+    document.getElementById("userName").textContent = displayName;
+    document.getElementById("userAvatar").textContent = displayName
+      .charAt(0)
+      .toUpperCase();
+
+  } catch (error) {
+    console.error("Erro ao carregar informações do usuário:", error);
+    window.location.href = "/";
+    return;
+  }
 
   // Atualizar navegação ativa
   document.querySelectorAll(".nav-item").forEach((item) => {
@@ -202,6 +248,10 @@ async function loadTab(tipo = "alunos") {
   document.getElementById("tableTitle").textContent = title;
   document.getElementById("searchInput").value = "";
 
+  // Mostrar loading
+  document.getElementById("usersTable").innerHTML =
+    '<tr><td colspan="5" style="text-align: center; padding: 2rem;">Carregando...</td></tr>';
+
   try {
     const res = await fetch(`${API_URL}/users`);
 
@@ -226,13 +276,22 @@ async function loadTab(tipo = "alunos") {
       ? allUsers.filter((u) => roles.includes(u.role))
       : allUsers;
 
-    renderUsers(filteredUsers);
+    if (!paginator) {
+      paginator = new Paginator(filteredUsers, 10, renderTablePage);
+    } else {
+      paginator.updateItems(filteredUsers);
+    }
+
+    paginator.goToPage(1);
+    paginator.render('paginationContainer');
   } catch (error) {
     console.error(error);
+    document.getElementById("usersTable").innerHTML =
+      `<tr><td colspan="5" style="color: red; text-align: center;">Erro: ${error.message}</td></tr>`;
   }
 }
 
-// Pesquisa
+// MODIFICADO: Pesquisa com Paginação
 function handleSearch() {
   const searchTerm = document.getElementById("searchInput").value.toLowerCase();
 
@@ -257,13 +316,17 @@ function handleSearch() {
     filteredUsers = baseUsers;
   }
 
-  renderUsers(filteredUsers);
+  if (paginator) {
+    paginator.updateItems(filteredUsers);
+    paginator.render('paginationContainer');
+  }
 }
 
 // Modal Adicionar
 function openAddModal() {
   document.getElementById("addModal").classList.add("active");
   document.getElementById("addForm").reset();
+  document.getElementById("addAlertContainer").innerHTML = "";
 
   if (currentTab === "alunos") {
     document.getElementById("addModalTitle").textContent = "Adicionar Aluno";
@@ -278,7 +341,7 @@ function openAddModal() {
   } else if (currentTab === "funcionarios") {
     document.getElementById("addModalTitle").textContent =
       "Adicionar Funcionário";
-    document.getElementById("addCpfGroup").style.display = "block";
+    document.getElementById("addCpfGroup").style.display = "none";
     document.getElementById("addCpf").required = true;
     document.getElementById("addRoleGroup").style.display = "none";
     document.getElementById("addRole").required = false;
@@ -545,4 +608,4 @@ phoneInputs.forEach((id) => {
   }
 });
 
-loadTab('alunos');
+loadTab("alunos");
