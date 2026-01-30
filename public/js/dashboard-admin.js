@@ -87,7 +87,7 @@ async function loadData() {
     }
 
     paginator.goToPage(1);
-    paginator.render('paginationContainer');
+    paginator.render("paginationContainer");
   } catch (error) {
     console.error("Erro:", error);
   }
@@ -98,7 +98,7 @@ function renderTablePage(pageItems) {
 
   if (pageItems.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #666;">Nenhum registro encontrado.</td></tr>';
+      '<tr><td colspan="5" class="text-center-padded-gray">Nenhum registro encontrado.</td></tr>';
     return;
   }
 
@@ -204,7 +204,6 @@ async function loadTab(tipo = "alunos") {
     document.getElementById("userAvatar").textContent = displayName
       .charAt(0)
       .toUpperCase();
-
   } catch (error) {
     console.error("Erro ao carregar informações do usuário:", error);
     window.location.href = "/";
@@ -250,7 +249,7 @@ async function loadTab(tipo = "alunos") {
 
   // Mostrar loading
   document.getElementById("usersTable").innerHTML =
-    '<tr><td colspan="5" style="text-align: center; padding: 2rem;">Carregando...</td></tr>';
+    '<tr><td colspan="5" class="text-center-padded">Carregando...</td></tr>';
 
   try {
     const res = await fetch(`${API_URL}/users`);
@@ -283,11 +282,11 @@ async function loadTab(tipo = "alunos") {
     }
 
     paginator.goToPage(1);
-    paginator.render('paginationContainer');
+    paginator.render("paginationContainer");
   } catch (error) {
     console.error(error);
     document.getElementById("usersTable").innerHTML =
-      `<tr><td colspan="5" style="color: red; text-align: center;">Erro: ${error.message}</td></tr>`;
+      `<tr><td colspan="5" class="text-error-center">Erro: ${error.message}</td></tr>`;
   }
 }
 
@@ -318,7 +317,7 @@ function handleSearch() {
 
   if (paginator) {
     paginator.updateItems(filteredUsers);
-    paginator.render('paginationContainer');
+    paginator.render("paginationContainer");
   }
 }
 
@@ -330,34 +329,36 @@ function openAddModal() {
 
   if (currentTab === "alunos") {
     document.getElementById("addModalTitle").textContent = "Adicionar Aluno";
-    document.getElementById("addCpfGroup").style.display = "block";
+    document.getElementById("addCpfGroup").classList.remove("hidden");
     document.getElementById("addCpf").required = true;
-    document.getElementById("addRoleGroup").style.display = "none";
+    document.getElementById("addRoleGroup").classList.add("hidden");
     document.getElementById("addRole").required = false;
-    document.getElementById("addTipoPlanoGroup").style.display = "block";
+    document.getElementById("addTipoPlanoGroup").classList.remove("hidden");
     document.getElementById("addTipoPlano").required = true;
-    document.getElementById("addTipoFuncionarioGroup").style.display = "none";
+    document.getElementById("addTipoFuncionarioGroup").classList.add("hidden");
     document.getElementById("addTipoFuncionario").required = false;
   } else if (currentTab === "funcionarios") {
     document.getElementById("addModalTitle").textContent =
       "Adicionar Funcionário";
-    document.getElementById("addCpfGroup").style.display = "none";
+    document.getElementById("addCpfGroup").classList.remove("hidden");
     document.getElementById("addCpf").required = true;
-    document.getElementById("addRoleGroup").style.display = "none";
+    document.getElementById("addRoleGroup").classList.add("hidden");
     document.getElementById("addRole").required = false;
-    document.getElementById("addTipoPlanoGroup").style.display = "none";
+    document.getElementById("addTipoPlanoGroup").classList.add("hidden");
     document.getElementById("addTipoPlano").required = false;
-    document.getElementById("addTipoFuncionarioGroup").style.display = "block";
+    document
+      .getElementById("addTipoFuncionarioGroup")
+      .classList.remove("hidden");
     document.getElementById("addTipoFuncionario").required = true;
   } else {
     document.getElementById("addModalTitle").textContent = "Adicionar Usuário";
-    document.getElementById("addCpfGroup").style.display = "block";
+    document.getElementById("addCpfGroup").classList.remove("hidden");
     document.getElementById("addCpf").required = true;
-    document.getElementById("addRoleGroup").style.display = "block";
+    document.getElementById("addRoleGroup").classList.remove("hidden");
     document.getElementById("addRole").required = true;
-    document.getElementById("addTipoPlanoGroup").style.display = "none";
+    document.getElementById("addTipoPlanoGroup").classList.add("hidden");
     document.getElementById("addTipoPlano").required = false;
-    document.getElementById("addTipoFuncionarioGroup").style.display = "none";
+    document.getElementById("addTipoFuncionarioGroup").classList.add("hidden");
     document.getElementById("addTipoFuncionario").required = false;
   }
 }
@@ -381,28 +382,56 @@ async function openEditModal(userId) {
   document.getElementById("editUserId").value = userId;
   document.getElementById("editNome").value = userToEdit.nome;
   document.getElementById("editEmail").value = userToEdit.email;
+  document.getElementById("editCpf").value = userToEdit.cpf;
   document.getElementById("editTelefone").value = userToEdit.phone || "";
 
   if (currentTab === "alunos") {
     document.getElementById("editModalTitle").textContent = "Editar Aluno";
-    document.getElementById("editNovaSenhaGroup").style.display = "none";
-    document.getElementById("editTipoPlanoGroup").style.display = "block";
+    document.getElementById("editNovaSenhaGroup").classList.add("hidden");
+    document.getElementById("editTipoPlanoGroup").classList.remove("hidden");
     document.getElementById("editTipoPlano").value =
       userToEdit.tipo_plano || "mensal";
     document.getElementById("editTipoPlano").required = true;
+
+    document.getElementById("editCpfGroup").classList.remove("hidden");
+    document.getElementById("editRoleGroup").classList.add("hidden");
   } else if (currentTab === "funcionarios") {
     document.getElementById("editModalTitle").textContent =
       "Editar Funcionário";
-    document.getElementById("editNovaSenhaGroup").style.display = "block";
+    document.getElementById("editNovaSenhaGroup").classList.remove("hidden");
     document.getElementById("editNovaSenha").value = "";
-    document.getElementById("editTipoPlanoGroup").style.display = "none";
+    document.getElementById("editTipoPlanoGroup").classList.add("hidden");
     document.getElementById("editTipoPlano").required = false;
+
+    document.getElementById("editCpfGroup").classList.remove("hidden");
+    document.getElementById("editRoleGroup").classList.remove("hidden");
+    document.getElementById("editRole").value = userToEdit.role;
+
+    // Hide "Aluno" option if in employees tab
+    const roleSelect = document.getElementById("editRole");
+    for (let i = 0; i < roleSelect.options.length; i++) {
+      if (roleSelect.options[i].value === "aluno") {
+        roleSelect.options[i].hidden = true;
+      } else {
+        roleSelect.options[i].hidden = false;
+      }
+    }
   } else {
     document.getElementById("editModalTitle").textContent = "Editar Usuário";
-    document.getElementById("editNovaSenhaGroup").style.display = "block";
+    document.getElementById("editNovaSenhaGroup").classList.remove("hidden");
     document.getElementById("editNovaSenha").value = "";
-    document.getElementById("editTipoPlanoGroup").style.display = "none";
+    document.getElementById("editTipoPlanoGroup").classList.add("hidden");
     document.getElementById("editTipoPlano").required = false;
+
+    document.getElementById("editCpfGroup").classList.remove("hidden");
+    document.getElementById("editRoleGroup").classList.remove("hidden");
+    document.getElementById("editRole").value = userToEdit.role;
+
+    // Show all options
+    const roleSelect = document.getElementById("editRole");
+    for (let i = 0; i < roleSelect.options.length; i++) {
+      roleSelect.options[i].hidden = false;
+    }
   }
 
   document.getElementById("editModal").classList.add("active");
@@ -507,10 +536,10 @@ document.getElementById("addRole").addEventListener("change", function () {
   // Apenas se estiver na tab geral, pois nas outras tabs o comportamento é hardcoded no openAddModal
   if (currentTab === "all" || !currentTab) {
     if (role === "aluno") {
-      planGroup.style.display = "block";
+      planGroup.classList.remove("hidden");
       planInput.required = true;
     } else {
-      planGroup.style.display = "none";
+      planGroup.classList.add("hidden");
       planInput.required = false;
     }
   }
@@ -527,6 +556,7 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
     name: document.getElementById("editNome").value,
     email: document.getElementById("editEmail").value,
     phone: document.getElementById("editTelefone").value,
+    document: document.getElementById("editCpf").value,
   };
 
   // Só adicionar senha se o campo de nova senha estiver preenchido
@@ -535,11 +565,13 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
     if (newPassword) {
       data.password = newPassword;
     }
+    data.role = document.getElementById("editRole").value;
   } else if (currentTab !== "alunos") {
     const newPassword = document.getElementById("editNovaSenha").value;
     if (newPassword) {
       data.password = newPassword;
     }
+    data.role = document.getElementById("editRole").value;
   }
 
   // Atualizar plan_type do aluno

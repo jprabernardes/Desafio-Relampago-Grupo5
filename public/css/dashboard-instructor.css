@@ -778,3 +778,224 @@ body {
   width: 95%;
   max-height: 95vh;
 }
+
+/* Refactored styles */
+.hidden {
+  display: none !important;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
+.mt-8 {
+  margin-top: 2rem;
+}
+
+.search-container {
+  max-width: 400px;
+}
+
+.search-input-full {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.modal-content-large {
+  max-width: 600px;
+}
+
+.label-bold {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.modal-scrollable-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #f9fafb;
+}
+
+.text-gray {
+  color: #666;
+}
+
+.text-gray-light {
+  color: #999;
+}
+
+.italic {
+  font-style: italic;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.opacity-90 {
+  opacity: 0.9;
+}
+
+.modal-main-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.modal-subtitle {
+  color: #999;
+  font-size: 0.875rem;
+  font-weight: normal;
+}
+
+.confirm-modal-message {
+  margin-bottom: 2rem;
+  color: #666;
+}
+
+/* JS Dynamic Classes */
+.class-card-item {
+  background: #fff;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.class-card-item:hover {
+  border-color: #667eea !important;
+}
+
+.flex-between-start {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.class-card-title {
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.class-card-info {
+  color: #666;
+}
+
+.class-card-enrollment {
+  color: #667eea;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+.text-gray-italic {
+  color: #666;
+  font-style: italic;
+}
+
+.student-list-item {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.student-avatar-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+}
+
+.student-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.student-email {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.text-error {
+  color: #e53e3e;
+}
+
+/* Modal Exercise Detail */
+.modal-exercise-detail-container {
+  padding: 1rem 0;
+}
+
+.modal-exercise-title {
+  color: #333;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.modal-exercise-section {
+  margin-bottom: 1.5rem;
+}
+
+.modal-exercise-label {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modal-exercise-desc {
+  color: #333;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.modal-exercise-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.modal-stat-box {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.modal-stat-label {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.modal-stat-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #667eea;
+}

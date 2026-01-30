@@ -28,7 +28,7 @@ let allWorkouts = []; // Cache para os treinos do aluno
 const GYM_INFO = {
   name: "💪 FITMANAGER ACADEMIA",
   address: "Rua Exemplo, 123",
-  phone: "(11) 99999-9999"
+  phone: "(11) 99999-9999",
 };
 
 // Verificar autenticação
@@ -125,28 +125,29 @@ async function loadWorkouts() {
         (workout) => `
             <div class="workout-card">
               <div>
-                <h3 style="margin-bottom: 0.75rem;">${workout.name}</h3>
-                <p style="font-size: 0.9rem; margin-bottom: 0.4rem; color: #4a5568;">
+                <h3 class="card-title">${workout.name}</h3>
+                <p class="card-subtitle">
                   👤 <strong>Instrutor:</strong> ${workout.instructor_name || workout.instructor_id}
                 </p>
-                <div class="exercises-list" style="font-size: 0.85rem; color: #718096; margin-top: 1rem;">
-                  ${Array.isArray(workout.exercises)
-            ? workout.exercises
-              .map(
-                (ex) => `
-                      <div style="margin-bottom: 6px; padding-left: 10px; border-left: 2px solid #edf2f7;">
+                <div class="exercises-list">
+                  ${
+                    Array.isArray(workout.exercises)
+                      ? workout.exercises
+                          .map(
+                            (ex) => `
+                      <div class="workout-exercise-item">
                         <strong>${ex.name}</strong><br>
                         ${ex.series}x${ex.repetitions} ${ex.weight ? `• ${ex.weight}KG` : ""}
                       </div>
                     `,
-              )
-              .join("")
-            : `<pre>${workout.exercises}</pre>`
-          }
+                          )
+                          .join("")
+                      : `<pre>${workout.exercises}</pre>`
+                  }
                 </div>
               </div>
-              <div class="workout-actions" style="margin-top: 1.5rem;">
-                <button class="btn btn-primary" style="width: 100%; border-radius: 6px; font-size: 0.85rem;" onclick="printWorkout(${workout.id})">
+              <div class="workout-actions">
+                <button class="btn btn-primary btn-full" onclick="printWorkout(${workout.id})">
                   🖨️ Imprimir Treino
                 </button>
               </div>
@@ -242,10 +243,11 @@ async function printWorkout(workoutId) {
           <div class="workout-title">${workout.name.toUpperCase()}</div>
 
           <div class="section">
-            ${Array.isArray(workout.exercises) && workout.exercises.length > 0
-        ? workout.exercises
-          .map(
-            (ex) => `
+            ${
+              Array.isArray(workout.exercises) && workout.exercises.length > 0
+                ? workout.exercises
+                    .map(
+                      (ex) => `
               <div class="exercise-item">
                 <span class="ex-header">${ex.name}</span>
                 <div class="ex-details">
@@ -253,10 +255,10 @@ async function printWorkout(workoutId) {
                 </div>
               </div>
             `,
-          )
-          .join("")
-        : '<div style="text-align:center;">Sem exercícios cadastrados.</div>'
-      }
+                    )
+                    .join("")
+                : '<div class="text-center">Sem exercícios cadastrados.</div>'
+            }
           </div>
 
           <div class="footer">
@@ -341,9 +343,9 @@ function renderAvailableClasses() {
       return `
             <div class="class-card class-card-clickable" onclick="openClassModal(${cls.id})">
               <div>
-                <h3 style="margin-bottom: 0.75rem;">${cls.title}</h3>
-                <p style="font-size: 0.9rem; margin-bottom: 0.4rem;">📍 ${cls.location || "Sala Principal"}</p>
-                <p style="font-size: 0.9rem;">📅 ${dateStr} • ⏰ ${timeStr}</p>
+                <h3 class="card-title">${cls.title}</h3>
+                <p class="card-location">📍 ${cls.location || "Sala Principal"}</p>
+                <p class="card-date">📅 ${dateStr} • ⏰ ${timeStr}</p>
               </div>
               <span class="class-status ${statusClass}">${statusText}</span>
             </div>
@@ -483,17 +485,17 @@ async function loadMyClasses() {
           : '<span class="class-status status-enrolled">Confirmada</span>';
 
         let actionBtn = !isPast
-          ? `<button class="btn btn-danger btn-sm" style="margin-top: 1.5rem; width: 100%; border-radius: 6px; font-size: 0.85rem;" onclick="cancelEnrollment(${cls.id})">Cancelar Inscrição</button>`
+          ? `<button class="btn btn-danger btn-sm btn-full mt-6" onclick="cancelEnrollment(${cls.id})">Cancelar Inscrição</button>`
           : "";
 
         return `
-            <div class="class-card" style="border-left: 5px solid ${isPast ? "#dc3545" : "#28a745"}; display: flex; flex-direction: column; height: 100%;">
+            <div class="class-card flex-col-full ${isPast ? "class-card-past" : "class-card-future"}">
               <div>
-                <h3 style="margin-bottom: 0.75rem;">${cls.title}</h3>
-                <p style="font-size: 0.9rem; margin-bottom: 0.4rem; color: #4a5568;">📍 ${cls.location || "Sala Principal"}</p>
-                <p style="font-size: 0.9rem; color: #4a5568;">📅 ${dateStr} • ⏰ ${timeStr}</p>
+                <h3 class="card-title">${cls.title}</h3>
+                <p class="card-subtitle">📍 ${cls.location || "Sala Principal"}</p>
+                <p class="card-date">📅 ${dateStr} • ⏰ ${timeStr}</p>
               </div>
-              <div style="margin-top: auto; padding-top: 1rem;">
+              <div class="mt-auto-pt-4">
                 ${statusLabel}
                 ${actionBtn}
               </div>
@@ -571,7 +573,6 @@ async function loadCalendar() {
   updateStats();
 }
 
-
 async function loadHistoryData() {
   // Carregar check-ins reais da API
   try {
@@ -579,7 +580,9 @@ async function loadHistoryData() {
     if (checkinResponse.ok) {
       const checkins = await checkinResponse.json();
       checkinHistory = checkins.map((checkin) => ({
-        date: new Date(checkin.check_in_time || checkin.checkinTime || checkin.date),
+        date: new Date(
+          checkin.check_in_time || checkin.checkinTime || checkin.date,
+        ),
         type: "workout",
         name: checkin.training_name || checkin.trainingName || "Treino",
         exercises: [], // Pode ser expandido se necessário
@@ -718,7 +721,7 @@ function openCalendarModal(date, workouts, classes) {
 
   if (workouts.length === 0 && classes.length === 0) {
     body.innerHTML =
-      '<p style="text-align:center; color:#666;">Nenhuma atividade registrada.</p>';
+      '<p class="text-center text-gray">Nenhuma atividade registrada.</p>';
   } else {
     // Render Workouts
     workouts.forEach((w) => {
@@ -729,7 +732,6 @@ function openCalendarModal(date, workouts, classes) {
         : w.exercises;
       div.innerHTML = `
                 <h4>💪 Check-in: ${w.name || "Treino"}</h4>
-                <p>Exercícios: ${exercisesList}</p>
             `;
       body.appendChild(div);
     });

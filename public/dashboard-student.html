@@ -1,164 +1,157 @@
 <!doctype html>
 <html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Aluno</title>
+    <link rel="stylesheet" href="css/dashboard-student.css" />
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard - Aluno</title>
-  <link rel="stylesheet" href="css/dashboard-student.css" />
-</head>
-
-<body>
-  <div class="container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="logo">💪 FitManager</div>
-      <nav>
-        <div class="nav-item active" data-section="workouts">
-          💪 Meus Treinos
-        </div>
-        <div class="nav-item" data-section="classes">
-          🏋️ Aulas Disponíveis
-        </div>
-        <div class="nav-item" data-section="my-classes">
-          📅 Minhas Inscrições
-        </div>
-        <div class="nav-item" data-section="calendar">
-          🗓️ Calendário
-        </div>
-      </nav>
-      <button class="logout-btn" onclick="logout()">🚪 Sair</button>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-      <div class="header">
-        <h1>Dashboard Aluno</h1>
-        <div class="user-info">
-          <div class="user-avatar" id="userAvatar">A</div>
-          <span id="userName">Carregando...</span>
-        </div>
-      </div>
-
-      <!-- Alert -->
-      <div class="alert" id="alert"></div>
-
-      <!-- Workouts Section -->
-      <section class="section active" id="workouts">
-        <h2>Meus Treinos</h2>
-        <div id="workoutsList">
-          <p>Carregando...</p>
-        </div>
-      </section>
-
-      <!-- Available Classes Section -->
-      <section class="section" id="classes">
-        <h2>Aulas Disponíveis</h2>
-        <div id="classesList">
-          <p>Carregando...</p>
-        </div>
-      </section>
-
-      <!-- My Classes Section -->
-      <section class="section" id="my-classes">
-        <h2>Minhas Inscrições</h2>
-        <div id="myClassesList">
-          <p>Carregando...</p>
-        </div>
-      </section>
-
-      <!-- Calendar Section -->
-      <section class="section" id="calendar">
-        <h2>Calendário de Atividades</h2>
-
-        <div class="calendar-stats">
-          <div class="stat-card">
-            <h3>Check-ins</h3>
-            <span id="totalCheckins">0</span>
+  <body>
+    <div class="container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="logo">💪 FitManager</div>
+        <nav>
+          <div class="nav-item active" data-section="workouts">
+            💪 Meus Treinos
           </div>
-          <div class="stat-card">
-            <h3>Aulas</h3>
-            <span id="totalClasses">0</span>
+          <div class="nav-item" data-section="classes">
+            🏋️ Aulas Disponíveis
+          </div>
+          <div class="nav-item" data-section="my-classes">
+            📅 Minhas Inscrições
+          </div>
+          <div class="nav-item" data-section="calendar">🗓️ Calendário</div>
+        </nav>
+        <button class="logout-btn" onclick="logout()">🚪 Sair</button>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="header">
+          <h1>Dashboard Aluno</h1>
+          <div class="user-info">
+            <div class="user-avatar" id="userAvatar">A</div>
+            <span id="userName">Carregando...</span>
           </div>
         </div>
 
-        <div class="calendar-controls">
-          <button class="btn btn-secondary" onclick="changeMonth(-1)">❮ Anterior</button>
-          <h3 id="currentMonthLabel">Janeiro 2024</h3>
-          <button class="btn btn-secondary" onclick="changeMonth(1)">Próximo ❯</button>
-        </div>
+        <!-- Alert -->
+        <div class="alert" id="alert"></div>
 
-        <div class="calendar-grid" id="calendarGrid">
-          <!-- Calendar will be populated by JS -->
-        </div>
-      </section>
-    </main>
-  </div>
+        <!-- Workouts Section -->
+        <section class="section active" id="workouts">
+          <h2>Meus Treinos</h2>
+          <div id="workoutsList">
+            <p>Carregando...</p>
+          </div>
+        </section>
 
-  <!-- Class Details Modal -->
-  <div class="modal" id="classDetailsModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="modalClassTitle">Detalhes da Aula</h2>
-      </div>
-      <div id="modalClassBody">
-        <div class="modal-info-item">
-          <span style="font-size: 1.2rem">📍</span>
-          <span id="modalClassInfo" style="font-weight: 500"></span>
+        <!-- Available Classes Section -->
+        <section class="section" id="classes">
+          <h2>Aulas Disponíveis</h2>
+          <div id="classesList">
+            <p>Carregando...</p>
+          </div>
+        </section>
+
+        <!-- My Classes Section -->
+        <section class="section" id="my-classes">
+          <h2>Minhas Inscrições</h2>
+          <div id="myClassesList">
+            <p>Carregando...</p>
+          </div>
+        </section>
+
+        <!-- Calendar Section -->
+        <section class="section" id="calendar">
+          <h2>Calendário de Atividades</h2>
+
+          <div class="calendar-stats">
+            <div class="stat-card">
+              <h3>Check-ins</h3>
+              <span id="totalCheckins">0</span>
+            </div>
+            <div class="stat-card">
+              <h3>Aulas</h3>
+              <span id="totalClasses">0</span>
+            </div>
+          </div>
+
+          <div class="calendar-controls">
+            <button class="btn btn-secondary" onclick="changeMonth(-1)">
+              ❮ Anterior
+            </button>
+            <h3 id="currentMonthLabel"></h3>
+            <button class="btn btn-secondary" onclick="changeMonth(1)">
+              Próximo ❯
+            </button>
+          </div>
+
+          <div class="calendar-grid" id="calendarGrid">
+            <!-- Calendar will be populated by JS -->
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Class Details Modal -->
+    <div class="modal" id="classDetailsModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalClassTitle">Detalhes da Aula</h2>
         </div>
-        <div style="margin-top: 1.5rem">
-          <h4 style="color: #2d3748; margin-bottom: 0.5rem">Descrição</h4>
-          <p id="modalClassDescription" style="
-                color: #718096;
-                line-height: 1.6;
-                font-size: 0.95rem;
-                margin-bottom: 1.5rem;
-              "></p>
+        <div id="modalClassBody">
+          <div class="modal-info-item">
+            <span class="modal-location-icon">📍</span>
+            <span id="modalClassInfo" class="modal-location-text"></span>
+          </div>
+          <div class="modal-section-wrapper">
+            <h4 class="modal-section-title">Descrição</h4>
+            <p id="modalClassDescription" class="modal-description-text"></p>
+          </div>
+          <div id="modalClassStatus" class="modal-status-container"></div>
         </div>
-        <div id="modalClassStatus" style="
-              padding-top: 1rem;
-              border-top: 1px solid #edf2f7;
-              margin-bottom: 1.5rem;
-            "></div>
-      </div>
-      <div class="form-actions" id="modalClassActions">
-        <!-- Botão será inserido dinamicamente -->
+        <div class="form-actions" id="modalClassActions">
+          <!-- Botão será inserido dinamicamente -->
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="modal" id="calendarModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="calendarModalDate">Detalhes do Dia</h2>
-        <button class="close-btn" onclick="closeCalendarModal()">&times;</button>
-      </div>
-      <div id="calendarModalBody">
-        <!-- Details will be populated by JS -->
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-secondary" onclick="closeCalendarModal()">Fechar</button>
+    <div class="modal" id="calendarModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="calendarModalDate">Detalhes do Dia</h2>
+          <button class="close-btn" onclick="closeCalendarModal()">
+            &times;
+          </button>
+        </div>
+        <div id="calendarModalBody">
+          <!-- Details will be populated by JS -->
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-secondary" onclick="closeCalendarModal()">
+            Fechar
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="modal" id="confirmModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Confirmação</h2>
-      </div>
-      <p id="confirmMessage" style="margin-bottom: 2rem; color: #666">
-        Tem certeza?
-      </p>
-      <div class="form-actions">
-        <button class="btn" onclick="closeConfirmModal()">Não</button>
-        <button class="btn btn-danger" onclick="confirmAction()">
-          Sim, tenho certeza
-        </button>
+    <div class="modal" id="confirmModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Confirmação</h2>
+        </div>
+        <p id="confirmMessage" class="confirm-modal-message">Tem certeza?</p>
+        <div class="form-actions">
+          <button class="btn" onclick="closeConfirmModal()">Não</button>
+          <button class="btn btn-danger" onclick="confirmAction()">
+            Sim, tenho certeza
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-  <script src="js/dashboard-student.js"></script>
-</body>
-
+    <script src="js/dashboard-student.js"></script>
+  </body>
 </html>

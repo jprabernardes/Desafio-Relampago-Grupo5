@@ -11,14 +11,14 @@
       <div class="sidebar">
         <div class="logo">💪 FitManager</div>
         <div class="nav-item active" id="navAlunos" onclick="loadTab('alunos')">
-          <i class="fas fa-user-graduate"></i> Alunos
+          <i class="fas fa-user-graduate"></i> 👥 Alunos
         </div>
         <div
           class="nav-item"
           id="navFuncionarios"
           onclick="loadTab('funcionarios')"
         >
-          <i class="fas fa-user-tie"></i> Funcionários
+          <i class="fas fa-user-tie"></i> 🏋️ Funcionários
         </div>
         <div style="flex: 1"></div>
         <div class="logout-btn" onclick="logout()">🚪 Sair</div>
@@ -36,7 +36,7 @@
         <div class="table-container">
           <div class="table-header">
             <h2 id="tableTitle">Usuários do Sistema</h2>
-            <div style="display: flex; gap: 1rem; align-items: center">
+            <div class="flex-center-gap">
               <input
                 type="text"
                 id="searchInput"
@@ -101,7 +101,7 @@
             <label>Telefone</label>
             <input type="text" id="addTelefone" placeholder="(XX)9XXXXXXXX" />
           </div>
-          <div class="form-group" id="addRoleGroup" style="display: none">
+          <div class="form-group hidden" id="addRoleGroup">
             <label>Função *</label>
             <select id="addRole">
               <option value="">Selecione...</option>
@@ -111,7 +111,7 @@
               <option value="aluno">🏃 Aluno</option>
             </select>
           </div>
-          <div class="form-group" id="addTipoPlanoGroup" style="display: none">
+          <div class="form-group hidden" id="addTipoPlanoGroup">
             <label>Tipo de Plano *</label>
             <select id="addTipoPlano">
               <option value="">Selecione...</option>
@@ -121,16 +121,13 @@
               <option value="anual">Anual</option>
             </select>
           </div>
-          <div
-            class="form-group"
-            id="addTipoFuncionarioGroup"
-            style="display: none"
-          >
+          <div class="form-group hidden" id="addTipoFuncionarioGroup">
             <label>Função *</label>
             <select id="addTipoFuncionario">
               <option value="">Selecione...</option>
-              <option value="recepcionista">Recepcionista</option>
-              <option value="instrutor">Instrutor</option>
+              <option value="administrador">👑 Administrador</option>
+              <option value="recepcionista">📋 Recepcionista</option>
+              <option value="instrutor">💪 Instrutor</option>
             </select>
           </div>
           <div class="form-actions">
@@ -158,13 +155,14 @@
             <input type="text" id="editNome" required />
           </div>
           <div class="form-group">
+            <label>Email *</label>
             <input type="email" id="editEmail" required />
           </div>
           <div class="form-group">
             <label>Telefone</label>
             <input type="text" id="editTelefone" placeholder="(XX)9XXXXXXXX" />
           </div>
-          <div class="form-group" id="editNovaSenhaGroup" style="display: none">
+          <div class="form-group hidden" id="editNovaSenhaGroup">
             <label>Nova Senha (deixe em branco para não alterar)</label>
             <input
               type="password"
@@ -173,7 +171,20 @@
               placeholder="Digite nova senha"
             />
           </div>
-          <div class="form-group" id="editTipoPlanoGroup" style="display: none">
+          <div class="form-group" id="editCpfGroup">
+            <label>CPF *</label>
+            <input type="text" id="editCpf" required maxlength="11" />
+          </div>
+          <div class="form-group hidden" id="editRoleGroup">
+            <label>Função *</label>
+            <select id="editRole">
+              <option value="administrador">👑 Administrador</option>
+              <option value="recepcionista">📋 Recepcionista</option>
+              <option value="instrutor">💪 Instrutor</option>
+              <option value="aluno">🏃 Aluno</option>
+            </select>
+          </div>
+          <div class="form-group hidden" id="editTipoPlanoGroup">
             <label>Tipo de Plano *</label>
             <select id="editTipoPlano">
               <option value="">Selecione...</option>
@@ -209,9 +220,7 @@
             &times;
           </button>
         </div>
-        <p id="confirmMessage" style="margin-bottom: 2rem; color: #666">
-          Tem certeza?
-        </p>
+        <p id="confirmMessage" class="confirm-modal-message">Tem certeza?</p>
         <div class="form-actions">
           <button class="btn" onclick="closeConfirmModal()">Não</button>
           <button class="btn btn-danger" onclick="confirmAction()">

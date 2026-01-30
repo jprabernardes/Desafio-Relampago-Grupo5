@@ -9,7 +9,7 @@
   <body>
     <div class="container">
       <aside class="sidebar">
-        <div class="logo">FitManager</div>
+        <div class="logo">💪 FitManager</div>
         <nav>
           <div class="nav-item active" data-section="create-exercise">
             🏋️ Criar Exercício
@@ -99,20 +99,19 @@
               type="button"
               class="btn btn-secondary"
               id="cancelEditBtn"
-              style="display: none"
+              class="btn btn-secondary hidden"
               onclick="cancelEdit()"
             >
               Cancelar Edição
             </button>
           </form>
 
-          <h3 style="margin-top: 2rem">Templates Cadastrados</h3>
+          <h3 class="mt-8">Templates Cadastrados</h3>
           <input
             type="text"
             id="templatesSearch"
             placeholder="Buscar exercício por nome ou descrição..."
-            class="exercise-search-input"
-            style="margin-bottom: 1rem"
+            class="exercise-search-input mb-6"
           />
           <div id="templatesList" class="templates-grid">
             <p>Carregando...</p>
@@ -177,7 +176,7 @@
               type="button"
               class="btn btn-secondary"
               id="cancelClassEditBtn"
-              style="display: none"
+              class="btn btn-secondary hidden"
               onclick="cancelClassEdit()"
             >
               Cancelar Edição
@@ -187,32 +186,20 @@
 
         <!-- My Classes -->
         <section class="section" id="classes">
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 1.5rem;
-            "
-          >
+          <div class="flex-between mb-6">
             <h2>Minhas Aulas Agendadas</h2>
             <button class="btn btn-primary" onclick="openCreateClassTab()">
               ➕ Agendar Aula
             </button>
           </div>
 
-          <div class="form-group" style="max-width: 400px">
+          <div class="form-group search-container">
             <input
               type="text"
               id="classSearchInput"
               placeholder="🔍 Pesquisar aulas..."
               oninput="filterClasses()"
-              style="
-                width: 100%;
-                padding: 0.75rem;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-              "
+              class="search-input-full"
             />
           </div>
 
@@ -225,7 +212,7 @@
 
     <!-- Modal de Detalhes da Aula -->
     <div class="modal" id="classDetailsModal">
-      <div class="modal-content" style="max-width: 600px">
+      <div class="modal-content modal-content-large">
         <div class="modal-header">
           <h2 id="classDetailsTitle">Detalhes da Aula</h2>
           <button class="close-btn" onclick="closeClassDetailsModal()">
@@ -257,21 +244,10 @@
           </div>
 
           <div class="form-group">
-            <label style="margin-bottom: 1rem; display: block; font-weight: 600"
-              >Alunos Inscritos</label
-            >
-            <div
-              id="enrolledStudentsList"
-              style="
-                max-height: 200px;
-                overflow-y: auto;
-                border: 1px solid #e5e7eb;
-                border-radius: 8px;
-                padding: 1rem;
-                background: #f9fafb;
-              "
-            >
-              <p style="color: #666">Carregando...</p>
+            <label class="label-bold">Alunos Inscritos</label>
+            <div id="enrolledStudentsList" class="modal-scrollable-list">
+              >
+              <p class="text-gray">Carregando...</p>
             </div>
           </div>
 
@@ -319,7 +295,7 @@
         <div class="student-header">
           <h1 id="studentName">Carregando...</h1>
           <p id="studentEmail">Carregando...</p>
-          <p id="studentPhone" style="margin-top: 0.5rem; opacity: 0.9"></p>
+          <p id="studentPhone" class="mt-2 opacity-90"></p>
         </div>
 
         <div class="alert" id="studentAlert"></div>
@@ -342,9 +318,9 @@
     <div class="modal" id="trainingModal">
       <div class="modal-content training-modal-content">
         <div class="modal-header">
-          <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
+          <div class="modal-main-header">
             <h2 id="modalTitle">Criar Treino</h2>
-            <span id="trainingInstructorInfo" style="color: #999; font-size: 0.875rem; font-weight: normal;"></span>
+            <span id="trainingInstructorInfo" class="modal-subtitle"></span>
           </div>
           <button class="close-btn" onclick="closeTrainingModal()">
             &times;
@@ -369,9 +345,7 @@
             <div class="training-column-left">
               <label class="column-label">Exercícios Selecionados</label>
               <div class="selected-exercises-list" id="selectedExercisesList">
-                <p style="color: #666; font-style: italic">
-                  Nenhum exercício selecionado
-                </p>
+                <p class="text-gray italic">Nenhum exercício selecionado</p>
               </div>
             </div>
 
@@ -402,7 +376,7 @@
               type="button"
               class="btn btn-danger"
               id="deleteTrainingBtn"
-              style="display: none"
+              class="btn btn-danger hidden"
               onclick="deleteTraining()"
             >
               Deletar Treino
@@ -423,8 +397,7 @@
       "
     >
       <div
-        class="modal-content"
-        style="max-width: 600px"
+        class="modal-content modal-content-large"
         onclick="event.stopPropagation()"
       >
         <div class="modal-header">
@@ -448,9 +421,7 @@
             &times;
           </button>
         </div>
-        <p id="confirmMessage" style="margin-bottom: 2rem; color: #666">
-          Tem certeza?
-        </p>
+        <p id="confirmMessage" class="confirm-modal-message">Tem certeza?</p>
         <div class="form-actions">
           <button class="btn" onclick="closeConfirmModal()">Não</button>
           <button class="btn btn-danger" onclick="confirmAction()">
