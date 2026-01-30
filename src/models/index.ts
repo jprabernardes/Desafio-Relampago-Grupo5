@@ -6,3 +6,4 @@ export * from './CheckIn';
 export * from './Enrollment';
 export * from './LoginResponse';
 export * from './DashboardMetrics';
+export * from './Plan';

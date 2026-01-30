@@ -1,5 +1,5 @@
 export interface StudentProfile {
   user_id: number;
-  plan_type: 'mensal' | 'trimestral' | 'semestral' | 'anual';
+  plan_id: number;      // FK para plans.id
   active: boolean;
 }
