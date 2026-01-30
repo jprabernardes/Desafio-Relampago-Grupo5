@@ -698,6 +698,8 @@ function renderCalendar(date) {
 }
 
 function changeMonth(delta) {
+  // Fix: Set day to 1 to avoid skipping months (e.g., Jan 30 -> Feb 30 -> Mar 2)
+  currentDate.setDate(1);
   currentDate.setMonth(currentDate.getMonth() + delta);
   renderCalendar(currentDate);
 }

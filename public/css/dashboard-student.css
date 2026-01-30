@@ -434,6 +434,10 @@ body {
   padding: 1rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 1000px;
+  /* Limit width to reduce max card size */
+  margin: 0 auto;
+  /* Center the grid */
 }
 
 .calendar-header {
@@ -512,6 +516,16 @@ body {
   background-color: #ebf8ff;
   border-color: #667eea;
   border-width: 2px;
+}
+
+.calendar-day.today.has-activity {
+  background-color: #c6f6d5;
+  border-color: #667eea;
+}
+
+.calendar-day.today.has-activity:hover {
+  background-color: #9ae6b4;
+  border-color: #5a67d8;
 }
 
 /* Modal List Styles */
