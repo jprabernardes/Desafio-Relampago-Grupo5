@@ -1,4 +1,6 @@
 import axios from 'axios';
+import bcrypt from 'bcrypt';
+import db from './db';
 import { UserService } from '../services/UserService';
 import { ExerciseRepository } from '../repositories/ExerciseRepository';
 import { GymClassRepository } from '../repositories/GymClassRepository';
@@ -13,6 +15,296 @@ const gymClassRepository = new GymClassRepository();
 const enrollmentRepository = new EnrollmentRepository();
 const checkInRepository = new CheckInRepository();
 const trainingRepository = new TrainingRepository();
+
+/**
+ * Cria usuários padrão essenciais (Admin, Recepcionista, Instrutor, Aluno)
+ */
+export const seedDefaultUsers = async (): Promise<void> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Default users list
+      const defaultUsers = [
+        {
+          name: 'Administrador',
+          email: 'admin@academia.com',
+          password: 'admin123',
+          role: 'administrador',
+          document: '00000000000',
+        },
+        {
+          name: 'Recepcionista',
+          email: 'maria@academia.com',
+          password: 'senha123',
+          role: 'recepcionista',
+          document: '11111111111',
+        },
+        {
+          name: 'Instrutor',
+          email: 'carlos@academia.com',
+          password: 'senha123',
+          role: 'instrutor',
+          document: '22222222222',
+        },
+        {
+          name: 'Aluno',
+          email: 'joao@academia.com',
+          password: 'senha123',
+          role: 'aluno',
+          document: '33333333333',
+          planType: 'mensal' as const,
+        },
+      ];
+
+      for (const user of defaultUsers) {
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+
+        // Inserir ou ignorar usuário
+        const userId = await new Promise<number | undefined>((res, rej) => {
+          db.run(
+            `INSERT OR IGNORE INTO users (name, email, password, role, document)
+             VALUES (?, ?, ?, ?, ?)`,
+            [user.name, user.email, hashedPassword, user.role, user.document],
+            function (err) {
+              if (err) {
+                rej(err);
+              } else {
+                if (this.changes > 0) {
+                  console.log(`✅ Usuário ${user.role} criado (email: ${user.email}, senha: ${user.password})`);
+                  res(this.lastID);
+                } else {
+                  console.log(`ℹ️  Usuário ${user.role} já existe (email: ${user.email})`);
+                  res(undefined);
+                }
+              }
+            }
+          );
+        });
+
+        // Se é aluno, garantir que student_profile existe
+        if (user.role === 'aluno') {
+          // Buscar ID do usuário (caso já existisse)
+          const finalUserId = userId || await new Promise<number>((res, rej) => {
+            db.get(
+              'SELECT id FROM users WHERE email = ?',
+              [user.email],
+              (err, row: any) => {
+                if (err) rej(err);
+                else res(row.id);
+              }
+            );
+          });
+
+          // Criar student_profile se não existir
+          await new Promise<void>((res, rej) => {
+            db.run(
+              `INSERT OR IGNORE INTO student_profile (user_id, plan_type, active)
+               VALUES (?, ?, 1)`,
+              [finalUserId, (user as any).planType || 'mensal'],
+              function (err) {
+                if (err) {
+                  rej(err);
+                } else {
+                  if (this.changes > 0) {
+                    console.log(`✅ Student profile criado para user_id ${finalUserId}`);
+                  } else {
+                    console.log(`ℹ️  Student profile já existe para user_id ${finalUserId}`);
+                  }
+                  res();
+                }
+              }
+            );
+          });
+        }
+      }
+
+      resolve();
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+/**
+ * Cria exercícios padrão com valores predefinidos.
+ */
+export const seedDefaultExercises = async (): Promise<void> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const defaultExercises = [
+        {
+          name: 'Supino Reto com Barra',
+          description: 'Exercício composto para peitoral, com auxílio de tríceps e ombros.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        },
+        {
+          name: 'Supino Inclinado com Halteres',
+          description: 'Exercício com foco na parte superior do peitoral, exigindo maior estabilização.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        },
+        {
+          name: 'Crucifixo em Máquina',
+          description: 'Exercício de isolamento para o peitoral com movimento guiado.',
+          weight: 5,
+          series: 3,
+          repetitions: 12
+        },
+        {
+          name: 'Puxada Frontal na Polia',
+          description: 'Exercício para dorsais, simulando o movimento da barra fixa.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        },
+        {
+          name: 'Remada Baixa na Polia',
+          description: 'Exercício que trabalha dorsais, romboides e bíceps.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        },
+        {
+          name: 'Agachamento Livre',
+          description: 'Exercício composto para membros inferiores, com foco em quadríceps, glúteos e core.',
+          weight: 5,
+          series: 4,
+          repetitions: 8
+        },
+        {
+          name: 'Leg Press 45',
+          description: 'Exercício em máquina para membros inferiores, com foco em quadríceps e glúteos.',
+          weight: 5,
+          series: 3,
+          repetitions: 12
+        },
+        {
+          name: 'Cadeira Extensora',
+          description: 'Exercício de isolamento para o quadríceps.',
+          weight: 5,
+          series: 3,
+          repetitions: 12
+        },
+        {
+          name: 'Mesa Flexora',
+          description: 'Exercício de isolamento para os músculos posteriores da coxa.',
+          weight: 5,
+          series: 3,
+          repetitions: 12
+        },
+        {
+          name: 'Desenvolvimento com Halteres',
+          description: 'Exercício para ombros, com foco nas porções anterior e medial do deltoide.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        },
+        {
+          name: 'Elevação Lateral',
+          description: 'Exercício de isolamento para a porção medial dos ombros.',
+          weight: 5,
+          series: 3,
+          repetitions: 12
+        },
+        {
+          name: 'Rosca Direta com Barra',
+          description: 'Exercício clássico para o bíceps braquial.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        },
+        {
+          name: 'Tríceps Pulley',
+          description: 'Exercício de isolamento para o tríceps em polia alta.',
+          weight: 5,
+          series: 3,
+          repetitions: 12
+        },
+        {
+          name: 'Abdominal Crunch',
+          description: 'Exercício básico para o reto abdominal.',
+          weight: 5,
+          series: 3,
+          repetitions: 15
+        },
+        {
+          name: 'Prancha Isométrica',
+          description: 'Exercício isométrico para estabilização do core.',
+          weight: 5,
+          series: 3,
+          repetitions: 30
+        },
+        {
+          name: 'Rosca Martelo',
+          description: 'Exercício para bíceps e antebraço, trabalhando a porção lateral do braço.',
+          weight: 5,
+          series: 3,
+          repetitions: 12
+        },
+        {
+          name: 'Tríceps Testa',
+          description: 'Exercício de isolamento para tríceps realizado deitado com halteres ou barra.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        },
+        {
+          name: 'Levantamento Terra',
+          description: 'Exercício composto fundamental que trabalha toda a cadeia posterior, glúteos e core.',
+          weight: 5,
+          series: 4,
+          repetitions: 8
+        },
+        {
+          name: 'Panturrilha em Pé',
+          description: 'Exercício de isolamento para os músculos da panturrilha (gastrocnêmio e sóleo).',
+          weight: 5,
+          series: 3,
+          repetitions: 15
+        },
+        {
+          name: 'Stiff',
+          description: 'Exercício para posterior de coxa e glúteos, realizado com barra ou halteres.',
+          weight: 5,
+          series: 3,
+          repetitions: 10
+        }
+      ];
+
+      for (const exercise of defaultExercises) {
+        await new Promise<void>((res, rej) => {
+          // Check if exists first
+          db.get('SELECT id FROM exercise WHERE name = ?', [exercise.name], (err, row) => {
+            if (err) return rej(err);
+
+            if (row) {
+              console.log(`ℹ️  Exercício "${exercise.name}" já existe`);
+              res();
+            } else {
+              db.run(
+                `INSERT INTO exercise (name, description, repetitions, weight, series)
+                 VALUES (?, ?, ?, ?, ?)`,
+                [exercise.name, exercise.description, exercise.repetitions, exercise.weight, exercise.series],
+                function (err) {
+                  if (err) return rej(err);
+                  console.log(`✅ Exercício "${exercise.name}" criado`);
+                  res();
+                }
+              );
+            }
+          });
+        });
+      }
+
+      console.log(`✅ ${defaultExercises.length} exercícios padrão processados.`);
+      resolve();
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
 
 /**
  * Função auxiliar para limpar nome e criar email válido
@@ -329,6 +621,14 @@ export async function runSeed() {
     console.log('='.repeat(50));
     console.log('--- Iniciando Geração de Dados (Completa) ---');
     console.log('='.repeat(50));
+
+    // 0. Criar usuários padrão essenciais (Admin, Maria, Carlos, João)
+    console.log('\n--- 0. Criando Usuários Padrão Essenciais ---');
+    await seedDefaultUsers();
+
+    // 0.1. Criar exercícios padrão
+    console.log('\n--- 0.1. Criando Exercícios Padrão ---');
+    await seedDefaultExercises();
 
     // Verificar quantos usuários já existem
     try {
