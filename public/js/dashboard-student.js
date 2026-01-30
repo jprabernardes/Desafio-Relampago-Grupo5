@@ -116,25 +116,31 @@ async function loadWorkouts() {
       .map(
         (workout) => `
             <div class="workout-card">
-              <h3>${workout.name}</h3>
-              <p><strong>Instrutor:</strong> ${workout.instructor_name || workout.instructor_id}</p>
-              <div class="exercises-list">
-                ${
-                  Array.isArray(workout.exercises)
-                    ? workout.exercises
-                        .map(
-                          (ex) => `
-                    <div style="margin-bottom: 4px;">
-                      <strong>${ex.name}</strong>: ${ex.series}x${ex.repetitions} - ${ex.weight || ""}
-                    </div>
-                  `,
-                        )
-                        .join("")
-                    : `<pre>${workout.exercises}</pre>`
-                }
+              <div>
+                <h3 style="margin-bottom: 0.75rem;">${workout.name}</h3>
+                <p style="font-size: 0.9rem; margin-bottom: 0.4rem; color: #4a5568;">
+                  👤 <strong>Instrutor:</strong> ${workout.instructor_name || workout.instructor_id}
+                </p>
+                <div class="exercises-list" style="font-size: 0.85rem; color: #718096; margin-top: 1rem;">
+                  ${Array.isArray(workout.exercises)
+            ? workout.exercises
+              .map(
+                (ex) => `
+                      <div style="margin-bottom: 6px; padding-left: 10px; border-left: 2px solid #edf2f7;">
+                        <strong>${ex.name}</strong><br>
+                        ${ex.series}x${ex.repetitions} ${ex.weight ? `• ${ex.weight}` : ""}
+                      </div>
+                    `,
+              )
+              .join("")
+            : `<pre>${workout.exercises}</pre>`
+          }
+                </div>
               </div>
-              <div class="workout-actions">
-                <button class="btn btn-primary" onclick="printWorkout(${workout.id})">🖨️ Imprimir (Check-in)</button>
+              <div class="workout-actions" style="margin-top: 1.5rem;">
+                <button class="btn btn-primary" style="width: 100%; border-radius: 6px; font-size: 0.85rem;" onclick="printWorkout(${workout.id})">
+                  🖨️ Imprimir Treino
+                </button>
               </div>
             </div>
           `,
