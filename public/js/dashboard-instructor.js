@@ -1620,6 +1620,8 @@ window.openCreateTrainingModal = () => {
   window.selectedExercises = selectedExercises; // Atualizar referência global
   exerciseSearchFilter = ""; // Limpar filtro de busca
   document.getElementById("modalTitle").textContent = "Criar Treino";
+  const instructorInfo = document.getElementById("trainingInstructorInfo");
+  if (instructorInfo) instructorInfo.textContent = "";
   document.getElementById("trainingId").value = "";
   document.getElementById("trainingName").value = "";
   document.getElementById("deleteTrainingBtn").style.display = "none";
@@ -1648,6 +1650,12 @@ window.openEditTrainingModal = async (trainingId) => {
     const fullTraining = await res.json();
 
     document.getElementById("modalTitle").textContent = "Editar Treino";
+    const instructorInfo = document.getElementById("trainingInstructorInfo");
+    if (instructorInfo && fullTraining.instructor_name) {
+      instructorInfo.textContent = `(Criado por ${fullTraining.instructor_name})`;
+    } else if (instructorInfo) {
+      instructorInfo.textContent = "";
+    }
     document.getElementById("trainingId").value = trainingId;
     document.getElementById("trainingName").value = fullTraining.name || "";
     document.getElementById("deleteTrainingBtn").style.display = "inline-block";

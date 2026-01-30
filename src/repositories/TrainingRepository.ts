@@ -24,7 +24,13 @@ export class TrainingRepository {
 
   findById(id: number): Promise<Training | undefined> {
     return new Promise((resolve, reject) => {
-      db.get('SELECT * FROM training WHERE id = ?', [id], (err, row: any) => {
+      const sql = `
+        SELECT t.*, u.name as instructor_name 
+        FROM training t
+        LEFT JOIN users u ON t.instructor_id = u.id 
+        WHERE t.id = ?
+      `;
+      db.get(sql, [id], (err, row: any) => {
         if (err) {
           reject(err);
         } else if (row) {
