@@ -14,7 +14,8 @@ export class UserController {
   create = async (req: Request, res: Response): Promise<Response> => {
     try {
       const creatorRole = (req as any).user.role;
-      const user = await this.userService.create(req.body, creatorRole);
+      const { planType, ...userData } = req.body; 
+      const user = await this.userService.create(userData, creatorRole, planType); 
       return res.status(201).json(user);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -39,7 +40,10 @@ export class UserController {
       }
       return res.status(200).json(user);
     } catch (error: any) {
-      return res.status(400).json({ error: error.message });
+      if (error.message.includes('não encontrado')) {
+        return res.status(404).json({ error: error.message });
+      }
+      return res.status(500).json({ error: 'Erro interno do servidor' });
     }
   };
 
@@ -53,13 +57,22 @@ export class UserController {
     }
   };
 
-  update = async (req: Request, res: Response): Promise<Response> => {
+    update = async (req: Request, res: Response): Promise<Response> => {
     try {
       const updaterRole = (req as any).user.role;
+      const userId = Number(req.params.id);
       const { planType, ...userData } = req.body;
-      await this.userService.update(Number(req.params.id), userData, updaterRole, planType);
-      return res.status(200).json({ message: 'Usuário atualizado com sucesso.' });
+      
+      await this.userService.update(userId, userData, updaterRole, planType);
+      
+      // Buscar e retornar usuário atualizado
+      const updatedUser = await this.userService.findById(userId);
+      return res.status(200).json(updatedUser);
     } catch (error: any) {
+      // Diferenciar 404 de outros erros
+      if (error.message.includes('não encontrado')) {
+        return res.status(404).json({ error: error.message });
+      }
       return res.status(400).json({ error: error.message });
     }
   };
@@ -70,6 +83,10 @@ export class UserController {
       await this.userService.delete(Number(req.params.id), deleterRole);
       return res.status(200).json({ message: 'Usuário deletado com sucesso.' });
     } catch (error: any) {
+      // Retornar 404 para usuário não encontrado
+      if (error.message.includes('não encontrado')) {
+        return res.status(404).json({ error: error.message });
+      }
       return res.status(400).json({ error: error.message });
     }
   };

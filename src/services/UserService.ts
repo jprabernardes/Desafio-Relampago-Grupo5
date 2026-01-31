@@ -7,8 +7,11 @@ import {
   isValidEmail,
   isValidPassword,
   isValidCPF,
-  isNotEmpty
+  isNotEmpty,
+  isValidPhone
 } from '../utils/validators';
+
+
 
 export class UserService {
   private userRepository: UserRepository;
@@ -27,12 +30,12 @@ export class UserService {
   /**
    * Adiciona plan_type ao usuário se ele for aluno
    */
-  private async enrichWithStudentProfile(user: any): Promise<any> {
+  private async enrichUser(user: any): Promise<any> {
     if (user.role === 'aluno') {
       const profile: any = await this.studentProfileRepository.findByUserId(user.id);
       return {
         ...user,
-        plan_type: profile?.plan_type || 'mensal'
+        planType: profile?.plan_type || 'mensal'
       };
     }
     return user;
@@ -75,6 +78,10 @@ export class UserService {
       throw new Error('CPF inválido. Deve conter 11 dígitos numéricos.');
     }
 
+    if (user.phone && !isValidPhone(user.phone)) {
+      throw new Error('Telefone inválido. Use o formato (XX)XXXXXXXXX.');
+    }
+
     const existingEmail = await this.userRepository.findByEmail(user.email);
     if (existingEmail) {
       throw new Error('Email já cadastrado.');
@@ -100,8 +107,8 @@ export class UserService {
       );
     }
 
-    // Enriquecer com plan_type antes de retornar
-    const enrichedUser = await this.enrichWithStudentProfile(newUser);
+    // Enriquecer antes de retornar
+    const enrichedUser = await this.enrichUser(newUser);
     return this.removePassword(enrichedUser);
   }
 
@@ -109,18 +116,17 @@ export class UserService {
     const user = await this.userRepository.findById(id);
     if (!user) return undefined;
     
-    // Enriquecer com plan_type
-    const enrichedUser = await this.enrichWithStudentProfile(user);
+    const enrichedUser = await this.enrichUser(user);
     return this.removePassword(enrichedUser);
   }
 
   async findAll(role?: string) {
     const users = await this.userRepository.findAll(role);
     
-    // Enriquecer cada usuário com plan_type se for aluno
+    // Enriquecer cada usuário
     const enrichedUsers = await Promise.all(
       users.map(async (user) => {
-        const enriched = await this.enrichWithStudentProfile(user);
+        const enriched = await this.enrichUser(user);
         return this.removePassword(enriched);
       })
     );
@@ -138,10 +144,10 @@ export class UserService {
 
     const users = await this.userRepository.search(query);
     
-    // Enriquecer cada usuário com plan_type se for aluno
+    // Enriquecer cada usuário
     const enrichedUsers = await Promise.all(
       users.map(async (user) => {
-        const enriched = await this.enrichWithStudentProfile(user);
+        const enriched = await this.enrichUser(user);
         return this.removePassword(enriched);
       })
     );
@@ -159,10 +165,28 @@ export class UserService {
     updaterRole: string,
     planType?: 'mensal' | 'trimestral' | 'semestral' | 'anual'
   ): Promise<void> {
-    if (updaterRole !== 'administrador') {
-      throw new Error('Apenas administrador pode atualizar usuários.');
+    
+    // Verificar se usuário existe
+    const existingUser = await this.userRepository.findById(id);
+    if (!existingUser) {
+      throw new Error('Usuário não encontrado.');
     }
 
+    // Check permissions
+    if (updaterRole !== 'admin' && updaterRole !== 'administrador') {
+      if (updaterRole === 'recepcionista') {
+        if (existingUser.role !== 'aluno' && existingUser.role !== 'instrutor') {
+          throw new Error('Acesso negado: Recepcionistas só podem editar Alunos e Instrutores.');
+        }
+        if (data.role && data.role !== existingUser.role) {
+          throw new Error('Acesso negado: Recepcionistas não podem alterar o tipo de usuário.');
+        }
+      } else {
+        throw new Error('Apenas administrador ou recepcionista pode atualizar usuários.');
+      }
+    }
+
+    // Validações
     if (data.email && !isValidEmail(data.email)) {
       throw new Error('Email inválido.');
     }
@@ -171,16 +195,21 @@ export class UserService {
       throw new Error('Senha deve ter no mínimo 6 caracteres.');
     }
 
+    if (data.phone && !isValidPhone(data.phone)) {
+      throw new Error('Telefone inválido. Use o formato (XX)XXXXXXXXX.');
+    }
+
+    if (data.document && !isValidCPF(data.document)) {
+      throw new Error('CPF inválido. Deve conter 11 dígitos numéricos.');
+    }
+
     if (data.password) {
       data.password = await hashPassword(data.password);
     }
 
-    // Atualizar dados do usuário
     await this.userRepository.update(id, data);
 
-    // Se forneceu planType, atualizar student_profile
     if (planType) {
-      // Verificar se o usuário é aluno
       const user = await this.userRepository.findById(id);
       if (user && user.role === 'aluno') {
         await this.studentProfileRepository.updatePlanType(id, planType);
@@ -189,8 +218,19 @@ export class UserService {
   }
 
   async delete(id: number, deleterRole: string) {
+    const existingUser = await this.userRepository.findById(id);
+    if (!existingUser) {
+      throw new Error('Usuário não encontrado.');
+    }
+
     if (deleterRole !== 'administrador') {
-      throw new Error('Apenas administrador pode deletar usuários.');
+      if (deleterRole === 'recepcionista') {
+        if (existingUser.role !== 'aluno' && existingUser.role !== 'instrutor') {
+          throw new Error('Acesso negado: Recepcionistas só podem deletar Alunos e Instrutores.');
+        }
+      } else {
+        throw new Error('Apenas administrador ou recepcionista pode deletar usuários.');
+      }
     }
 
     await this.userRepository.delete(id);

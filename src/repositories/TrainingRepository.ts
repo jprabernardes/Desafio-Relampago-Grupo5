@@ -24,7 +24,13 @@ export class TrainingRepository {
 
   findById(id: number): Promise<Training | undefined> {
     return new Promise((resolve, reject) => {
-      db.get('SELECT * FROM training WHERE id = ?', [id], (err, row: any) => {
+      const sql = `
+        SELECT t.*, u.name as instructor_name 
+        FROM training t
+        LEFT JOIN users u ON t.instructor_id = u.id 
+        WHERE t.id = ?
+      `;
+      db.get(sql, [id], (err, row: any) => {
         if (err) {
           reject(err);
         } else if (row) {
@@ -42,7 +48,7 @@ export class TrainingRepository {
   findByUserId(userId: number): Promise<Training[]> {
     return new Promise((resolve, reject) => {
       const sql = `
-        SELECT t.*, u.name as instructor_name 
+        SELECT t.id, t.instructor_id, t.name, t.finish, t.completed_date, u.name as instructor_name 
         FROM training t 
         INNER JOIN training_user tu ON t.id = tu.training_id
         LEFT JOIN users u ON t.instructor_id = u.id 
@@ -64,6 +70,28 @@ export class TrainingRepository {
   findByInstructorId(instructorId: number): Promise<Training[]> {
     return new Promise((resolve, reject) => {
       db.all('SELECT * FROM training WHERE instructor_id = ?', [instructorId], (err, rows: any[]) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve((rows || []).map(row => ({
+            ...row,
+            finish: row.finish === 1
+          })) as Training[]);
+        }
+      });
+    });
+  }
+
+  findByInstructorAndUserId(instructorId: number, userId: number): Promise<Training[]> {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT t.id, t.instructor_id, t.name, t.finish, t.completed_date
+        FROM training t
+        INNER JOIN training_user tu ON t.id = tu.training_id
+        WHERE t.instructor_id = ? AND tu.user_id = ?
+        ORDER BY t.id DESC
+      `;
+      db.all(sql, [instructorId, userId], (err, rows: any[]) => {
         if (err) {
           reject(err);
         } else {

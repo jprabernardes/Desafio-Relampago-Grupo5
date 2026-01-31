@@ -36,7 +36,7 @@ export class TrainingController {
     try {
       const userId = (req as any).user.id;
       const userRole = (req as any).user.role;
-      
+
       let training;
       if (userRole === 'instrutor') {
         training = await this.trainingService.findById(Number(req.params.id), userId);
@@ -47,11 +47,11 @@ export class TrainingController {
           return res.status(404).json({ error: 'Treino não encontrado.' });
         }
       }
-      
+
       if (!training) {
         return res.status(404).json({ error: 'Treino não encontrado.' });
       }
-      
+
       const exercises = await this.exerciseService.findByTrainingId(training.id!);
       return res.status(200).json({ ...training, exercises });
     } catch (error: any) {
@@ -82,10 +82,30 @@ export class TrainingController {
   addExercise = async (req: Request, res: Response): Promise<Response> => {
     try {
       const instructorId = (req as any).user.id;
-      const { exerciseId } = req.body;
+      const { exerciseId, series, repetitions, weight } = req.body;
       await this.trainingService.findById(Number(req.params.id), instructorId);
-      await this.exerciseService.addToTraining(Number(req.params.id), exerciseId);
+      await this.exerciseService.addToTrainingWithParams(Number(req.params.id), exerciseId, {
+        series,
+        repetitions,
+        weight
+      });
       return res.status(200).json({ message: 'Exercício associado ao treino com sucesso.' });
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
+    }
+  };
+
+  updateExerciseInTraining = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const instructorId = (req as any).user.id;
+      const trainingId = Number(req.params.id);
+      const exerciseId = Number(req.params.exerciseId);
+      const { series, repetitions, weight } = req.body;
+
+      await this.trainingService.findById(trainingId, instructorId);
+      await this.exerciseService.updateInTraining(trainingId, exerciseId, { series, repetitions, weight });
+
+      return res.status(200).json({ message: 'Exercício do treino atualizado com sucesso.' });
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
     }
@@ -133,11 +153,42 @@ export class TrainingController {
     }
   };
 
+  findTrainingsByStudentForInstructor = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const studentId = Number(req.params.studentId);
+      
+      const trainings = await this.trainingService.findByUserId(studentId);
+      
+      const trainingsWithExercises = await Promise.all(
+        trainings.map(async (t) => {
+          const exercises = await this.exerciseService.findByTrainingId(t.id!);
+          return { 
+            ...t, 
+            exercises
+          };
+        })
+      );
+      
+      return res.status(200).json(trainingsWithExercises);
+    } catch (error: any) {
+      console.error('[TrainingController] Erro ao buscar treinos:', error);
+      return res.status(400).json({ error: error.message });
+    }
+  };
+
   findMyWorkouts = async (req: Request, res: Response): Promise<Response> => {
     try {
       const userId = (req as any).user.id;
       const trainings = await this.trainingService.findByUserId(userId);
-      return res.status(200).json(trainings);
+
+      const trainingsWithExercises = await Promise.all(
+        trainings.map(async (t) => {
+          const exercises = await this.exerciseService.findByTrainingId(t.id!);
+          return { ...t, exercises };
+        })
+      );
+
+      return res.status(200).json(trainingsWithExercises);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
     }

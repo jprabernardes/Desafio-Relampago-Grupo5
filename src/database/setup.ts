@@ -1,6 +1,6 @@
 // src/database/setup.ts
 import db from './db';
-import bcrypt from 'bcrypt';
+import runSeed from './seed';
 
 /**
  * Creates all necessary tables in the database.
@@ -17,9 +17,23 @@ export const createTables = (): Promise<void> => {
           password TEXT NOT NULL,
           role TEXT CHECK(role IN ('administrador', 'recepcionista', 'instrutor', 'aluno')) NOT NULL,
           document TEXT UNIQUE NOT NULL,
+          phone TEXT,
           created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
       `);
+
+      // Migration check for phone column (for existing databases)
+      db.all("PRAGMA table_info(users)", (err, rows: any[]) => {
+        if (!err && rows) {
+          const hasPhone = rows.some(r => r.name === 'phone');
+          if (!hasPhone) {
+            db.run("ALTER TABLE users ADD COLUMN phone TEXT", (err) => {
+              if (err) console.error("Error adding phone column:", err);
+              else console.log("✅ Phone column added to users table.");
+            });
+          }
+        }
+      });
 
       db.run(`
         CREATE TABLE IF NOT EXISTS student_profile (
@@ -29,6 +43,8 @@ export const createTables = (): Promise<void> => {
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
       `);
+
+
 
       db.run(`
         CREATE TABLE IF NOT EXISTS training (
@@ -56,11 +72,24 @@ export const createTables = (): Promise<void> => {
         CREATE TABLE IF NOT EXISTS exercise_training (
           exercise_id INTEGER NOT NULL,
           training_id INTEGER NOT NULL,
+          series INTEGER,
+          repetitions INTEGER,
+          weight REAL,
           PRIMARY KEY (exercise_id, training_id),
           FOREIGN KEY (exercise_id) REFERENCES exercise(id) ON DELETE CASCADE,
           FOREIGN KEY (training_id) REFERENCES training(id) ON DELETE CASCADE
         )
-      `);
+      `, () => {
+        // Migration to add columns if they don't exist
+        db.all("PRAGMA table_info(exercise_training)", (err, rows: any[]) => {
+          if (!err && rows) {
+            const columns = rows.map(r => r.name);
+            if (!columns.includes('series')) db.run("ALTER TABLE exercise_training ADD COLUMN series INTEGER");
+            if (!columns.includes('repetitions')) db.run("ALTER TABLE exercise_training ADD COLUMN repetitions INTEGER");
+            if (!columns.includes('weight')) db.run("ALTER TABLE exercise_training ADD COLUMN weight REAL");
+          }
+        });
+      });
 
       db.run(`
         CREATE TABLE IF NOT EXISTS training_user (
@@ -122,122 +151,39 @@ export const createTables = (): Promise<void> => {
 };
 
 /**
- * Creates default users with proper student_profile for students.
+ * Verifica se o banco está vazio (primeira criação)
  */
-export const createDefaultUsers = async (): Promise<void> => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      // Default users list
-      const defaultUsers = [
-        {
-          name: 'Administrador',
-          email: 'admin@academia.com',
-          password: 'admin123',
-          role: 'administrador',
-          document: '00000000000',
-        },
-        {
-          name: 'Recepcionista',
-          email: 'maria@academia.com',
-          password: 'senha123',
-          role: 'recepcionista',
-          document: '11111111111',
-        },
-        {
-          name: 'Instrutor',
-          email: 'carlos@academia.com',
-          password: 'senha123',
-          role: 'instrutor',
-          document: '22222222222',
-        },
-        {
-          name: 'Aluno',
-          email: 'joao@academia.com',
-          password: 'senha123',
-          role: 'aluno',
-          document: '33333333333',
-          planType: 'mensal' as const,
-        },
-      ];
-
-      for (const user of defaultUsers) {
-        const hashedPassword = await bcrypt.hash(user.password, 10);
-
-        // Inserir ou ignorar usuário
-        const userId = await new Promise<number | undefined>((res, rej) => {
-          db.run(
-            `INSERT OR IGNORE INTO users (name, email, password, role, document)
-             VALUES (?, ?, ?, ?, ?)`,
-            [user.name, user.email, hashedPassword, user.role, user.document],
-            function (err) {
-              if (err) {
-                rej(err);
-              } else {
-                if (this.changes > 0) {
-                  console.log(`✅ Usuário ${user.role} criado (email: ${user.email}, senha: ${user.password})`);
-                  res(this.lastID);
-                } else {
-                  console.log(`ℹ️  Usuário ${user.role} já existe (email: ${user.email})`);
-                  res(undefined);
-                }
-              }
-            }
-          );
-        });
-
-        // Se é aluno, garantir que student_profile existe
-        if (user.role === 'aluno') {
-          // Buscar ID do usuário (caso já existisse)
-          const finalUserId = userId || await new Promise<number>((res, rej) => {
-            db.get(
-              'SELECT id FROM users WHERE email = ?',
-              [user.email],
-              (err, row: any) => {
-                if (err) rej(err);
-                else res(row.id);
-              }
-            );
-          });
-
-          // Criar student_profile se não existir
-          await new Promise<void>((res, rej) => {
-            db.run(
-              `INSERT OR IGNORE INTO student_profile (user_id, plan_type, active)
-               VALUES (?, ?, 1)`,
-              [finalUserId, (user as any).planType || 'mensal'],
-              function (err) {
-                if (err) {
-                  rej(err);
-                } else {
-                  if (this.changes > 0) {
-                    console.log(`✅ Student profile criado para user_id ${finalUserId}`);
-                  } else {
-                    console.log(`ℹ️  Student profile já existe para user_id ${finalUserId}`);
-                  }
-                  res();
-                }
-              }
-            );
-          });
-        }
+const isDatabaseEmpty = (): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    db.get("SELECT COUNT(*) as count FROM users", (err, row: any) => {
+      if (err) {
+        // Se der erro, assume que está vazio (tabela pode não existir ainda)
+        resolve(true);
+      } else {
+        resolve(row.count === 0);
       }
-
-      resolve();
-    } catch (error) {
-      reject(error);
-    }
+    });
   });
 };
-
 
 /**
  * Initializes the database connection and sets up the initial schema.
  */
 export const initializeDatabase = async (): Promise<void> => {
   try {
+    // Garante que as tabelas existam
     await createTables();
-    await createDefaultUsers();
-    console.log('✅ Database initialized successfully!');
+
+    // Verifica se é a primeira criação do banco
+    const isEmpty = await isDatabaseEmpty();
+    
+    if (isEmpty) {
+      console.log('🌱 Banco de dados vazio detectado. Executando seed inicial...');
+      await runSeed();
+      console.log('✅ Seed inicial concluído!');
+    } else {
+      console.log('✅ Database initialized successfully!');
+    }
   } catch (error) {
     console.error('❌ Error initializing database:', error);
     throw error;

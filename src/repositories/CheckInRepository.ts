@@ -7,16 +7,24 @@ import { CheckIn } from '../models';
  * REGRA: Apenas acesso a dados, SEM regras de negócio.
  */
 export class CheckInRepository {
-  
+
   /**
    * Registra um check-in
    */
   create(checkin: CheckIn): Promise<CheckIn> {
     return new Promise((resolve, reject) => {
-      const sql = `INSERT INTO checkins (student_id, training_id) VALUES (?, ?)`;
-      const params = [checkin.student_id, checkin.training_id || null];
-      
-      db.run(sql, params, function(err) {
+      let sql: string;
+      let params: any[];
+
+      if (checkin.checkin_at) {
+        sql = `INSERT INTO checkins (student_id, training_id, checkin_at) VALUES (?, ?, ?)`;
+        params = [checkin.student_id, checkin.training_id || null, checkin.checkin_at];
+      } else {
+        sql = `INSERT INTO checkins (student_id, training_id) VALUES (?, ?)`;
+        params = [checkin.student_id, checkin.training_id || null];
+      }
+
+      db.run(sql, params, function (err) {
         if (err) {
           reject(err);
         } else {

@@ -26,6 +26,12 @@ export class ExerciseService {
       throw new Error('Séries deve ser um número positivo.');
     }
 
+    const normalizedName = exercise.name.toLowerCase().replace(/\s+/g, '');
+    const existing = await this.repository.findByName(normalizedName);
+    if (existing) {
+      throw new Error('Já existe um exercício com este nome.');
+    }
+
     return this.repository.create(exercise);
   }
 
@@ -76,6 +82,26 @@ export class ExerciseService {
     }
 
     await this.repository.addToTraining(trainingId, exerciseId);
+  }
+
+  async addToTrainingWithParams(
+    trainingId: number,
+    exerciseId: number,
+    params?: { series?: number; repetitions?: number; weight?: number }
+  ): Promise<void> {
+    const exercise = await this.repository.findById(exerciseId);
+    if (!exercise) {
+      throw new Error('Exercício não encontrado.');
+    }
+    await this.repository.addToTraining(trainingId, exerciseId, params);
+  }
+
+  async updateInTraining(
+    trainingId: number,
+    exerciseId: number,
+    params: { series?: number; repetitions?: number; weight?: number }
+  ): Promise<void> {
+    await this.repository.updateInTraining(trainingId, exerciseId, params);
   }
 
   async removeFromTraining(trainingId: number, exerciseId: number): Promise<void> {

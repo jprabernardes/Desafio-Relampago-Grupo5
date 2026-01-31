@@ -474,6 +474,11 @@ td {
   align-items: center;
 }
 
+.text-center-padded {
+  text-align: center;
+  padding: 2rem;
+}
+
 .confirm-modal-message {
   margin-bottom: 2rem;
   color: #666;
@@ -494,9 +499,4 @@ td {
   text-align: center;
   padding: 2rem;
   color: #666;
-}
-
-.text-center-padded {
-  text-align: center;
-  padding: 2rem;
 }

@@ -4,18 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - Administrador</title>
-    <link rel="stylesheet" href="css/dashboard-admin.css">
+    <link rel="stylesheet" href="css/dashboard-admin.css" />
   </head>
   <body>
     <div class="container">
       <div class="sidebar">
         <div class="logo">💪 FitManager</div>
-        <div class="nav-item active" id="navDashboard" onclick="loadTab('all')">📊 Dashboard</div>
-        <div class="nav-item" id="navAlunos" onclick="loadTab('alunos')">
-          <i class="fas fa-user-graduate"></i> Alunos
+        <div class="nav-item active" id="navAlunos" onclick="loadTab('alunos')">
+          <i class="fas fa-user-graduate"></i> 👥 Alunos
         </div>
-        <div class="nav-item" id="navFuncionarios" onclick="loadTab('funcionarios')">
-          <i class="fas fa-user-tie"></i> Funcionários
+        <div
+          class="nav-item"
+          id="navFuncionarios"
+          onclick="loadTab('funcionarios')"
+        >
+          <i class="fas fa-user-tie"></i> 🏋️ Funcionários
         </div>
         <div style="flex: 1"></div>
         <div class="logout-btn" onclick="logout()">🚪 Sair</div>
@@ -30,33 +33,14 @@
           </div>
         </div>
 
-        <div class="stats-grid">
-          <div class="stat-card">
-            <h3>Total Usuários</h3>
-            <div class="value" id="totalUsers">0</div>
-          </div>
-          <div class="stat-card">
-            <h3>Alunos</h3>
-            <div class="value" id="totalStudents">0</div>
-          </div>
-          <div class="stat-card">
-            <h3>Instrutores</h3>
-            <div class="value" id="totalInstructors">0</div>
-          </div>
-          <div class="stat-card">
-            <h3>Recepcionistas</h3>
-            <div class="value" id="totalReceptionists">0</div>
-          </div>
-        </div>
-
         <div class="table-container">
           <div class="table-header">
             <h2 id="tableTitle">Usuários do Sistema</h2>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-              <input 
-                type="text" 
-                id="searchInput" 
-                placeholder="Pesquisar..." 
+            <div class="flex-center-gap">
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Pesquisar..."
                 class="search-input"
                 oninput="handleSearch()"
               />
@@ -77,6 +61,7 @@
             </thead>
             <tbody id="usersTable"></tbody>
           </table>
+          <div id="paginationContainer"></div>
         </div>
       </div>
     </div>
@@ -112,7 +97,11 @@
               placeholder="11 dígitos"
             />
           </div>
-          <div class="form-group" id="addRoleGroup" style="display: none;">
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="addTelefone" placeholder="(XX)9XXXXXXXX" />
+          </div>
+          <div class="form-group hidden" id="addRoleGroup">
             <label>Função *</label>
             <select id="addRole">
               <option value="">Selecione...</option>
@@ -122,7 +111,7 @@
               <option value="aluno">🏃 Aluno</option>
             </select>
           </div>
-          <div class="form-group" id="addTipoPlanoGroup" style="display: none;">
+          <div class="form-group hidden" id="addTipoPlanoGroup">
             <label>Tipo de Plano *</label>
             <select id="addTipoPlano">
               <option value="">Selecione...</option>
@@ -132,12 +121,13 @@
               <option value="anual">Anual</option>
             </select>
           </div>
-          <div class="form-group" id="addTipoFuncionarioGroup" style="display: none;">
+          <div class="form-group hidden" id="addTipoFuncionarioGroup">
             <label>Função *</label>
             <select id="addTipoFuncionario">
               <option value="">Selecione...</option>
-              <option value="recepcionista">Recepcionista</option>
-              <option value="instrutor">Instrutor</option>
+              <option value="administrador">👑 Administrador</option>
+              <option value="recepcionista">📋 Recepcionista</option>
+              <option value="instrutor">💪 Instrutor</option>
             </select>
           </div>
           <div class="form-actions">
@@ -168,11 +158,33 @@
             <label>Email *</label>
             <input type="email" id="editEmail" required />
           </div>
-          <div class="form-group" id="editNovaSenhaGroup" style="display: none;">
-            <label>Nova Senha (deixe em branco para não alterar)</label>
-            <input type="password" id="editNovaSenha" minlength="6" placeholder="Digite nova senha" />
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="editTelefone" placeholder="(XX)9XXXXXXXX" />
           </div>
-          <div class="form-group" id="editTipoPlanoGroup" style="display: none;">
+          <div class="form-group hidden" id="editNovaSenhaGroup">
+            <label>Nova Senha (deixe em branco para não alterar)</label>
+            <input
+              type="password"
+              id="editNovaSenha"
+              minlength="6"
+              placeholder="Digite nova senha"
+            />
+          </div>
+          <div class="form-group" id="editCpfGroup">
+            <label>CPF *</label>
+            <input type="text" id="editCpf" required maxlength="11" />
+          </div>
+          <div class="form-group hidden" id="editRoleGroup">
+            <label>Função *</label>
+            <select id="editRole">
+              <option value="administrador">👑 Administrador</option>
+              <option value="recepcionista">📋 Recepcionista</option>
+              <option value="instrutor">💪 Instrutor</option>
+              <option value="aluno">🏃 Aluno</option>
+            </select>
+          </div>
+          <div class="form-group hidden" id="editTipoPlanoGroup">
             <label>Tipo de Plano *</label>
             <select id="editTipoPlano">
               <option value="">Selecione...</option>
@@ -183,7 +195,11 @@
             </select>
           </div>
           <div class="form-actions">
-            <button type="button" class="btn btn-danger" onclick="confirmDeleteUser()">
+            <button
+              type="button"
+              class="btn btn-danger"
+              onclick="confirmDeleteUser()"
+            >
               Deletar Conta
             </button>
             <div style="flex: 1"></div>
@@ -204,9 +220,7 @@
             &times;
           </button>
         </div>
-        <p id="confirmMessage" style="margin-bottom: 2rem; color: #666">
-          Tem certeza?
-        </p>
+        <p id="confirmMessage" class="confirm-modal-message">Tem certeza?</p>
         <div class="form-actions">
           <button class="btn" onclick="closeConfirmModal()">Não</button>
           <button class="btn btn-danger" onclick="confirmAction()">
@@ -215,7 +229,7 @@
         </div>
       </div>
     </div>
-
+    <script src="js/pagination.js"></script>
     <script src="js/dashboard-admin.js"></script>
   </body>
 </html>

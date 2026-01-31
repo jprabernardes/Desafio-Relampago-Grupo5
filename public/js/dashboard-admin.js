@@ -1,10 +1,11 @@
-let currentTab = "all";
+// public/js/dashboard-admin.js
+
+let paginator = null;
+let currentTab = "alunos";
 let allUsers = [];
 let filteredUsers = [];
 
 const API_URL = "/api";
-const token = localStorage.getItem("token");
-const user = JSON.parse(localStorage.getItem("user") || "{}");
 
 // Lógica do Modal de Confirmação
 let pendingConfirmAction = null;
@@ -27,86 +28,115 @@ function confirmAction() {
   closeConfirmModal();
 }
 
-if (!token || user.role !== "administrador") {
-  window.location.href = "/";
+async function loadUserInfo() {
+  const res = await fetch(`${API_URL}/auth/me`);
+  const data = await res.json();
+  return data;
 }
-
-// Adaptador: backend usa 'name', frontend usa 'nome'
-document.getElementById("userName").textContent = user.name || user.nome || "Admin";
-document.getElementById("userAvatar").textContent = (user.name || user.nome || "A")
-  .charAt(0)
-  .toUpperCase();
 
 async function loadData() {
   try {
+    const userData = await loadUserInfo();
+    if (userData.error) {
+      document.cookie = "";
+      window.location.href = "/";
+    }
+
+    // Ensure user is administrator
+    if (userData.role && userData.role !== "administrador") {
+      alert("Acesso negado. Você não é administrador.");
+      logout();
+    }
+
+    // Adaptador: backend usa 'name', frontend usa 'nome'
+    document.getElementById("userName").textContent =
+      userData.name || userData.nome || "Admin";
+    document.getElementById("userAvatar").textContent = (
+      userData.name ||
+      userData.nome ||
+      "A"
+    )
+      .charAt(0)
+      .toUpperCase();
+
     const [usersRes, metricsRes] = await Promise.all([
-      fetch(`${API_URL}/users`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      fetch(`${API_URL}/users/dashboard`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
+      fetch(`${API_URL}/users`),
+      fetch(`${API_URL}/users/dashboard`),
     ]);
 
     const rawUsers = await usersRes.json();
     const metrics = await metricsRes.json();
 
     // Mapear campos do backend para frontend
-    allUsers = rawUsers.map(u => ({
+    allUsers = rawUsers.map((u) => ({
       id: u.id,
       nome: u.name,
       email: u.email,
       cpf: u.document,
       role: u.role,
-      tipo_plano: u.plan_type || 'mensal'
+      tipo_plano: u.planType || u.plan_type || "mensal",
+      phone: u.phone,
     }));
 
-    document.getElementById("totalUsers").textContent = allUsers.length;
-    document.getElementById("totalStudents").textContent =
-      metrics.totalStudents || 0;
-    document.getElementById("totalInstructors").textContent =
-      metrics.totalInstructors || 0;
-    document.getElementById("totalReceptionists").textContent =
-      metrics.totalReceptionists || 0;
+    filteredUsers = [...allUsers];
 
-    renderUsers(allUsers);
+    if (!paginator) {
+      paginator = new Paginator(filteredUsers, 10, renderTablePage);
+    } else {
+      paginator.updateItems(filteredUsers);
+    }
+
+    paginator.goToPage(1);
+    paginator.render("paginationContainer");
   } catch (error) {
     console.error("Erro:", error);
   }
 }
 
-function renderUsers(users) {
+function renderTablePage(pageItems) {
   const tbody = document.getElementById("usersTable");
-  
+
+  if (pageItems.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="5" class="text-center-padded-gray">Nenhum registro encontrado.</td></tr>';
+    return;
+  }
+
   if (currentTab === "alunos") {
-    // Mostrar: Nome, Email, Tipo de Plano
-    tbody.innerHTML = users
+    // Mostrar: Nome, Email, Tipo de Plano, Ações
+    tbody.innerHTML = pageItems
       .map(
         (u) => `
-      <tr onclick="openEditModal(${u.id})" style="cursor: pointer;">
+      <tr>
         <td>${u.nome}</td>
         <td>${u.email}</td>
-        <td><span class="plan-badge plan-${u.tipo_plano || 'mensal'}">${u.tipo_plano || 'Mensal'}</span></td>
+        <td><span class="plan-badge plan-${u.tipo_plano || "mensal"}">${u.tipo_plano || "Mensal"}</span></td>
+        <td>
+           <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
+        </td>
       </tr>
     `,
       )
       .join("");
   } else if (currentTab === "funcionarios") {
-    // Mostrar: Nome, Email, Função
-    tbody.innerHTML = users
+    // Mostrar: Nome, Email, Função, Ações
+    tbody.innerHTML = pageItems
       .map(
         (u) => `
-      <tr onclick="openEditModal(${u.id})" style="cursor: pointer;">
+      <tr>
         <td>${u.nome}</td>
         <td>${u.email}</td>
-        <td><span class="role-badge role-${u.role}">${u.role === 'instrutor' ? 'Instrutor' : 'Recepcionista'}</span></td>
+        <td><span class="role-badge role-${u.role}">${u.role === "instrutor" ? "Instrutor" : "Recepcionista"}</span></td>
+        <td>
+           <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
+        </td>
       </tr>
     `,
       )
       .join("");
   } else {
     // Dashboard padrão
-    tbody.innerHTML = users
+    tbody.innerHTML = pageItems
       .map(
         (u) => `
       <tr>
@@ -115,7 +145,7 @@ function renderUsers(users) {
         <td>${u.cpf}</td>
         <td><span class="role-badge role-${u.role}">${u.role}</span></td>
         <td>
-          <button class="btn btn-danger" onclick="event.stopPropagation(); deleteUser(${u.id})">Deletar</button>
+          <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
         </td>
       </tr>
     `,
@@ -126,29 +156,22 @@ function renderUsers(users) {
 
 // Atualizar cabeçalhos da tabela
 function updateTableHeaders(tipo) {
-  const tableHead = document.getElementById('tableHead');
-  if (tipo === 'alunos') {
+  const tableHead = document.getElementById("tableHead");
+  if (tipo === "alunos") {
     tableHead.innerHTML = `
       <tr>
         <th>Nome</th>
         <th>Email</th>
         <th>Tipo de Plano</th>
-      </tr>
-    `;
-  } else if (tipo === 'funcionarios') {
-    tableHead.innerHTML = `
-      <tr>
-        <th>Nome</th>
-        <th>Email</th>
-        <th>Função</th>
+        <th>Ações</th>
       </tr>
     `;
   } else {
+    // funcionarios
     tableHead.innerHTML = `
       <tr>
         <th>Nome</th>
         <th>Email</th>
-        <th>CPF</th>
         <th>Função</th>
         <th>Ações</th>
       </tr>
@@ -156,20 +179,46 @@ function updateTableHeaders(tipo) {
   }
 }
 
-async function loadTab(tipo = "all") {
+async function loadTab(tipo = "alunos") {
   currentTab = tipo;
 
+  try {
+    // Carregar informações do usuário logado
+    const userData = await loadUserInfo();
+    if (userData.error) {
+      document.cookie = "";
+      window.location.href = "/";
+      return;
+    }
+
+    // Ensure user is administrator
+    if (userData.role && userData.role !== "administrador") {
+      alert("Acesso negado. Você não é administrador.");
+      logout();
+      return;
+    }
+
+    // Exibir nome e avatar do usuário
+    const displayName = userData.name || userData.nome || "Admin";
+    document.getElementById("userName").textContent = displayName;
+    document.getElementById("userAvatar").textContent = displayName
+      .charAt(0)
+      .toUpperCase();
+  } catch (error) {
+    console.error("Erro ao carregar informações do usuário:", error);
+    window.location.href = "/";
+    return;
+  }
+
   // Atualizar navegação ativa
-  document.querySelectorAll('.nav-item').forEach(item => {
-    item.classList.remove('active');
+  document.querySelectorAll(".nav-item").forEach((item) => {
+    item.classList.remove("active");
   });
 
-  if (tipo === 'alunos') {
-    document.getElementById('navAlunos').classList.add('active');
-  } else if (tipo === 'funcionarios') {
-    document.getElementById('navFuncionarios').classList.add('active');
-  } else {
-    document.getElementById('navDashboard').classList.add('active');
+  if (tipo === "alunos") {
+    document.getElementById("navAlunos").classList.add("active");
+  } else if (tipo === "funcionarios") {
+    document.getElementById("navFuncionarios").classList.add("active");
   }
 
   let roles = null;
@@ -189,21 +238,21 @@ async function loadTab(tipo = "all") {
       break;
 
     default:
-      roles = null;
-      title = "Usuários do Sistema";
-      updateTableHeaders("all");
+      roles = ["aluno"]; // Default para alunos
+      title = "Alunos";
+      updateTableHeaders("alunos");
       break;
   }
 
   document.getElementById("tableTitle").textContent = title;
   document.getElementById("searchInput").value = "";
 
+  // Mostrar loading
+  document.getElementById("usersTable").innerHTML =
+    '<tr><td colspan="5" class="text-center-padded">Carregando...</td></tr>';
+
   try {
-    const res = await fetch(`${API_URL}/users`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const res = await fetch(`${API_URL}/users`);
 
     if (!res.ok) {
       throw new Error("Erro ao buscar usuários");
@@ -212,84 +261,104 @@ async function loadTab(tipo = "all") {
     const rawUsers = await res.json();
 
     // Mapear campos do backend para frontend
-    allUsers = rawUsers.map(u => ({
+    allUsers = rawUsers.map((u) => ({
       id: u.id,
       nome: u.name,
       email: u.email,
       cpf: u.document,
       role: u.role,
-      tipo_plano: u.plan_type || 'mensal'
+      tipo_plano: u.planType || u.plan_type || "mensal",
+      phone: u.phone,
     }));
 
     filteredUsers = roles
       ? allUsers.filter((u) => roles.includes(u.role))
       : allUsers;
 
-    renderUsers(filteredUsers);
+    if (!paginator) {
+      paginator = new Paginator(filteredUsers, 10, renderTablePage);
+    } else {
+      paginator.updateItems(filteredUsers);
+    }
+
+    paginator.goToPage(1);
+    paginator.render("paginationContainer");
   } catch (error) {
     console.error(error);
+    document.getElementById("usersTable").innerHTML =
+      `<tr><td colspan="5" class="text-error-center">Erro: ${error.message}</td></tr>`;
   }
 }
 
-// Pesquisa
+// MODIFICADO: Pesquisa com Paginação
 function handleSearch() {
-  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-  
+  const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+
   let baseUsers;
-  if (currentTab === 'alunos') {
-    baseUsers = allUsers.filter(u => u.role === 'aluno');
-  } else if (currentTab === 'funcionarios') {
-    baseUsers = allUsers.filter(u => u.role === 'instrutor' || u.role === 'recepcionista');
+  if (currentTab === "alunos") {
+    baseUsers = allUsers.filter((u) => u.role === "aluno");
+  } else if (currentTab === "funcionarios") {
+    baseUsers = allUsers.filter(
+      (u) => u.role === "instrutor" || u.role === "recepcionista",
+    );
   } else {
     baseUsers = allUsers;
   }
-  
+
   if (searchTerm) {
-    filteredUsers = baseUsers.filter(u => 
-      u.nome.toLowerCase().includes(searchTerm) ||
-      u.email.toLowerCase().includes(searchTerm)
+    filteredUsers = baseUsers.filter(
+      (u) =>
+        u.nome.toLowerCase().includes(searchTerm) ||
+        u.email.toLowerCase().includes(searchTerm),
     );
   } else {
     filteredUsers = baseUsers;
   }
-  
-  renderUsers(filteredUsers);
+
+  if (paginator) {
+    paginator.updateItems(filteredUsers);
+    paginator.render("paginationContainer");
+  }
 }
 
 // Modal Adicionar
 function openAddModal() {
   document.getElementById("addModal").classList.add("active");
   document.getElementById("addForm").reset();
-  
-  if (currentTab === 'alunos') {
+  document.getElementById("addAlertContainer").innerHTML = "";
+
+  if (currentTab === "alunos") {
     document.getElementById("addModalTitle").textContent = "Adicionar Aluno";
-    document.getElementById("addCpfGroup").style.display = "block";
+    document.getElementById("addCpfGroup").classList.remove("hidden");
     document.getElementById("addCpf").required = true;
-    document.getElementById("addRoleGroup").style.display = "none";
+    document.getElementById("addRoleGroup").classList.add("hidden");
     document.getElementById("addRole").required = false;
-    document.getElementById("addTipoPlanoGroup").style.display = "block";
+    document.getElementById("addTipoPlanoGroup").classList.remove("hidden");
     document.getElementById("addTipoPlano").required = true;
-    document.getElementById("addTipoFuncionarioGroup").style.display = "none";
+    document.getElementById("addTipoFuncionarioGroup").classList.add("hidden");
     document.getElementById("addTipoFuncionario").required = false;
-  } else if (currentTab === 'funcionarios') {
-    document.getElementById("addModalTitle").textContent = "Adicionar Funcionário";
-    document.getElementById("addCpfGroup").style.display = "block";
+  } else if (currentTab === "funcionarios") {
+    document.getElementById("addModalTitle").textContent =
+      "Adicionar Funcionário";
+    document.getElementById("addCpfGroup").classList.remove("hidden");
     document.getElementById("addCpf").required = true;
-    document.getElementById("addRoleGroup").style.display = "none";
+    document.getElementById("addRoleGroup").classList.add("hidden");
     document.getElementById("addRole").required = false;
-    document.getElementById("addTipoPlanoGroup").style.display = "none";
+    document.getElementById("addTipoPlanoGroup").classList.add("hidden");
     document.getElementById("addTipoPlano").required = false;
-    document.getElementById("addTipoFuncionarioGroup").style.display = "block";
+    document
+      .getElementById("addTipoFuncionarioGroup")
+      .classList.remove("hidden");
     document.getElementById("addTipoFuncionario").required = true;
   } else {
     document.getElementById("addModalTitle").textContent = "Adicionar Usuário";
-    document.getElementById("addCpfGroup").style.display = "block";
+    document.getElementById("addCpfGroup").classList.remove("hidden");
     document.getElementById("addCpf").required = true;
-    document.getElementById("addRoleGroup").style.display = "block";
+    document.getElementById("addRoleGroup").classList.remove("hidden");
     document.getElementById("addRole").required = true;
-    document.getElementById("addTipoPlanoGroup").style.display = "none";
+    document.getElementById("addTipoPlanoGroup").classList.add("hidden");
     document.getElementById("addTipoPlano").required = false;
-    document.getElementById("addTipoFuncionarioGroup").style.display = "none";
+    document.getElementById("addTipoFuncionarioGroup").classList.add("hidden");
     document.getElementById("addTipoFuncionario").required = false;
   }
 }
@@ -307,33 +376,64 @@ function showAddAlert(message, type = "error") {
 
 // Modal Editar
 async function openEditModal(userId) {
-  const userToEdit = allUsers.find(u => u.id === userId);
+  const userToEdit = allUsers.find((u) => u.id === userId);
   if (!userToEdit) return;
-  
+
   document.getElementById("editUserId").value = userId;
   document.getElementById("editNome").value = userToEdit.nome;
   document.getElementById("editEmail").value = userToEdit.email;
-  
-  if (currentTab === 'alunos') {
+  document.getElementById("editCpf").value = userToEdit.cpf;
+  document.getElementById("editTelefone").value = userToEdit.phone || "";
+
+  if (currentTab === "alunos") {
     document.getElementById("editModalTitle").textContent = "Editar Aluno";
-    document.getElementById("editNovaSenhaGroup").style.display = "none";
-    document.getElementById("editTipoPlanoGroup").style.display = "block";
-    document.getElementById("editTipoPlano").value = userToEdit.tipo_plano || "mensal";
+    document.getElementById("editNovaSenhaGroup").classList.add("hidden");
+    document.getElementById("editTipoPlanoGroup").classList.remove("hidden");
+    document.getElementById("editTipoPlano").value =
+      userToEdit.tipo_plano || "mensal";
     document.getElementById("editTipoPlano").required = true;
-  } else if (currentTab === 'funcionarios') {
-    document.getElementById("editModalTitle").textContent = "Editar Funcionário";
-    document.getElementById("editNovaSenhaGroup").style.display = "block";
+
+    document.getElementById("editCpfGroup").classList.remove("hidden");
+    document.getElementById("editRoleGroup").classList.add("hidden");
+  } else if (currentTab === "funcionarios") {
+    document.getElementById("editModalTitle").textContent =
+      "Editar Funcionário";
+    document.getElementById("editNovaSenhaGroup").classList.remove("hidden");
     document.getElementById("editNovaSenha").value = "";
-    document.getElementById("editTipoPlanoGroup").style.display = "none";
+    document.getElementById("editTipoPlanoGroup").classList.add("hidden");
     document.getElementById("editTipoPlano").required = false;
+
+    document.getElementById("editCpfGroup").classList.remove("hidden");
+    document.getElementById("editRoleGroup").classList.remove("hidden");
+    document.getElementById("editRole").value = userToEdit.role;
+
+    // Hide "Aluno" option if in employees tab
+    const roleSelect = document.getElementById("editRole");
+    for (let i = 0; i < roleSelect.options.length; i++) {
+      if (roleSelect.options[i].value === "aluno") {
+        roleSelect.options[i].hidden = true;
+      } else {
+        roleSelect.options[i].hidden = false;
+      }
+    }
   } else {
     document.getElementById("editModalTitle").textContent = "Editar Usuário";
-    document.getElementById("editNovaSenhaGroup").style.display = "block";
+    document.getElementById("editNovaSenhaGroup").classList.remove("hidden");
     document.getElementById("editNovaSenha").value = "";
-    document.getElementById("editTipoPlanoGroup").style.display = "none";
+    document.getElementById("editTipoPlanoGroup").classList.add("hidden");
     document.getElementById("editTipoPlano").required = false;
+
+    document.getElementById("editCpfGroup").classList.remove("hidden");
+    document.getElementById("editRoleGroup").classList.remove("hidden");
+    document.getElementById("editRole").value = userToEdit.role;
+
+    // Show all options
+    const roleSelect = document.getElementById("editRole");
+    for (let i = 0; i < roleSelect.options.length; i++) {
+      roleSelect.options[i].hidden = false;
+    }
   }
-  
+
   document.getElementById("editModal").classList.add("active");
 }
 
@@ -361,7 +461,6 @@ async function deleteUser(id) {
   try {
     const res = await fetch(`${API_URL}/users/${id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (res.ok) {
@@ -388,15 +487,16 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
     name: document.getElementById("addNome").value,
     email: document.getElementById("addEmail").value,
     password: document.getElementById("addSenha").value,
-    document: document.getElementById("addCpf").value || "00000000000"
+    document: document.getElementById("addCpf").value || "00000000000",
+    phone: document.getElementById("addTelefone").value,
   };
 
   let planType = null;
-  
-  if (currentTab === 'alunos') {
-    data.role = 'aluno';
+
+  if (currentTab === "alunos") {
+    data.role = "aluno";
     planType = document.getElementById("addTipoPlano").value;
-  } else if (currentTab === 'funcionarios') {
+  } else if (currentTab === "funcionarios") {
     data.role = document.getElementById("addTipoFuncionario").value;
   } else {
     data.role = document.getElementById("addRole").value;
@@ -407,7 +507,6 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ ...data, planType }),
     });
@@ -428,33 +527,55 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
   }
 });
 
+// Listener para exibir campo de plano quando selecionar "Aluno" no modal de adição geral
+document.getElementById("addRole").addEventListener("change", function () {
+  const role = this.value;
+  const planGroup = document.getElementById("addTipoPlanoGroup");
+  const planInput = document.getElementById("addTipoPlano");
+
+  // Apenas se estiver na tab geral, pois nas outras tabs o comportamento é hardcoded no openAddModal
+  if (currentTab === "all" || !currentTab) {
+    if (role === "aluno") {
+      planGroup.classList.remove("hidden");
+      planInput.required = true;
+    } else {
+      planGroup.classList.add("hidden");
+      planInput.required = false;
+    }
+  }
+});
+
 // Submit Editar
 document.getElementById("editForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const userId = document.getElementById("editUserId").value;
-  
+
   // Mapear campos frontend -> backend
   const data = {
     name: document.getElementById("editNome").value,
     email: document.getElementById("editEmail").value,
+    phone: document.getElementById("editTelefone").value,
+    document: document.getElementById("editCpf").value,
   };
 
   // Só adicionar senha se o campo de nova senha estiver preenchido
-  if (currentTab === 'funcionarios') {
+  if (currentTab === "funcionarios") {
     const newPassword = document.getElementById("editNovaSenha").value;
     if (newPassword) {
       data.password = newPassword;
     }
-  } else if (currentTab !== 'alunos') {
+    data.role = document.getElementById("editRole").value;
+  } else if (currentTab !== "alunos") {
     const newPassword = document.getElementById("editNovaSenha").value;
     if (newPassword) {
       data.password = newPassword;
     }
+    data.role = document.getElementById("editRole").value;
   }
 
   // Atualizar plan_type do aluno
-  if (currentTab === 'alunos') {
+  if (currentTab === "alunos") {
     data.planType = document.getElementById("editTipoPlano").value;
   }
 
@@ -463,7 +584,6 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(data),
     });
@@ -484,9 +604,40 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
   }
 });
 
-function logout() {
-  localStorage.clear();
+async function logout() {
+  await fetch(`${API_URL}/auth/logout`, { method: "DELETE" });
   window.location.href = "/";
 }
 
-loadData();
+// Função para formatar telefone
+function formatPhoneNumber(value) {
+  if (!value) return "";
+  value = value.replace(/\D/g, "");
+  if (value.length > 11) value = value.slice(0, 11);
+
+  if (value.length > 2) {
+    if (value.length <= 10) {
+      // (XX)XXXXXXXX
+      return `(${value.slice(0, 2)})${value.slice(2)}`;
+    } else {
+      // (XX)9XXXXXXXX
+      return `(${value.slice(0, 2)})${value.slice(2)}`;
+    }
+  } else if (value.length > 0) {
+    return `(${value}`;
+  }
+  return value;
+}
+
+// Aplicar máscara nos campos de telefone
+const phoneInputs = ["addTelefone", "editTelefone"];
+phoneInputs.forEach((id) => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener("input", (e) => {
+      e.target.value = formatPhoneNumber(e.target.value);
+    });
+  }
+});
+
+loadTab("alunos");

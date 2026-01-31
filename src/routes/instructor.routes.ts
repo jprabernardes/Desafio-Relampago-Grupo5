@@ -20,6 +20,9 @@ router.get('/students', (req, res, next) => {
   next();
 }, userController.findAll);
 
+router.get('/students/:id', userController.findById);
+router.get('/students/:studentId/trainings', trainingController.findTrainingsByStudentForInstructor);
+
 router.get('/students/from-trainings', trainingController.getStudentsFromTrainings);
 router.get('/students/from-classes', gymClassController.getStudentsFromClasses);
 
@@ -35,6 +38,7 @@ router.get('/trainings/:id', trainingController.findById);
 router.put('/trainings/:id', trainingController.update);
 router.delete('/trainings/:id', trainingController.delete);
 router.post('/trainings/:id/exercises', trainingController.addExercise);
+router.put('/trainings/:id/exercises/:exerciseId', trainingController.updateExerciseInTraining);
 router.delete('/trainings/:id/exercises/:exerciseId', trainingController.removeExercise);
 router.post('/trainings/:id/users', trainingController.addUser);
 router.delete('/trainings/:id/users/:userId', trainingController.removeUser);

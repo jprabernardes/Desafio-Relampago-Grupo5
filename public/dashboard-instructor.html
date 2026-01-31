@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Instrutor</title>
+    <link rel="stylesheet" href="./css/dashboard-instructor.css" />
+  </head>
+  <body>
+    <div class="container">
+      <aside class="sidebar">
+        <div class="logo">💪 FitManager</div>
+        <nav>
+          <div class="nav-item active" data-section="create-exercise">
+            🏋️ Criar Exercício
+          </div>
+          <div class="nav-item" data-section="students">👥 Alunos</div>
+          <div class="nav-item" data-section="create-class">➕ Criar Aula</div>
+          <div class="nav-item" data-section="classes">📅 Minhas Aulas</div>
+        </nav>
+        <button class="logout-btn" onclick="logout()">🚪 Sair</button>
+      </aside>
+
+      <main class="main-content">
+        <div class="header">
+          <h1>Dashboard Instrutor</h1>
+          <div class="user-info">
+            <div class="user-avatar" id="userAvatar">I</div>
+            <span id="userName">Carregando...</span>
+          </div>
+        </div>
+        <div class="alert" id="alert"></div>
+
+        <!-- Create Exercise Template -->
+        <section class="section active" id="create-exercise">
+          <h2 id="formTitle">Criar Template de Exercício</h2>
+          <form id="createExerciseForm">
+            <input type="hidden" id="exId" />
+            <div class="form-group">
+              <label for="exName">Nome do Exercício</label>
+              <input
+                type="text"
+                id="exName"
+                placeholder="Ex: Supino Reto"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="exDescription">Descrição</label>
+              <textarea
+                id="exDescription"
+                placeholder="Ex: Exercício para peitoral"
+                required
+                maxlength="500"
+                rows="4"
+              ></textarea>
+              <small class="char-counter" id="exDescriptionCounter"
+                >0/500 caracteres</small
+              >
+            </div>
+            <div class="form-group">
+              <label for="exSeries">Séries</label>
+              <input
+                type="number"
+                id="exSeries"
+                placeholder="3"
+                required
+                min="1"
+                max="20"
+              />
+            </div>
+            <div class="form-group">
+              <label for="exRepetitions">Repetições</label>
+              <input
+                type="number"
+                id="exRepetitions"
+                placeholder="12"
+                required
+                min="1"
+                max="100"
+              />
+            </div>
+            <div class="form-group">
+              <label for="exWeight">Peso (kg)</label>
+              <input
+                type="number"
+                id="exWeight"
+                placeholder="20"
+                required
+                min="0"
+                max="500"
+                step="0.5"
+              />
+            </div>
+            <button type="submit" class="btn btn-primary" id="saveBtn">
+              Salvar Template
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="cancelEditBtn"
+              class="btn btn-secondary hidden"
+              onclick="cancelEdit()"
+            >
+              Cancelar Edição
+            </button>
+          </form>
+
+          <h3 class="mt-8">Templates Cadastrados</h3>
+          <input
+            type="text"
+            id="templatesSearch"
+            placeholder="Buscar exercício por nome ou descrição..."
+            class="exercise-search-input mb-6"
+          />
+          <div id="templatesList" class="templates-grid">
+            <p>Carregando...</p>
+          </div>
+          <div id="templatesPagination" class="pagination"></div>
+        </section>
+
+        <!-- Students -->
+        <section class="section" id="students">
+          <h2>Alunos</h2>
+          <div class="form-group">
+            <label for="studentsSearch">Pesquisar aluno (nome ou email)</label>
+            <input
+              type="text"
+              id="studentsSearch"
+              placeholder="Digite para filtrar..."
+            />
+          </div>
+          <div id="studentsGrid" class="students-grid">
+            <p>Carregando...</p>
+          </div>
+          <div id="studentsPagination" class="pagination"></div>
+        </section>
+
+        <!-- Create Class -->
+        <section class="section" id="create-class">
+          <h2 id="classFormTitle">Criar Nova Aula</h2>
+          <form id="createClassForm">
+            <input type="hidden" id="classId" />
+            <!-- Used for editing -->
+            <div class="form-group">
+              <label for="className">Nome da Aula</label>
+              <input
+                type="text"
+                id="className"
+                placeholder="Ex: Yoga Matinal"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="classDate">Data</label>
+              <input type="date" id="classDate" required />
+            </div>
+            <div class="form-group">
+              <label for="classTime">Hora</label>
+              <input type="time" id="classTime" required />
+            </div>
+            <div class="form-group">
+              <label for="classLimit">Limite de Vagas</label>
+              <input
+                type="number"
+                id="classLimit"
+                placeholder="Ex: 20"
+                required
+                min="1"
+              />
+            </div>
+            <button type="submit" class="btn btn-primary" id="saveClassBtn">
+              Agendar Aula
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="cancelClassEditBtn"
+              class="btn btn-secondary hidden"
+              onclick="cancelClassEdit()"
+            >
+              Cancelar Edição
+            </button>
+          </form>
+        </section>
+
+        <!-- My Classes -->
+        <section class="section" id="classes">
+          <div class="flex-between mb-6">
+            <h2>Minhas Aulas Agendadas</h2>
+            <button class="btn btn-primary" onclick="openCreateClassTab()">
+              ➕ Agendar Aula
+            </button>
+          </div>
+
+          <div class="form-group search-container">
+            <input
+              type="text"
+              id="classSearchInput"
+              placeholder="🔍 Pesquisar aulas..."
+              oninput="filterClasses()"
+              class="search-input-full"
+            />
+          </div>
+
+          <div id="classesContainer">
+            <p>Carregando aulas...</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal de Detalhes da Aula -->
+    <div class="modal" id="classDetailsModal">
+      <div class="modal-content modal-content-large">
+        <div class="modal-header">
+          <h2 id="classDetailsTitle">Detalhes da Aula</h2>
+          <button class="close-btn" onclick="closeClassDetailsModal()">
+            &times;
+          </button>
+        </div>
+
+        <form id="editClassForm">
+          <input type="hidden" id="detailsClassId" />
+
+          <div class="form-group">
+            <label for="detailsClassName">Nome da Aula</label>
+            <input type="text" id="detailsClassName" required />
+          </div>
+
+          <div class="form-group">
+            <label for="detailsClassDate">Data</label>
+            <input type="date" id="detailsClassDate" required />
+          </div>
+
+          <div class="form-group">
+            <label for="detailsClassTime">Hora</label>
+            <input type="time" id="detailsClassTime" required />
+          </div>
+
+          <div class="form-group">
+            <label for="detailsClassLimit">Limite de Vagas</label>
+            <input type="number" id="detailsClassLimit" required min="1" />
+          </div>
+
+          <div class="form-group">
+            <label class="label-bold">Alunos Inscritos</label>
+            <div id="enrolledStudentsList" class="modal-scrollable-list">
+              >
+              <p class="text-gray">Carregando...</p>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn btn-danger"
+              onclick="deleteClassFromModal()"
+            >
+              🗑️ Deletar Aula
+            </button>
+            <div style="flex: 1"></div>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeClassDetailsModal()"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              💾 Salvar Alterações
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Detalhes do Aluno -->
+    <div
+      class="modal"
+      id="studentDetailModal"
+      onclick="if (event.target === this) closeStudentDetailModal();"
+    >
+      <div
+        class="modal-content student-modal-content"
+        onclick="event.stopPropagation()"
+      >
+        <div class="modal-header">
+          <h2>Detalhes do Aluno</h2>
+          <button class="close-btn" onclick="closeStudentDetailModal()">
+            &times;
+          </button>
+        </div>
+
+        <div class="student-header">
+          <h1 id="studentName">Carregando...</h1>
+          <p id="studentEmail">Carregando...</p>
+          <p id="studentPhone" class="mt-2 opacity-90"></p>
+        </div>
+
+        <div class="alert" id="studentAlert"></div>
+
+        <div class="trainings-section">
+          <div class="trainings-header">
+            <h2>Treinos</h2>
+            <button class="btn btn-primary" onclick="openCreateTrainingModal()">
+              ➕ Criar Treino
+            </button>
+          </div>
+          <div id="trainingsGrid" class="trainings-grid">
+            <p>Carregando treinos...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Criar/Editar Treino -->
+    <div class="modal" id="trainingModal">
+      <div class="modal-content training-modal-content">
+        <div class="modal-header">
+          <div class="modal-main-header">
+            <h2 id="modalTitle">Criar Treino</h2>
+            <span id="trainingInstructorInfo" class="modal-subtitle"></span>
+          </div>
+          <button class="close-btn" onclick="closeTrainingModal()">
+            &times;
+          </button>
+        </div>
+
+        <form id="trainingForm">
+          <input type="hidden" id="trainingId" />
+
+          <div class="form-group">
+            <label for="trainingName">Nome do Treino</label>
+            <input
+              type="text"
+              id="trainingName"
+              placeholder="Ex: Treino A"
+              required
+            />
+          </div>
+
+          <div class="training-editor-grid">
+            <!-- Coluna da Esquerda: Selecionados -->
+            <div class="training-column-left">
+              <label class="column-label">Exercícios Selecionados</label>
+              <div class="selected-exercises-list" id="selectedExercisesList">
+                <p class="text-gray italic">Nenhum exercício selecionado</p>
+              </div>
+            </div>
+
+            <!-- Coluna da Direita: Disponíveis -->
+            <div class="training-column-right">
+              <label class="column-label">Adicionar Exercícios</label>
+              <input
+                type="text"
+                id="exerciseSearchInput"
+                placeholder="Buscar exercício..."
+                class="exercise-search-input"
+              />
+              <div class="modal-exercises-grid" id="availableExercisesGrid">
+                <p>Carregando exercícios...</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeTrainingModal()"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              id="deleteTrainingBtn"
+              class="btn btn-danger hidden"
+              onclick="deleteTraining()"
+            >
+              Deletar Treino
+            </button>
+            <button type="submit" class="btn btn-primary">Salvar Treino</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Detalhes do Exercício -->
+    <div
+      class="modal"
+      id="exerciseDetailModal"
+      onclick="
+        if (event.target === this && !event.target.closest('.modal-content'))
+          closeExerciseDetailModal();
+      "
+    >
+      <div
+        class="modal-content modal-content-large"
+        onclick="event.stopPropagation()"
+      >
+        <div class="modal-header">
+          <h2>Detalhes do Exercício</h2>
+          <button class="close-btn" onclick="closeExerciseDetailModal()">
+            &times;
+          </button>
+        </div>
+        <div id="exerciseDetailContent">
+          <!-- Conteúdo será preenchido via JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div class="modal" id="confirmModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Confirmação</h2>
+          <button class="close-btn" onclick="closeConfirmModal()">
+            &times;
+          </button>
+        </div>
+        <p id="confirmMessage" class="confirm-modal-message">Tem certeza?</p>
+        <div class="form-actions">
+          <button class="btn" onclick="closeConfirmModal()">Não</button>
+          <button class="btn btn-danger" onclick="confirmAction()">
+            Sim, tenho certeza
+          </button>
+        </div>
+      </div>
+    </div>
+    <script src="js/pagination.js"></script>
+    <script src="./js/dashboard-instructor.js"></script>
+  </body>
+</html>
