@@ -17,6 +17,31 @@ const checkInRepository = new CheckInRepository();
 const trainingRepository = new TrainingRepository();
 
 /**
+ * ✅ Seed de Planos Padrão
+ * (PRECISA vir antes de criar alunos que usam planType)
+ */
+export const seedDefaultPlans = async (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `
+      INSERT OR IGNORE INTO plans (code, name, price_cents, duration_days, description, benefits_json, active)
+      VALUES
+      ('fit', 'Fit', 12990, 30, 'Plano Fit', '["Musculação"]', 1),
+      ('fit_pro', 'Fit Pro', 15990, 30, 'Plano Fit Pro', '["Musculação","Aulas em grupo"]', 1),
+      ('fit_diamond', 'Fit Diamond', 21990, 30, 'Plano Fit Diamond', '["Musculação","Aulas","Personal 1x/sem"]', 1)
+      `,
+      [],
+      function (err) {
+        if (err) return reject(err);
+
+        console.log('✅ Planos padrão verificados/criados');
+        resolve();
+      }
+    );
+  });
+};
+
+/**
  * Cria usuários padrão essenciais (Admin, Recepcionista, Instrutor, Aluno)
  */
 export const seedDefaultUsers = async (): Promise<void> => {
@@ -51,7 +76,7 @@ export const seedDefaultUsers = async (): Promise<void> => {
           password: 'senha123',
           role: 'aluno',
           document: '33333333333',
-          planType: 'mensal' as const,
+          planType: 'fit' as const,
         },
       ];
 
@@ -69,7 +94,9 @@ export const seedDefaultUsers = async (): Promise<void> => {
                 rej(err);
               } else {
                 if (this.changes > 0) {
-                  console.log(`✅ Usuário ${user.role} criado (email: ${user.email}, senha: ${user.password})`);
+                  console.log(
+                    `✅ Usuário ${user.role} criado (email: ${user.email}, senha: ${user.password})`
+                  );
                   res(this.lastID);
                 } else {
                   console.log(`ℹ️  Usuário ${user.role} já existe (email: ${user.email})`);
@@ -83,23 +110,21 @@ export const seedDefaultUsers = async (): Promise<void> => {
         // Se é aluno, garantir que student_profile existe
         if (user.role === 'aluno') {
           // Buscar ID do usuário (caso já existisse)
-          const finalUserId = userId || await new Promise<number>((res, rej) => {
-            db.get(
-              'SELECT id FROM users WHERE email = ?',
-              [user.email],
-              (err, row: any) => {
+          const finalUserId =
+            userId ||
+            (await new Promise<number>((res, rej) => {
+              db.get('SELECT id FROM users WHERE email = ?', [user.email], (err, row: any) => {
                 if (err) rej(err);
                 else res(row.id);
-              }
-            );
-          });
+              });
+            }));
 
           // Criar student_profile se não existir
           await new Promise<void>((res, rej) => {
             db.run(
               `INSERT OR IGNORE INTO student_profile (user_id, plan_type, active)
                VALUES (?, ?, 1)`,
-              [finalUserId, (user as any).planType || 'mensal'],
+              [finalUserId, (user as any).planType || 'fit'],
               function (err) {
                 if (err) {
                   rej(err);
@@ -593,12 +618,15 @@ async function seedHistoryCheckIns() {
       date.setDate(today.getDate() - d);
 
       const dateStr = date.toISOString().split('T')[0];
-      const timeStr = `${10 + Math.floor(Math.random() * 10)}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`; // entre 10h e 20h
+      const timeStr = `${10 + Math.floor(Math.random() * 10)}:${Math.floor(Math.random() * 60)
+        .toString()
+        .padStart(2, '0')}`; // entre 10h e 20h
       const fullDate = `${dateStr}T${timeStr}:00Z`;
 
-      const trainingId = userTrainings.length > 0
-        ? userTrainings[Math.floor(Math.random() * userTrainings.length)].id
-        : undefined;
+      const trainingId =
+        userTrainings.length > 0
+          ? userTrainings[Math.floor(Math.random() * userTrainings.length)].id
+          : undefined;
 
       try {
         await checkInRepository.create({
@@ -615,19 +643,22 @@ async function seedHistoryCheckIns() {
   console.log(`  ✓ ${checkInCount} check-ins históricos criados.`);
 }
 
-
 export async function runSeed() {
   try {
     console.log('='.repeat(50));
     console.log('--- Iniciando Geração de Dados (Completa) ---');
     console.log('='.repeat(50));
 
-    // 0. Criar usuários padrão essenciais (Admin, Maria, Carlos, João)
-    console.log('\n--- 0. Criando Usuários Padrão Essenciais ---');
+    // ✅ 0) CRIAR PLANOS PRIMEIRO
+    console.log('\n--- 0. Criando Planos Padrão ---');
+    await seedDefaultPlans();
+
+    // 1) Usuários padrão essenciais (Admin, Maria, Carlos, João)
+    console.log('\n--- 1. Criando Usuários Padrão Essenciais ---');
     await seedDefaultUsers();
 
-    // 0.1. Criar exercícios padrão
-    console.log('\n--- 0.1. Criando Exercícios Padrão ---');
+    // 1.1) Criar exercícios padrão
+    console.log('\n--- 1.1. Criando Exercícios Padrão ---');
     await seedDefaultExercises();
 
     // Verificar quantos usuários já existem
@@ -638,7 +669,7 @@ export async function runSeed() {
       console.log('Não foi possível verificar usuários existentes');
     }
 
-    // 1. Busca usuários aleatórios da API 
+    // 2) Busca usuários aleatórios da API
     console.log('\nBuscando nomes e emails reais da API...');
 
     // Se já tiver muitos usuários (>10), assume que users já foram seedados e pula essa parte pesada
@@ -676,24 +707,26 @@ export async function runSeed() {
               await userService.create(
                 newUser,
                 'administrador',
-                role === 'aluno' ? 'mensal' : undefined
+                role === 'aluno' ? 'fit' : undefined
               );
               successCount++;
             } catch (err: any) {
               // Pula erros silenciosamente no seed massivo
+              // Se quiser debugar alunos, descomenta abaixo:
+              // if (role === 'aluno' && i < 3) console.error('ERRO ALUNO:', err?.message || err);
             }
             userIndex++;
           }
           console.log(`✓ ${role}: ${successCount} criados.`);
         }
       } catch (e) {
-        console.error("Erro ao buscar/criar usuários da API:", e);
+        console.error('Erro ao buscar/criar usuários da API:', e);
       }
     } else {
-      console.log("  ! Usuários já populados, pulando criação massiva.");
+      console.log('  ! Usuários já populados, pulando criação massiva.');
     }
 
-    // Novas etapas do Seed
+    // Etapas do seed (mantive as mesmas)
     await seedExercises();
     await seedClasses();
     await seedEnrollments();
@@ -703,7 +736,6 @@ export async function runSeed() {
     console.log('\n' + '='.repeat(50));
     console.log('--- Seed finalizado com sucesso! ---');
     console.log('='.repeat(50));
-
   } catch (error) {
     console.error('\n✗ Erro ao rodar seed:', error);
     process.exit(1);

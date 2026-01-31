@@ -4,8 +4,44 @@ let paginator = null;
 let currentTab = "alunos";
 let allUsers = [];
 let filteredUsers = [];
+let cachedPlans = []; // [{code, name, ...}]
+
 
 const API_URL = "/api";
+
+
+async function fetchPlans() {
+  const res = await fetch(`${API_URL}/plans`); // vai chamar /api/plans
+  if (!res.ok) throw new Error("Erro ao buscar planos");
+  return await res.json();
+}
+
+function populatePlanSelects(plans) {
+  cachedPlans = Array.isArray(plans) ? plans : [];
+
+  const addSelect = document.getElementById("addTipoPlano");
+  const editSelect = document.getElementById("editTipoPlano");
+
+  const optionsHtml = [
+    `<option value="">Selecione...</option>`,
+    ...cachedPlans.map((p) => `<option value="${p.code}">${p.name}</option>`),
+  ].join("");
+
+  if (addSelect) addSelect.innerHTML = optionsHtml;
+  if (editSelect) editSelect.innerHTML = optionsHtml;
+}
+
+async function ensurePlansLoaded() {
+  if (cachedPlans.length > 0) return;
+  const plans = await fetchPlans();
+  populatePlanSelects(plans);
+}
+
+function getPlanName(code) {
+  const found = cachedPlans.find((p) => p.code === code);
+  return found ? found.name : (code || "—");
+}
+
 
 // Lógica do Modal de Confirmação
 let pendingConfirmAction = null;
@@ -110,7 +146,12 @@ function renderTablePage(pageItems) {
       <tr>
         <td>${u.nome}</td>
         <td>${u.email}</td>
-        <td><span class="plan-badge plan-${u.tipo_plano || "mensal"}">${u.tipo_plano || "Mensal"}</span></td>
+        <td>
+  <span class="plan-badge plan-${u.tipo_plano || "unknown"}">
+    ${getPlanName(u.tipo_plano)}
+  </span>
+</td>
+
         <td>
            <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
         </td>
@@ -267,7 +308,8 @@ async function loadTab(tipo = "alunos") {
       email: u.email,
       cpf: u.document,
       role: u.role,
-      tipo_plano: u.planType || u.plan_type || "mensal",
+      tipo_plano: u.planType || u.plan_type || "fit",
+
       phone: u.phone,
     }));
 
@@ -322,7 +364,9 @@ function handleSearch() {
 }
 
 // Modal Adicionar
-function openAddModal() {
+async function openAddModal() {
+  await ensurePlansLoaded();
+
   document.getElementById("addModal").classList.add("active");
   document.getElementById("addForm").reset();
   document.getElementById("addAlertContainer").innerHTML = "";
@@ -376,6 +420,7 @@ function showAddAlert(message, type = "error") {
 
 // Modal Editar
 async function openEditModal(userId) {
+  await ensurePlansLoaded();
   const userToEdit = allUsers.find((u) => u.id === userId);
   if (!userToEdit) return;
 
@@ -389,8 +434,8 @@ async function openEditModal(userId) {
     document.getElementById("editModalTitle").textContent = "Editar Aluno";
     document.getElementById("editNovaSenhaGroup").classList.add("hidden");
     document.getElementById("editTipoPlanoGroup").classList.remove("hidden");
-    document.getElementById("editTipoPlano").value =
-      userToEdit.tipo_plano || "mensal";
+    document.getElementById("editTipoPlano").value = userToEdit.tipo_plano || "fit";
+
     document.getElementById("editTipoPlano").required = true;
 
     document.getElementById("editCpfGroup").classList.remove("hidden");
@@ -640,4 +685,5 @@ phoneInputs.forEach((id) => {
   }
 });
 
+ensurePlansLoaded();
 loadTab("alunos");

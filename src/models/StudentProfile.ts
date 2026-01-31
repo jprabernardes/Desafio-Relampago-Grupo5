@@ -1,5 +1,5 @@
 export interface StudentProfile {
   user_id: number;
-  plan_id: number;      // FK para plans.id
+  plan_type: string; // ex: "fit", "fit_pro", "fit_diamond"
   active: boolean;
 }

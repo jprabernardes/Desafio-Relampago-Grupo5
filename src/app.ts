@@ -4,6 +4,7 @@ import path from 'path';
 import cors from 'cors';
 import routes from './routes';
 import cookieParser from 'cookie-parser';
+import planRoutes from './routes/plansRoutes';
 
 import { errorMiddleware } from './middlewares/error.middleware';
 import { generalRateLimiter } from './middlewares/rateLimit.middleware';
@@ -16,7 +17,7 @@ export const createApp = (): Application => {
 
   // Configuração CORS
   app.use(cors({
-    origin: true, 
+    origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -52,6 +53,10 @@ export const createApp = (): Application => {
   app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'Sistema de Academia funcionando!' });
   });
+
+
+  app.use('/plans', planRoutes);
+
 
   // Middleware global de tratamento de erros (Deve ser o último)
   app.use(errorMiddleware);

@@ -2,10 +2,7 @@
 import db from '../database/db';
 
 export class StudentProfileRepository {
-  create(
-    userId: number,
-    planType: 'mensal' | 'trimestral' | 'semestral' | 'anual'
-  ): Promise<void> {
+  create(userId: number, planType: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const sql = `
         INSERT INTO student_profile (user_id, plan_type, active)
@@ -32,10 +29,7 @@ export class StudentProfileRepository {
     });
   }
 
-  updatePlanType(
-    userId: number,
-    planType: 'mensal' | 'trimestral' | 'semestral' | 'anual'
-  ): Promise<void> {
+  updatePlanType(userId: number, planType: string): Promise<void> {
     return new Promise((resolve, reject) => {
       db.run(
         'UPDATE student_profile SET plan_type = ? WHERE user_id = ?',

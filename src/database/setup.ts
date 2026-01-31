@@ -22,6 +22,21 @@ export const createTables = (): Promise<void> => {
         )
       `);
 
+      db.run(`
+        CREATE TABLE IF NOT EXISTS plans (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        code TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        price_cents INTEGER NOT NULL,
+        duration_days INTEGER NOT NULL,
+        description TEXT,
+        benefits_json TEXT,
+        active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT
+       )
+    `)
+
       // Migration check for phone column (for existing databases)
       db.all("PRAGMA table_info(users)", (err, rows: any[]) => {
         if (!err && rows) {
@@ -36,13 +51,14 @@ export const createTables = (): Promise<void> => {
       });
 
       db.run(`
-        CREATE TABLE IF NOT EXISTS student_profile (
-          user_id INTEGER PRIMARY KEY,
-          plan_type TEXT CHECK(plan_type IN ('mensal', 'trimestral', 'semestral', 'anual')) NOT NULL,
-          active INTEGER DEFAULT 1,
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        )
-      `);
+  CREATE TABLE IF NOT EXISTS student_profile (
+    user_id INTEGER PRIMARY KEY,
+    plan_type TEXT NOT NULL,
+    active INTEGER DEFAULT 1,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )
+`);
+
 
 
 
@@ -176,7 +192,7 @@ export const initializeDatabase = async (): Promise<void> => {
 
     // Verifica se é a primeira criação do banco
     const isEmpty = await isDatabaseEmpty();
-    
+
     if (isEmpty) {
       console.log('🌱 Banco de dados vazio detectado. Executando seed inicial...');
       await runSeed();

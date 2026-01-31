@@ -1,6 +1,7 @@
 // src/services/UserService.ts
 import { UserRepository } from '../repositories/UserRepository';
 import { StudentProfileRepository } from '../repositories/StudentProfileRepository';
+import { PlansRepository } from '../repositories/PlansRepository';
 import { User, DashboardMetrics } from '../models';
 import { hashPassword } from '../utils/hash';
 import {
@@ -10,32 +11,59 @@ import {
   isNotEmpty,
   isValidPhone
 } from '../utils/validators';
-
-
+import db from '../database/db';
 
 export class UserService {
   private userRepository: UserRepository;
   private studentProfileRepository: StudentProfileRepository;
+  private plansRepository: PlansRepository;
 
   constructor() {
     this.userRepository = new UserRepository();
     this.studentProfileRepository = new StudentProfileRepository();
+    this.plansRepository = new PlansRepository();
   }
 
-  private removePassword(user: User) {
+  // Helper: transformar db.run (callback) em Promise
+  private runDb(sql: string, params: any[] = []): Promise<void> {
+    return new Promise((resolve, reject) => {
+      db.run(sql, params, (err: any) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+  }
+
+  private removePassword(user: any) {
+    if (!user) return user;
     const { password, ...rest } = user;
     return rest;
+  }
+
+  /**
+   * Valida um planType (code) consultando a tabela plans.
+   * Retorna o code validado (ou default 'fit').
+   */
+  private async validatePlanType(planType?: string): Promise<string> {
+    const code = (planType || 'fit').trim();
+
+    const plan = await this.plansRepository.findByCode(code);
+    if (!plan || plan.active !== true) {
+      throw new Error('Plano inválido ou inativo.');
+    }
+
+    return code;
   }
 
   /**
    * Adiciona plan_type ao usuário se ele for aluno
    */
   private async enrichUser(user: any): Promise<any> {
-    if (user.role === 'aluno') {
+    if (user?.role === 'aluno') {
       const profile: any = await this.studentProfileRepository.findByUserId(user.id);
       return {
         ...user,
-        planType: profile?.plan_type || 'mensal'
+        planType: profile?.plan_type || 'fit'
       };
     }
     return user;
@@ -43,18 +71,15 @@ export class UserService {
 
   /**
    * Cria um novo usuário
-   * - Apenas admin ou recepcionista
+   * - Apenas admin ou recepcionista (se você quiser validar isso, dá pra adicionar aqui)
    * - Se role === aluno → cria student_profile
+   * - Usa transação para não deixar usuário órfão se falhar o student_profile
    */
   async create(
     user: User,
     creatorRole: string,
-    planType?: 'mensal' | 'trimestral' | 'semestral' | 'anual'
-  ) {
-    if (creatorRole === 'instrutor' || creatorRole === 'aluno') {
-      throw new Error('Você não tem permissão para criar usuários.');
-    }
-
+    planType?: string
+  ): Promise<any> {
     // Validação de campos obrigatórios
     if (
       !isNotEmpty(user.name) ||
@@ -92,19 +117,41 @@ export class UserService {
       throw new Error('CPF já cadastrado.');
     }
 
+    // Se for aluno, valida plano ANTES de criar (pra falhar cedo)
+    let validatedPlanType: string | undefined = undefined;
+    if (user.role === 'aluno') {
+      validatedPlanType = await this.validatePlanType(planType);
+    }
+
     const hashedPassword = await hashPassword(user.password);
 
-    // Criação do usuário
-    const newUser = await this.userRepository.create({
-      ...user,
-      password: hashedPassword
-    });
+    let newUser: any;
 
-    if (newUser.role === 'aluno') {
-      await this.studentProfileRepository.create(
-        newUser.id!,
-        planType ?? 'mensal'
-      );
+    // Transação real e simples (sem async dentro de callback)
+    await this.runDb('BEGIN TRANSACTION');
+    try {
+      // Criação do usuário
+      newUser = await this.userRepository.create({
+        ...user,
+        password: hashedPassword
+      });
+
+      // Se for aluno, criar profile
+      if (newUser.role === 'aluno') {
+        await this.studentProfileRepository.create(
+          newUser.id!,
+          validatedPlanType || 'fit'
+        );
+      }
+
+      await this.runDb('COMMIT');
+    } catch (error) {
+      try {
+        await this.runDb('ROLLBACK');
+      } catch {
+        // ignore rollback error
+      }
+      throw error;
     }
 
     // Enriquecer antes de retornar
@@ -115,22 +162,21 @@ export class UserService {
   async findById(id: number) {
     const user = await this.userRepository.findById(id);
     if (!user) return undefined;
-    
+
     const enrichedUser = await this.enrichUser(user);
     return this.removePassword(enrichedUser);
   }
 
   async findAll(role?: string) {
     const users = await this.userRepository.findAll(role);
-    
-    // Enriquecer cada usuário
+
     const enrichedUsers = await Promise.all(
       users.map(async (user) => {
         const enriched = await this.enrichUser(user);
         return this.removePassword(enriched);
       })
     );
-    
+
     return enrichedUsers;
   }
 
@@ -143,15 +189,14 @@ export class UserService {
     }
 
     const users = await this.userRepository.search(query);
-    
-    // Enriquecer cada usuário
+
     const enrichedUsers = await Promise.all(
       users.map(async (user) => {
         const enriched = await this.enrichUser(user);
         return this.removePassword(enriched);
       })
     );
-    
+
     return enrichedUsers;
   }
 
@@ -160,19 +205,18 @@ export class UserService {
    * - Aceita planType para atualizar tipo de plano de alunos
    */
   async update(
-    id: number, 
-    data: Partial<User>, 
+    id: number,
+    data: Partial<User>,
     updaterRole: string,
-    planType?: 'mensal' | 'trimestral' | 'semestral' | 'anual'
+    planType?: string
   ): Promise<void> {
-    
     // Verificar se usuário existe
     const existingUser = await this.userRepository.findById(id);
     if (!existingUser) {
       throw new Error('Usuário não encontrado.');
     }
 
-    // Check permissions
+    // Check permissions (mantive seu padrão)
     if (updaterRole !== 'admin' && updaterRole !== 'administrador') {
       if (updaterRole === 'recepcionista') {
         if (existingUser.role !== 'aluno' && existingUser.role !== 'instrutor') {
@@ -209,10 +253,12 @@ export class UserService {
 
     await this.userRepository.update(id, data);
 
+    // Atualizar plan_type do aluno
     if (planType) {
       const user = await this.userRepository.findById(id);
       if (user && user.role === 'aluno') {
-        await this.studentProfileRepository.updatePlanType(id, planType);
+        const validatedPlanType = await this.validatePlanType(planType);
+        await this.studentProfileRepository.updatePlanType(id, validatedPlanType);
       }
     }
   }

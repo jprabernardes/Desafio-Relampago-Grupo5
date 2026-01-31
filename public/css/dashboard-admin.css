@@ -500,3 +500,18 @@ td {
   text-align: center;
   padding: 2rem;
 }
+
+.plan-fit {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.plan-fit_pro {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.plan-fit_diamond {
+  background: #fce7f3;
+  color: #9f1239;
+}

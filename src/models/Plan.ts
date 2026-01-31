@@ -1,6 +1,7 @@
 export interface Plan {
-  id: number;
-  name: string;
+  id?: number;
+  code: string;                 // "fit", "fit_pro"...
+  name: string;                 // "Fit Pro"
   price_cents: number;
   duration_days: number;
   description?: string | null;
