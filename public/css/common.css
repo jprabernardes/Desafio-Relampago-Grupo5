@@ -1,0 +1,52 @@
+@media (width < 1024px) { 
+
+  .header h1 {
+    font-size: 24px;
+  }
+
+  main, .main-content, #workouts, #classes, #my-classes, #calendar {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .openMenuButton {
+    display: block;
+    width: 30px;              
+    height: 22px;             
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    background: none;         
+    border: none;            
+    padding: 0;
+    margin-right: 8px;
+  }
+
+  .sidebar {
+    position: absolute;
+    transition: left 400ms ease-in-out;
+    height: 100%;
+    z-index: 10;
+    left: 0;
+  }
+
+  .black-layer {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    left: 0;
+    top: 0;
+    background-color: black;
+    opacity: 0.3;
+    z-index: 5;
+  }
+
+  .closed-menu .sidebar {
+    left: -300px;
+  }
+
+  .closed-menu .black-layer {
+    display: none;
+  }
+}

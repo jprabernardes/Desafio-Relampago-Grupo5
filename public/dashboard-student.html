@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - Aluno</title>
     <link rel="stylesheet" href="css/dashboard-student.css" />
+    <link rel="stylesheet" href="css/common.css" />
   </head>
 
-  <body>
+  <body class="closed-menu">
+    <div class="black-layer" onclick="openCloseMenu()"></div>
+
     <div class="container">
       <!-- Sidebar -->
       <aside class="sidebar">
@@ -30,6 +33,9 @@
       <!-- Main Content -->
       <main class="main-content">
         <div class="header">
+          <button class="openMenuButton" onclick="openCloseMenu()">
+            <span></span><span></span><span></span>
+          </button>
           <h1>Dashboard Aluno</h1>
           <div class="user-info">
             <div class="user-avatar" id="userAvatar">A</div>

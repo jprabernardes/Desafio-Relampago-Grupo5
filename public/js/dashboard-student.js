@@ -754,3 +754,12 @@ function openCalendarModal(date, workouts, classes) {
 function closeCalendarModal() {
   document.getElementById("calendarModal").classList.remove("active");
 }
+
+function openCloseMenu() {
+  const body = document.querySelector("body");
+  if (body.classList.contains("closed-menu")) {
+    body.classList.remove("closed-menu");
+  } else {
+    body.classList.add("closed-menu");
+  }
+}
