@@ -3,25 +3,30 @@
   padding: 0;
   box-sizing: border-box;
 }
+
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: #f5f7fa;
 }
+
 .container {
   display: flex;
   min-height: 100vh;
 }
+
 .sidebar {
   width: 250px;
   background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 2rem 1rem;
 }
+
 .logo {
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 3rem;
 }
+
 .nav-item {
   padding: 0.75rem 1rem;
   margin-bottom: 0.5rem;
@@ -29,12 +34,15 @@ body {
   cursor: pointer;
   transition: all 0.2s;
 }
+
 .nav-item:hover {
   background: rgba(255, 255, 255, 0.1);
 }
+
 .nav-item.active {
   background: rgba(255, 255, 255, 0.2);
 }
+
 .logout-btn {
   margin-top: auto;
   background: rgba(255, 255, 255, 0.1);
@@ -46,28 +54,34 @@ body {
   width: 100%;
   margin-top: 2rem;
 }
+
 .logout-btn:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
 .main-content {
   flex: 1;
   padding: 2rem;
 }
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
 }
+
 .header h1 {
   font-size: 2rem;
   color: #333;
 }
+
 .user-info {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
+
 .user-avatar {
   width: 40px;
   height: 40px;
@@ -79,6 +93,7 @@ body {
   color: white;
   font-weight: 700;
 }
+
 .section {
   background: white;
   padding: 2rem;
@@ -87,22 +102,27 @@ body {
   margin-bottom: 2rem;
   display: none;
 }
+
 .section.active {
   display: block;
 }
+
 .section h2 {
   margin-bottom: 1.5rem;
   color: #333;
 }
+
 .form-group {
   margin-bottom: 1.5rem;
 }
+
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
   color: #333;
   font-weight: 500;
 }
+
 .form-group input,
 .form-group select,
 .form-group textarea {
@@ -113,10 +133,12 @@ body {
   font-size: 1rem;
   font-family: inherit;
 }
+
 .form-group textarea {
   min-height: 100px;
   resize: vertical;
 }
+
 .btn {
   padding: 0.75rem 1.5rem;
   border: none;
@@ -125,40 +147,49 @@ body {
   cursor: pointer;
   transition: all 0.2s;
 }
+
 .btn-primary {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 }
+
 .btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
+
 .btn-secondary {
   background: #f0f0f0;
   color: #333;
 }
+
 .btn-secondary:hover {
   background: #e0e0e0;
 }
+
 .alert {
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1rem;
   display: none;
 }
+
 .alert.show {
   display: block;
 }
+
 .alert-success {
   background: #d4edda;
   color: #155724;
   border: 1px solid #c3e6cb;
 }
+
 .alert-error {
   background: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
 }
+
 .templates-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -209,6 +240,7 @@ body {
   white-space: nowrap;
   max-width: 100%;
 }
+
 /* Cards de exercício unificados */
 .template-card,
 .modal-exercise-card {
@@ -279,7 +311,8 @@ body {
 .modal-exercise-card .exercise-stats {
   display: flex;
   gap: 1rem;
-  margin-top: auto; /* Empurra para baixo */
+  margin-top: auto;
+  /* Empurra para baixo */
   font-size: 0.85rem;
   color: #888;
   flex-wrap: wrap;
@@ -301,6 +334,7 @@ body {
   color: #666;
   margin-bottom: 0.25rem;
 }
+
 .template-actions {
   position: absolute;
   top: 0.75rem;
@@ -309,6 +343,7 @@ body {
   gap: 0.4rem;
   z-index: 5;
 }
+
 .template-action-btn {
   background: none;
   border: none;
@@ -323,6 +358,7 @@ body {
   align-items: center;
   justify-content: center;
 }
+
 .template-action-btn:hover {
   opacity: 1;
   transform: scale(1.1);
@@ -346,9 +382,11 @@ body {
 #exerciseDetailModal {
   z-index: 2000;
 }
+
 .modal.active {
   display: flex;
 }
+
 .modal-content {
   background: white;
   border-radius: 12px;
@@ -364,18 +402,21 @@ body {
   overflow-wrap: break-word;
   max-width: 100%;
 }
+
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
 }
+
 .close-btn {
   background: none;
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
 }
+
 .form-actions {
   display: flex;
   gap: 1rem;
@@ -665,7 +706,8 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
-  height: 60vh; /* Fixed height for scrollable areas */
+  height: 60vh;
+  /* Fixed height for scrollable areas */
 }
 
 .column-label {
@@ -680,7 +722,8 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: hidden; /* Contain scrollbars */
+  overflow: hidden;
+  /* Contain scrollbars */
 }
 
 /* Scrollable containers override */
@@ -692,8 +735,10 @@ body {
   border-radius: 8px;
   padding: 0.5rem;
   background: #f7fafc;
-  margin: 0; /* Reset margins */
-  max-height: none !important; /* Force full height of container */
+  margin: 0;
+  /* Reset margins */
+  max-height: none !important;
+  /* Force full height of container */
 }
 
 /* Compact Cards - Selected */
@@ -702,7 +747,8 @@ body {
   margin-bottom: 0.5rem;
   background: white;
   border: 1px solid #edf2f7;
-  flex-direction: column; /* Stack for compactness */
+  flex-direction: column;
+  /* Stack for compactness */
   align-items: flex-start;
   gap: 0.5rem;
 }
@@ -725,7 +771,8 @@ body {
   margin-bottom: 0.1rem;
 }
 
-.param-group input, .param-group select {
+.param-group input,
+.param-group select {
   padding: 0.3rem;
   font-size: 0.85rem;
   width: 70px;
@@ -734,23 +781,27 @@ body {
 .remove-exercise-btn {
   padding: 0.3rem 0.6rem;
   font-size: 0.75rem;
-  margin-left: auto; /* Push to right */
+  margin-left: auto;
+  /* Push to right */
 }
 
 /* Compact Cards - Available (Override generic styles) */
 .modal-exercise-card {
-  height: auto; /* Remove fixed height */
+  height: auto;
+  /* Remove fixed height */
   min-height: auto;
   padding: 0.75rem;
   margin-bottom: 0.75rem;
   background: white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .modal-exercise-card h4 {
   margin: 0 0 0.25rem 0;
   font-size: 0.95rem;
-  -webkit-line-clamp: 1; /* Limit title lines */
+  -webkit-line-clamp: 1;
+  /* Limit title lines */
+  line-clamp: 1;
   max-height: auto;
 }
 
@@ -759,6 +810,7 @@ body {
   margin: 0.25rem 0;
   height: auto;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .modal-exercise-card .exercise-stats {
@@ -769,7 +821,8 @@ body {
 }
 
 .modal-exercise-card .exercise-hint {
-  display: none; /* Hide hint to save space */
+  display: none;
+  /* Hide hint to save space */
 }
 
 /* Wider modal for training editor */
@@ -998,4 +1051,23 @@ body {
   font-size: 1.5rem;
   font-weight: bold;
   color: #667eea;
+}
+
+/* Enhanced Modal Styles */
+.modal-stat-box.highlight {
+  border: 2px solid #667eea;
+  background: #eef2ff;
+  transform: scale(1.05);
+}
+
+.modal-exercise-desc-box {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+  margin-top: 0.5rem;
+}
+
+.description-section {
+  margin-top: 1.5rem;
 }
