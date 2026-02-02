@@ -4,6 +4,7 @@ import path from 'path';
 import cors from 'cors';
 import routes from './routes';
 import cookieParser from 'cookie-parser';
+import { config } from './config/env';
 
 import { errorMiddleware } from './middlewares/error.middleware';
 import { generalRateLimiter } from './middlewares/rateLimit.middleware';
@@ -42,6 +43,16 @@ export const createApp = (): Application => {
     next();
   });
 
+  // Configuração de ambiente para o frontend (carregado via <script src="config.js">)
+  app.get('/config.js', (req, res) => {
+    res.type('application/javascript').send(
+      `window.__APP_CONFIG__ = ${JSON.stringify({
+        APP_BASE_PATH: config.appBasePath,
+        API_BASE_URL: config.apiBaseUrl
+      })};`
+    );
+  });
+
   // Servir arquivos estáticos do frontend (pasta public)
   app.use(express.static(path.join(__dirname, '../public')));
 
@@ -49,7 +60,7 @@ export const createApp = (): Application => {
   app.use('/api', routes);
 
   // Rota de verificação de saúde (Health Check)
-  app.get('/health', (req, res) => {
+  app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'Sistema de Academia funcionando!' });
   });
 

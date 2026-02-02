@@ -5,7 +5,7 @@ let currentTab = "alunos";
 let allUsers = [];
 let filteredUsers = [];
 
-const API_URL = "/api";
+const { resolveAppPath } = window.AppConfig;
 
 // Lógica do Modal de Confirmação
 let pendingConfirmAction = null;
@@ -29,7 +29,7 @@ function confirmAction() {
 }
 
 async function loadUserInfo() {
-  const res = await fetch(`${API_URL}/auth/me`);
+  const res = await apiFetch("/auth/me");
   const data = await res.json();
   return data;
 }
@@ -39,7 +39,7 @@ async function loadData() {
     const userData = await loadUserInfo();
     if (userData.error) {
       document.cookie = "";
-      window.location.href = "/";
+      window.location.href = resolveAppPath("/");
     }
 
     // Ensure user is administrator
@@ -60,8 +60,8 @@ async function loadData() {
       .toUpperCase();
 
     const [usersRes, metricsRes] = await Promise.all([
-      fetch(`${API_URL}/users`),
-      fetch(`${API_URL}/users/dashboard`),
+      apiFetch("/users"),
+      apiFetch("/users/dashboard"),
     ]);
 
     const rawUsers = await usersRes.json();
@@ -187,7 +187,7 @@ async function loadTab(tipo = "alunos") {
     const userData = await loadUserInfo();
     if (userData.error) {
       document.cookie = "";
-      window.location.href = "/";
+      window.location.href = resolveAppPath("/");
       return;
     }
 
@@ -206,7 +206,7 @@ async function loadTab(tipo = "alunos") {
       .toUpperCase();
   } catch (error) {
     console.error("Erro ao carregar informações do usuário:", error);
-    window.location.href = "/";
+    window.location.href = resolveAppPath("/");
     return;
   }
 
@@ -252,7 +252,7 @@ async function loadTab(tipo = "alunos") {
     '<tr><td colspan="5" class="text-center-padded">Carregando...</td></tr>';
 
   try {
-    const res = await fetch(`${API_URL}/users`);
+    const res = await apiFetch("/users");
 
     if (!res.ok) {
       throw new Error("Erro ao buscar usuários");
@@ -459,7 +459,7 @@ function confirmDeleteUser() {
 // Deletar usuário
 async function deleteUser(id) {
   try {
-    const res = await fetch(`${API_URL}/users/${id}`, {
+    const res = await apiFetch(`/users/${id}`, {
       method: "DELETE",
     });
 
@@ -503,7 +503,7 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
   }
 
   try {
-    const res = await fetch(`${API_URL}/users`, {
+    const res = await apiFetch("/users", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -580,7 +580,7 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
   }
 
   try {
-    const res = await fetch(`${API_URL}/users/${userId}`, {
+    const res = await apiFetch(`/users/${userId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -605,8 +605,8 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
 });
 
 async function logout() {
-  await fetch(`${API_URL}/auth/logout`, { method: "DELETE" });
-  window.location.href = "/";
+  await apiFetch("/auth/logout", { method: "DELETE" });
+  window.location.href = resolveAppPath("/");
 }
 
 // Função para formatar telefone

@@ -5,10 +5,10 @@ let allUsers = [];
 let filteredUsers = [];
 let paginator = null;
 
-const API_URL = "/api";
+const { resolveAppPath } = window.AppConfig;
 
 async function loadUserInfo() {
-  const res = await fetch(`${API_URL}/auth/me`);
+  const res = await apiFetch("/auth/me");
   const data = await res.json();
   return data;
 }
@@ -42,7 +42,7 @@ async function loadTab(tab) {
     const userData = await loadUserInfo();
     if (userData.error) {
       document.cookie = "";
-      window.location.href = "/";
+      window.location.href = resolveAppPath("/");
     }
 
     // Ensure user is receptionist
@@ -59,7 +59,7 @@ async function loadTab(tab) {
       .toUpperCase();
   } catch (error) {
     console.error("Erro:", error);
-    window.location.href = "/";
+    window.location.href = resolveAppPath("/");
   }
 
   currentTab = tab;
@@ -127,7 +127,7 @@ async function loadUsers(type) {
   else if (type === "instructors") endpoint = "/receptionist/instructors";
 
   try {
-    const res = await fetch(`${API_URL}${endpoint}`);
+    const res = await apiFetch(endpoint);
 
     if (!res.ok) throw new Error("Erro ao buscar dados");
 
@@ -267,7 +267,7 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
   }
 
   try {
-    const res = await fetch(`${API_URL}${endpoint}`, {
+    const res = await apiFetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -341,7 +341,7 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
   }
 
   try {
-    const res = await fetch(`${API_URL}/users/${id}`, {
+    const res = await apiFetch(`/users/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -373,7 +373,7 @@ function confirmDeleteUser() {
 
 async function deleteUser(id) {
   try {
-    const res = await fetch(`${API_URL}/users/${id}`, {
+    const res = await apiFetch(`/users/${id}`, {
       method: "DELETE",
     });
 
@@ -398,8 +398,8 @@ function showEditAlert(msg, type) {
 }
 
 async function logout() {
-  await fetch(`${API_URL}/auth/logout`, { method: "DELETE" });
-  window.location.href = "/";
+  await apiFetch("/auth/logout", { method: "DELETE" });
+  window.location.href = resolveAppPath("/");
 }
 
 // Função para formatar telefone

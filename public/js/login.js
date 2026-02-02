@@ -1,4 +1,4 @@
-const API_URL = "/api";
+const { resolveAppPath } = window.AppConfig;
 
 function forgotPassword() {
   const email = document.getElementById("email").value;
@@ -38,7 +38,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   const password = document.getElementById("senha").value;
 
   try {
-    const response = await fetch(`${API_URL}/auth/login`, {
+    const response = await apiFetch("/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -51,16 +51,16 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
       const role = data.user.role;
       switch (role) {
         case "administrador":
-          window.location.href = "/dashboard-admin.html";
+          window.location.href = resolveAppPath("/dashboard-admin.html");
           break;
         case "recepcionista":
-          window.location.href = "/dashboard-receptionist.html";
+          window.location.href = resolveAppPath("/dashboard-receptionist.html");
           break;
         case "instrutor":
-          window.location.href = "dashboard-instructor.html";
+          window.location.href = resolveAppPath("/dashboard-instructor.html");
           break;
         case "aluno":
-          window.location.href = "/dashboard-student.html";
+          window.location.href = resolveAppPath("/dashboard-student.html");
           break;
         default:
           showAlert("Role desconhecido");

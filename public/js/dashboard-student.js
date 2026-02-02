@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000/api";
+const { resolveAppPath } = window.AppConfig;
 // ...
 
 // Lógica do Modal de Confirmação
@@ -72,7 +72,7 @@ function showAlert(message, type = "success") {
 // Carregar informações do usuário
 async function loadUserInfo() {
   try {
-    const response = await fetch(`${API_URL}/auth/me`);
+    const response = await apiFetch("/auth/me");
 
     if (!response.ok) throw new Error("Não autorizado");
 
@@ -101,7 +101,7 @@ async function loadUserInfo() {
 // Carregar treinos do aluno
 async function loadWorkouts() {
   try {
-    const response = await fetch(`${API_URL}/student/workouts`);
+    const response = await apiFetch("/student/workouts");
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -165,7 +165,7 @@ async function loadWorkouts() {
 async function printWorkout(workoutId) {
   try {
     // Registrar check-in na API
-    const response = await fetch(`${API_URL}/student/checkin`, {
+    const response = await apiFetch("/student/checkin", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -289,8 +289,8 @@ let myEnrollmentIds = [];
 async function loadAvailableClasses() {
   try {
     const [classesRes, myClassesRes] = await Promise.all([
-      fetch(`${API_URL}/student/classes`),
-      fetch(`${API_URL}/student/my-classes`),
+      apiFetch("/student/classes"),
+      apiFetch("/student/my-classes"),
     ]);
 
     if (!classesRes.ok || !myClassesRes.ok)
@@ -423,8 +423,8 @@ async function enrollFromModal(classId) {
 // Inscrever-se em aula (atualizada para suportar modal)
 async function enrollClass(classId, fromModal = false) {
   try {
-    const response = await fetch(
-      `${API_URL}/student/classes/${classId}/enroll`,
+    const response = await apiFetch(
+      `/student/classes/${classId}/enroll`,
       {
         method: "POST",
         headers: {
@@ -458,7 +458,7 @@ async function enrollClass(classId, fromModal = false) {
 // Carregar minhas inscrições
 async function loadMyClasses() {
   try {
-    const response = await fetch(`${API_URL}/student/my-classes`);
+    const response = await apiFetch("/student/my-classes");
 
     if (!response.ok) throw new Error("Erro ao carregar inscrições");
 
@@ -518,8 +518,8 @@ async function cancelEnrollment(classId) {
       console.log("Usuário confirmou cancelamento.");
 
       try {
-        const response = await fetch(
-          `${API_URL}/student/classes/${classId}/cancel`,
+        const response = await apiFetch(
+          `/student/classes/${classId}/cancel`,
           {
             method: "DELETE",
             headers: {
@@ -548,8 +548,8 @@ async function cancelEnrollment(classId) {
 
 // Logout
 async function logout() {
-  await fetch(`${API_URL}/auth/logout`, { method: "DELETE" });
-  window.location.href = "/";
+  await apiFetch("/auth/logout", { method: "DELETE" });
+  window.location.href = resolveAppPath("/");
 }
 
 // Inicializar
@@ -564,7 +564,7 @@ let classHistory = []; // Mock data store
 
 async function loadCalendar() {
   // Mock fetching history data (simulating API calls)
-  // In a real app, this would be: await fetch('${API_URL}/student/history');
+  // In a real app, this would be: await apiFetch('/student/history');
 
   // Reuse existing data if possible, or mock additional past data for demonstration
   await loadHistoryData();
@@ -576,7 +576,7 @@ async function loadCalendar() {
 async function loadHistoryData() {
   // Carregar check-ins reais da API
   try {
-    const checkinResponse = await fetch(`${API_URL}/student/checkins`);
+    const checkinResponse = await apiFetch("/student/checkins");
     if (checkinResponse.ok) {
       const checkins = await checkinResponse.json();
       checkinHistory = checkins.map((checkin) => ({
@@ -598,7 +598,7 @@ async function loadHistoryData() {
 
   // Carregar aulas inscritas
   try {
-    const response = await fetch(`${API_URL}/student/my-classes`);
+    const response = await apiFetch("/student/my-classes");
     if (response.ok) {
       const myClasses = await response.json();
       classHistory = myClasses.map((cls) => ({
@@ -753,4 +753,13 @@ function openCalendarModal(date, workouts, classes) {
 
 function closeCalendarModal() {
   document.getElementById("calendarModal").classList.remove("active");
+}
+
+function openCloseMenu() {
+  const body = document.querySelector("body");
+  if (body.classList.contains("closed-menu")) {
+    body.classList.remove("closed-menu");
+  } else {
+    body.classList.add("closed-menu");
+  }
 }

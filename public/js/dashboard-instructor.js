@@ -1,4 +1,4 @@
-const API_URL = "/api";
+const { resolveAppPath, buildApiUrl } = window.AppConfig;
 
 // ========== FUNÇÕES DE VALIDAÇÃO E SANITIZAÇÃO ==========
 
@@ -319,19 +319,19 @@ function showAlert(msg, type = "success") {
 }
 
 async function logout() {
-  await fetch(`${API_URL}/auth/logout`, { method: "DELETE" });
-  window.location.href = "/";
+  await apiFetch("/auth/logout", { method: "DELETE" });
+  window.location.href = resolveAppPath("/");
 }
 
 async function loadUserInfo() {
-  const res = await fetch(`${API_URL}/auth/me`);
+  const res = await apiFetch("/auth/me");
   const data = await res.json();
   document.getElementById("userName").textContent =
     data.name || data.nome || "Instrutor";
 
   if (data.error) {
     document.cookie = "";
-    window.location.href = "/";
+    window.location.href = resolveAppPath("/");
   }
 
   // Ensure user is instructor
@@ -346,7 +346,7 @@ let templates = [];
 
 async function loadTemplates() {
   try {
-    const res = await fetch(`${API_URL}/instructor/exercises`);
+    const res = await apiFetch("/instructor/exercises");
     templates = await res.json();
     allExercisesForDetail = templates; // Para uso no modal de detalhes
     renderTemplates();
@@ -376,49 +376,38 @@ function renderExerciseCard(exercise, options = {}) {
 
   const idAttr = cardId ? `id="${cardId}"` : "";
 
-  // Ícone de info para abrir modal de detalhes (sempre visível se allowDetailView)
-  const infoIcon = allowDetailView
-    ? `
-    <button class="template-action-btn" 
-            title="Ver detalhes do exercício"
-                  onclick="event.stopPropagation(); event.preventDefault(); openExerciseDetailModal(${exercise.id}, event); return false;">
-      ℹ️
-    </button>
-  `
-    : "";
+  // Ícone de info removido conforme solicitação
+  const infoIcon = "";
 
   return `
     <div class="${cardClass}" ${clickHandler} ${idAttr}>
       <h4>${exercise.name}</h4>
       ${showDescription && exercise.description ? `<p class="exercise-info">${exercise.description}</p>` : ""}
-      ${
-        showStats
-          ? `
+      ${showStats
+      ? `
         <div class="exercise-stats">
           <span>📊 ${exercise.series || 0} séries x ${exercise.repetitions || 0} repetições</span>
           <span>⚖️ ${exercise.weight || 0} kg</span>
         </div>
       `
-          : ""
-      }
+      : ""
+    }
       ${showHint ? `<p class="exercise-hint">Clique para selecionar e personalizar</p>` : ""}
-      ${
-        showActions || allowDetailView
-          ? `
+      ${showActions || allowDetailView
+      ? `
         <div class="template-actions" onclick="event.stopPropagation()">
           ${infoIcon}
-          ${
-            showActions
-              ? `
+          ${showActions
+        ? `
             <button class="template-action-btn" title="Editar" onclick="event.stopPropagation(); editTemplate(${exercise.id})">✏️</button>
             <button class="template-action-btn" title="Excluir" onclick="event.stopPropagation(); deleteTemplate(${exercise.id})">🗑️</button>
           `
-              : ""
-          }
+        : ""
+      }
         </div>
       `
-          : ""
-      }
+      : ""
+    }
     </div>
   `;
 }
@@ -448,25 +437,27 @@ window.openExerciseDetailModal = (exerciseId, event) => {
 
   content.innerHTML = `
       <div class="modal-exercise-detail-container">
-        <h3 class="modal-exercise-title">${exerciseData.name}</h3>
+        <h3 class="modal-exercise-title">${exercise.name}</h3>
         
-        <div class="modal-exercise-section">
-          <p class="modal-exercise-label">Descrição</p>
-          <p class="modal-exercise-desc">${exerciseData.description || "Sem descrição."}</p>
-        </div>
-
-        <div class="modal-exercise-stats-grid">
+        <div class="modal-exercise-stats-grid mb-6">
           <div class="modal-stat-box">
             <p class="modal-stat-label">Séries</p>
-            <p class="modal-stat-value">${exerciseData.series || 0}</p>
+            <p class="modal-stat-value">${exercise.series || 0}</p>
           </div>
           <div class="modal-stat-box">
             <p class="modal-stat-label">Repetições</p>
-            <p class="modal-stat-value">${exerciseData.repetitions || 0}</p>
+            <p class="modal-stat-value">${exercise.repetitions || 0}</p>
           </div>
-          <div class="modal-stat-box">
-            <p class="modal-stat-label">Carga (kg)</p>
-            <p class="modal-stat-value">${exerciseData.weight || 0}</p>
+          <div class="modal-stat-box highlight">
+            <p class="modal-stat-label">Peso</p>
+            <p class="modal-stat-value">${exercise.weight || 0} kg</p>
+          </div>
+        </div>
+
+        <div class="modal-exercise-section description-section">
+          <p class="modal-exercise-label">Descrição Completa</p>
+          <div class="modal-exercise-desc-box">
+            <p class="modal-exercise-desc">${exercise.description || "Sem descrição."}</p>
           </div>
         </div>
       </div>
@@ -569,9 +560,9 @@ function renderTemplates() {
             showActions: true,
             showDescription: true,
             showStats: true,
-            showHint: false,
-            onClick: null,
-            allowDetailView: true,
+            showHint: true,
+            onClick: `openExerciseDetailModal(${t.id}, event)`,
+            allowDetailView: false,
           }),
         )
         .join("");
@@ -594,7 +585,7 @@ let filteredStudents = [];
 
 async function loadStudents() {
   try {
-    const res = await fetch(`${API_URL}/instructor/students`);
+    const res = await apiFetch("/instructor/students");
     if (!res.ok) throw new Error("Erro ao carregar alunos");
     allStudents = await res.json();
     filteredStudents = allStudents;
@@ -612,7 +603,7 @@ function renderStudents() {
 
   if (!filteredStudents || filteredStudents.length === 0) {
     grid.innerHTML = "<p>Nenhum aluno encontrado.</p>";
-    renderPagination("studentsPagination", 1, 1, () => {});
+    renderPagination("studentsPagination", 1, 1, () => { });
     return;
   }
 
@@ -688,7 +679,7 @@ window.closeStudentDetailModal = function () {
 
 async function loadStudentData(studentId) {
   try {
-    const res = await fetch(`${API_URL}/instructor/students/${studentId}`);
+    const res = await apiFetch(`/instructor/students/${studentId}`);
     if (!res.ok) throw new Error("Erro ao carregar aluno");
     const student = await res.json();
     document.getElementById("studentName").textContent =
@@ -708,8 +699,8 @@ async function loadStudentData(studentId) {
 
 async function loadStudentTrainings(studentId) {
   try {
-    const res = await fetch(
-      `${API_URL}/instructor/students/${studentId}/trainings`,
+    const res = await apiFetch(
+      `/instructor/students/${studentId}/trainings`,
     );
     if (!res.ok) {
       const errorData = await res.json();
@@ -730,7 +721,7 @@ async function loadStudentTrainings(studentId) {
 
 async function loadExercisesForTraining() {
   try {
-    const res = await fetch(`${API_URL}/instructor/exercises`);
+    const res = await apiFetch("/instructor/exercises");
     if (!res.ok) throw new Error("Erro ao carregar exercícios");
     allExercisesForTraining = await res.json();
     allExercisesForDetail = allExercisesForTraining; // Para uso no modal de detalhes
@@ -871,22 +862,40 @@ window.editTemplate = (id) => {
     counter.className = "char-counter" + (length > 450 ? " warning" : "");
   }
 
-  document.getElementById("formTitle").textContent = "Editar Template";
-  document.getElementById("saveBtn").textContent = "Atualizar Template";
-  document.getElementById("cancelEditBtn").style.display = "inline-block";
+  document.getElementById("formTitle").textContent = "Editar Exercício"; // Renamed
+  document.getElementById("saveBtn").textContent = "Salvar Alterações";
+
+  // Show Modal
+  openCreateExerciseModal();
+
+  // No longer needed to scroll or show cancel button as it's in the modal
+  // document.getElementById("cancelEditBtn").style.display = "inline-block";
+
 
   clearValidationErrors();
-  document.querySelector(".main-content").scrollTop = 0; // Scroll to top
+  // document.querySelector(".main-content").scrollTop = 0; // Scroll to top removed
 };
 
+window.openCreateExerciseModal = () => {
+  document.getElementById("createExerciseModal").classList.add("active");
+  // Clear validation when opening
+  clearValidationErrors();
+};
+
+window.closeCreateExerciseModal = () => {
+  document.getElementById("createExerciseModal").classList.remove("active");
+  cancelEdit(); // Reset form data
+};
+
+// Renamed cancelEdit to be internal reset or keep as is but linked to modal close
 window.cancelEdit = () => {
   document.getElementById("createExerciseForm").reset();
   document.getElementById("exId").value = "";
   document.getElementById("exDescription").value = "";
-  document.getElementById("formTitle").textContent =
-    "Criar Template de Exercício";
-  document.getElementById("saveBtn").textContent = "Salvar Template";
-  document.getElementById("cancelEditBtn").style.display = "none";
+  document.getElementById("formTitle").textContent = "Criar Exercício";
+  document.getElementById("saveBtn").textContent = "Salvar";
+  // document.getElementById("cancelEditBtn").style.display = "none"; // Button removed
+
   clearValidationErrors();
   const counter = document.getElementById("exDescriptionCounter");
   if (counter) counter.textContent = "0/500 caracteres";
@@ -894,14 +903,14 @@ window.cancelEdit = () => {
 
 window.deleteTemplate = async (id) => {
   showConfirmModal(
-    "Tem certeza que deseja excluir este template?",
+    "Tem certeza que deseja excluir este exercício?",
     async () => {
       try {
-        const res = await fetch(`${API_URL}/instructor/exercises/${id}`, {
+        const res = await apiFetch(`/instructor/exercises/${id}`, {
           method: "DELETE",
         });
         if (res.ok) {
-          showAlert("Template excluído!");
+          showAlert("Exercício excluído!");
           loadTemplates();
         } else {
           showAlert("Erro ao excluir", "error");
@@ -974,12 +983,12 @@ document
     };
 
     try {
-      const url = id
-        ? `${API_URL}/instructor/exercises/${id}`
-        : `${API_URL}/instructor/exercises`;
+      const endpoint = id
+        ? `/instructor/exercises/${id}`
+        : "/instructor/exercises";
       const method = id ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await apiFetch(endpoint, {
         method: method,
         headers: {
           "Content-Type": "application/json",
@@ -988,9 +997,9 @@ document
       });
 
       if (res.ok) {
-        showAlert(id ? "Template atualizado!" : "Template criado!");
+        showAlert(id ? "Exercício atualizado!" : "Exercício criado!");
         loadTemplates();
-        cancelEdit(); // Reset form
+        closeCreateExerciseModal(); // Close modal on success
       } else {
         const err = await res.json();
         showAlert(err.error || "Erro ao salvar", "error");
@@ -1006,7 +1015,7 @@ let allClasses = [];
 
 async function loadClasses() {
   try {
-    const res = await fetch(`${API_URL}/instructor/classes`);
+    const res = await apiFetch("/instructor/classes");
     myClasses = await res.json();
     allClasses = [...myClasses]; // Cópia para filtro
     renderClasses();
@@ -1069,8 +1078,8 @@ async function renderClasses() {
   const classesWithEnrollments = await Promise.all(
     myClasses.map(async (c) => {
       try {
-        const res = await fetch(
-          `${API_URL}/instructor/classes/${c.id}/participants`,
+        const res = await apiFetch(
+          `/instructor/classes/${c.id}/participants`,
         );
 
         if (!res.ok) {
@@ -1196,12 +1205,12 @@ document
     };
 
     try {
-      const url = id
-        ? `${API_URL}/instructor/classes/${id}`
-        : `${API_URL}/instructor/classes`;
+      const endpoint = id
+        ? `/instructor/classes/${id}`
+        : "/instructor/classes";
       const method = id ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await apiFetch(endpoint, {
         method: method,
         headers: {
           "Content-Type": "application/json",
@@ -1259,7 +1268,7 @@ window.cancelClassEdit = () => {
 window.deleteClass = async (id) => {
   showConfirmModal("Tem certeza que deseja cancelar esta aula?", async () => {
     try {
-      const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
+      const res = await apiFetch(`/instructor/classes/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -1302,8 +1311,8 @@ async function openClassDetailsModal(classId) {
 
   // Buscar alunos inscritos
   try {
-    const res = await fetch(
-      `${API_URL}/instructor/classes/${classId}/participants`,
+    const res = await apiFetch(
+      `/instructor/classes/${classId}/participants`,
     );
 
     if (!res.ok) {
@@ -1371,7 +1380,7 @@ document
     };
 
     try {
-      const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
+      const res = await apiFetch(`/instructor/classes/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -1440,12 +1449,12 @@ function renderAvailableExercises() {
   // Filtrar exercícios baseado na busca
   const filteredExercises = exerciseSearchFilter
     ? allExercisesForTraining.filter((ex) => {
-        const searchTerm = exerciseSearchFilter.toLowerCase();
-        return (
-          (ex.name || "").toLowerCase().includes(searchTerm) ||
-          (ex.description || "").toLowerCase().includes(searchTerm)
-        );
-      })
+      const searchTerm = exerciseSearchFilter.toLowerCase();
+      return (
+        (ex.name || "").toLowerCase().includes(searchTerm) ||
+        (ex.description || "").toLowerCase().includes(searchTerm)
+      );
+    })
     : allExercisesForTraining;
 
   if (filteredExercises.length === 0) {
@@ -1653,7 +1662,7 @@ window.openEditTrainingModal = async (trainingId) => {
     }
 
     // Carregar detalhes completos do treino (com exercícios e parâmetros)
-    const res = await fetch(`${API_URL}/instructor/trainings/${trainingId}`);
+    const res = await apiFetch(`/instructor/trainings/${trainingId}`);
     if (!res.ok) throw new Error("Erro ao carregar treino");
 
     const fullTraining = await res.json();
@@ -1708,8 +1717,8 @@ window.deleteTraining = async () => {
 
   showConfirmModal("Tem certeza que deseja deletar este treino?", async () => {
     try {
-      const res = await fetch(
-        `${API_URL}/instructor/trainings/${currentTrainingId}`,
+      const res = await apiFetch(
+        `/instructor/trainings/${currentTrainingId}`,
         {
           method: "DELETE",
         },
@@ -1750,8 +1759,8 @@ document
     try {
       if (isEditingTraining && currentTrainingId) {
         // Atualizar treino existente
-        const updateRes = await fetch(
-          `${API_URL}/instructor/trainings/${currentTrainingId}`,
+        const updateRes = await apiFetch(
+          `/instructor/trainings/${currentTrainingId}`,
           {
             method: "PUT",
             headers: {
@@ -1766,9 +1775,9 @@ document
           throw new Error(err.error || "Erro ao atualizar treino");
         }
 
-        // Buscar exercícios atuais do treino
-        const currentRes = await fetch(
-          `${API_URL}/instructor/trainings/${currentTrainingId}`,
+        // Exercícios atuais do treino
+        const currentRes = await apiFetch(
+          `/instructor/trainings/${currentTrainingId}`,
         );
         const currentTraining = await currentRes.json();
         const currentExerciseIds = currentTraining.exercises
@@ -1780,8 +1789,8 @@ document
         // Remover exercícios que não estão mais selecionados
         for (const exId of currentExerciseIds) {
           if (!newExerciseIds.includes(exId)) {
-            await fetch(
-              `${API_URL}/instructor/trainings/${currentTrainingId}/exercises/${exId}`,
+            await apiFetch(
+              `/instructor/trainings/${currentTrainingId}/exercises/${exId}`,
               {
                 method: "DELETE",
               },
@@ -1793,8 +1802,8 @@ document
         for (const sel of selectedExercises) {
           const exists = currentExerciseIds.includes(sel.exerciseId);
           if (!exists) {
-            await fetch(
-              `${API_URL}/instructor/trainings/${currentTrainingId}/exercises`,
+            await apiFetch(
+              `/instructor/trainings/${currentTrainingId}/exercises`,
               {
                 method: "POST",
                 headers: {
@@ -1806,8 +1815,8 @@ document
           }
 
           // Atualizar parâmetros do exercício no treino
-          await fetch(
-            `${API_URL}/instructor/trainings/${currentTrainingId}/exercises/${sel.exerciseId}`,
+          await apiFetch(
+            `/instructor/trainings/${currentTrainingId}/exercises/${sel.exerciseId}`,
             {
               method: "PUT",
               headers: {
@@ -1825,7 +1834,7 @@ document
         showStudentAlert("Treino atualizado com sucesso!");
       } else {
         // Criar novo treino
-        const createRes = await fetch(`${API_URL}/instructor/trainings`, {
+        const createRes = await apiFetch("/instructor/trainings", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1845,8 +1854,8 @@ document
 
         // Adicionar exercícios com parâmetros
         for (const sel of selectedExercises) {
-          await fetch(
-            `${API_URL}/instructor/trainings/${newTraining.id}/exercises`,
+          await apiFetch(
+            `/instructor/trainings/${newTraining.id}/exercises`,
             {
               method: "POST",
               headers: {
@@ -1856,8 +1865,8 @@ document
             },
           );
 
-          await fetch(
-            `${API_URL}/instructor/trainings/${newTraining.id}/exercises/${sel.exerciseId}`,
+          await apiFetch(
+            `/instructor/trainings/${newTraining.id}/exercises/${sel.exerciseId}`,
             {
               method: "PUT",
               headers: {
