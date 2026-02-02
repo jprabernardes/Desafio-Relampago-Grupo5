@@ -3,24 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard - Administrador</title>
-    <script src="/server10/config.js"></script>
-    <script src="/server10/js/base-path.js"></script>
-    <link rel="stylesheet" href="/server10/css/dashboard-admin.css" />
+    <title>Dashboard - Recepcionista</title>
+    <script src="config.js"></script>
+    <script src="js/base-path.js"></script>
+    <link rel="stylesheet" href="css/dashboard-receptionist.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
   </head>
-  <body class="closed-menu">
+  <body>
     <div class="container">
       <div class="sidebar">
         <div class="logo">💪 FitManager</div>
-        <div class="nav-item active" id="navAlunos" onclick="loadTab('alunos')">
-          <i class="fas fa-user-graduate"></i> 👥 Alunos
+
+        <div class="nav-item" id="navAlunos" onclick="loadTab('students')">
+          👥 Alunos
         </div>
         <div
           class="nav-item"
-          id="navFuncionarios"
-          onclick="loadTab('funcionarios')"
+          id="navInstrutores"
+          onclick="loadTab('instructors')"
         >
-          <i class="fas fa-user-tie"></i> 🏋️ Funcionários
+          💪 Instrutores
         </div>
         <div style="flex: 1"></div>
         <div class="logout-btn" onclick="logout()">🚪 Sair</div>
@@ -28,40 +33,47 @@
 
       <div class="main-content">
         <div class="header">
-          <h1>Dashboard - Administrador</h1>
+          <h1>Dashboard - Recepcionista</h1>
           <div class="user-info">
-            <span id="userName"></span>
-            <div class="user-avatar" id="userAvatar"></div>
+            <span id="userName">Carregando...</span>
+            <div class="user-avatar" id="userAvatar">R</div>
           </div>
         </div>
 
+        <div class="alert hidden" id="alert"></div>
+
+        <!-- Unified Table Section -->
         <div class="table-container">
           <div class="table-header">
-            <h2 id="tableTitle">Usuários do Sistema</h2>
+            <h2 id="tableTitle">Visão Geral</h2>
             <div class="flex-center-gap">
               <input
                 type="text"
                 id="searchInput"
                 placeholder="Pesquisar..."
-                class="search-input"
+                class="search-input hidden"
                 oninput="handleSearch()"
               />
-              <button class="btn btn-primary" onclick="openAddModal()">
-                + Adicionar Conta
+              <button
+                class="btn btn-primary hidden"
+                id="addBtn"
+                onclick="openAddModal()"
+              >
+                + Adicionar
               </button>
             </div>
           </div>
           <table>
             <thead id="tableHead">
-              <tr>
-                <th>Nome</th>
-                <th>Email</th>
-                <th>CPF</th>
-                <th>Função</th>
-                <th>Ações</th>
-              </tr>
+              <!-- Headers will be injected by JS -->
             </thead>
-            <tbody id="usersTable"></tbody>
+            <tbody id="usersTable">
+              <tr>
+                <td colspan="5" class="text-center-padded">
+                  Selecione uma opção no menu lateral
+                </td>
+              </tr>
+            </tbody>
           </table>
           <div id="paginationContainer"></div>
         </div>
@@ -72,7 +84,7 @@
     <div class="modal" id="addModal">
       <div class="modal-content">
         <div class="modal-header">
-          <h2 id="addModalTitle">Adicionar Conta</h2>
+          <h2 id="addModalTitle">Adicionar</h2>
           <button class="close-btn" onclick="closeAddModal()">&times;</button>
         </div>
         <div id="addAlertContainer"></div>
@@ -99,20 +111,13 @@
               placeholder="11 dígitos"
             />
           </div>
+
+          <!-- Student Specific -->
           <div class="form-group">
             <label>Telefone</label>
             <input type="text" id="addTelefone" placeholder="(XX)9XXXXXXXX" />
           </div>
-          <div class="form-group hidden" id="addRoleGroup">
-            <label>Função *</label>
-            <select id="addRole">
-              <option value="">Selecione...</option>
-              <option value="administrador">👑 Administrador</option>
-              <option value="recepcionista">📋 Recepcionista</option>
-              <option value="instrutor">💪 Instrutor</option>
-              <option value="aluno">🏃 Aluno</option>
-            </select>
-          </div>
+
           <div class="form-group hidden" id="addTipoPlanoGroup">
             <label>Tipo de Plano *</label>
             <select id="addTipoPlano">
@@ -123,15 +128,13 @@
               <option value="anual">Anual</option>
             </select>
           </div>
-          <div class="form-group hidden" id="addTipoFuncionarioGroup">
-            <label>Função *</label>
-            <select id="addTipoFuncionario">
-              <option value="">Selecione...</option>
-              <option value="administrador">👑 Administrador</option>
-              <option value="recepcionista">📋 Recepcionista</option>
-              <option value="instrutor">💪 Instrutor</option>
-            </select>
+
+          <!-- Instructor Specific -->
+          <div class="form-group hidden" id="addSpecialtyGroup">
+            <label>Especialidade *</label>
+            <input type="text" id="addSpecialty" placeholder="Ex: Musculação" />
           </div>
+
           <div class="form-actions">
             <button type="button" class="btn" onclick="closeAddModal()">
               Cancelar
@@ -146,7 +149,7 @@
     <div class="modal" id="editModal">
       <div class="modal-content">
         <div class="modal-header">
-          <h2 id="editModalTitle">Editar Conta</h2>
+          <h2 id="editModalTitle">Editar</h2>
           <button class="close-btn" onclick="closeEditModal()">&times;</button>
         </div>
         <div id="editAlertContainer"></div>
@@ -164,28 +167,12 @@
             <label>Telefone</label>
             <input type="text" id="editTelefone" placeholder="(XX)9XXXXXXXX" />
           </div>
-          <div class="form-group hidden" id="editNovaSenhaGroup">
-            <label>Nova Senha (deixe em branco para não alterar)</label>
-            <input
-              type="password"
-              id="editNovaSenha"
-              minlength="6"
-              placeholder="Digite nova senha"
-            />
+          <div class="form-group">
+            <label>CPF</label>
+            <input type="text" id="editCpf" maxlength="11" />
           </div>
-          <div class="form-group" id="editCpfGroup">
-            <label>CPF *</label>
-            <input type="text" id="editCpf" required maxlength="11" />
-          </div>
-          <div class="form-group hidden" id="editRoleGroup">
-            <label>Função *</label>
-            <select id="editRole">
-              <option value="administrador">👑 Administrador</option>
-              <option value="recepcionista">📋 Recepcionista</option>
-              <option value="instrutor">💪 Instrutor</option>
-              <option value="aluno">🏃 Aluno</option>
-            </select>
-          </div>
+
+          <!-- Student Specific -->
           <div class="form-group hidden" id="editTipoPlanoGroup">
             <label>Tipo de Plano *</label>
             <select id="editTipoPlano">
@@ -196,11 +183,19 @@
               <option value="anual">Anual</option>
             </select>
           </div>
+
+          <!-- Instructor Specific -->
+          <div class="form-group hidden" id="editSpecialtyGroup">
+            <label>Especialidade *</label>
+            <input type="text" id="editSpecialty" />
+          </div>
+
           <div class="form-actions">
             <button
               type="button"
               class="btn btn-danger"
               onclick="confirmDeleteUser()"
+              class="btn btn-danger btn-danger-white"
             >
               Deletar Conta
             </button>
@@ -225,15 +220,19 @@
         <p id="confirmMessage" class="confirm-modal-message">Tem certeza?</p>
         <div class="form-actions">
           <button class="btn" onclick="closeConfirmModal()">Não</button>
-          <button class="btn btn-danger" onclick="confirmAction()">
+          <button
+            class="btn btn-danger"
+            onclick="confirmAction()"
+            class="btn btn-danger btn-danger-white"
+          >
             Sim, tenho certeza
           </button>
         </div>
       </div>
     </div>
-    <script src="/server10/js/app-config.js"></script>
-    <script src="/server10/js/api.js"></script>
-    <script src="/server10/js/pagination.js"></script>
-    <script src="/server10/js/dashboard-admin.js"></script>
+    <script src="js/app-config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/pagination.js"></script>
+    <script src="js/dashboard-receptionist.js"></script>
   </body>
 </html>

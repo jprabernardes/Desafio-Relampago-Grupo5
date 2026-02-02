@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const config = {
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 3001,
   jwtSecret: process.env.NODE_ENV === 'test' 
     ? 'test_secret_key_for_integration_tests'
     : (process.env.JWT_SECRET || 'secret_key_change_in_production'),
@@ -14,5 +14,5 @@ export const config = {
     : (process.env.DB_PATH || './academia.db'),
   nodeEnv: process.env.NODE_ENV || 'development',
   appBasePath: process.env.APP_BASE_PATH || '',
-  apiBaseUrl: process.env.API_BASE_URL || '/api'
+  apiBaseUrl: process.env.API_BASE_URL || '/server10/api'
 };
