@@ -12,5 +12,7 @@ export const config = {
   dbPath: process.env.NODE_ENV === 'test'
     ? ':memory:'
     : (process.env.DB_PATH || './academia.db'),
-  nodeEnv: process.env.NODE_ENV || 'development'
+  nodeEnv: process.env.NODE_ENV || 'development',
+  appBasePath: process.env.APP_BASE_PATH || '',
+  apiBaseUrl: process.env.API_BASE_URL || '/api'
 };
