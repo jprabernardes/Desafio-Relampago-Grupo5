@@ -1,4 +1,4 @@
-const API_URL = "/api";
+const { resolveAppPath, buildApiUrl } = window.AppConfig;
 
 // ========== FUNÇÕES DE VALIDAÇÃO E SANITIZAÇÃO ==========
 
@@ -319,19 +319,19 @@ function showAlert(msg, type = "success") {
 }
 
 async function logout() {
-  await fetch(`${API_URL}/auth/logout`, { method: "DELETE" });
-  window.location.href = "/";
+  await apiFetch("/auth/logout", { method: "DELETE" });
+  window.location.href = resolveAppPath("/");
 }
 
 async function loadUserInfo() {
-  const res = await fetch(`${API_URL}/auth/me`);
+  const res = await apiFetch("/auth/me");
   const data = await res.json();
   document.getElementById("userName").textContent =
     data.name || data.nome || "Instrutor";
 
   if (data.error) {
     document.cookie = "";
-    window.location.href = "/";
+    window.location.href = resolveAppPath("/");
   }
 
   // Ensure user is instructor
@@ -346,7 +346,7 @@ let templates = [];
 
 async function loadTemplates() {
   try {
-    const res = await fetch(`${API_URL}/instructor/exercises`);
+    const res = await apiFetch("/instructor/exercises");
     templates = await res.json();
     allExercisesForDetail = templates; // Para uso no modal de detalhes
     renderTemplates();
@@ -585,7 +585,7 @@ let filteredStudents = [];
 
 async function loadStudents() {
   try {
-    const res = await fetch(`${API_URL}/instructor/students`);
+    const res = await apiFetch("/instructor/students");
     if (!res.ok) throw new Error("Erro ao carregar alunos");
     allStudents = await res.json();
     filteredStudents = allStudents;
@@ -679,7 +679,7 @@ window.closeStudentDetailModal = function () {
 
 async function loadStudentData(studentId) {
   try {
-    const res = await fetch(`${API_URL}/instructor/students/${studentId}`);
+    const res = await apiFetch(`/instructor/students/${studentId}`);
     if (!res.ok) throw new Error("Erro ao carregar aluno");
     const student = await res.json();
     document.getElementById("studentName").textContent =
@@ -699,8 +699,8 @@ async function loadStudentData(studentId) {
 
 async function loadStudentTrainings(studentId) {
   try {
-    const res = await fetch(
-      `${API_URL}/instructor/students/${studentId}/trainings`,
+    const res = await apiFetch(
+      `/instructor/students/${studentId}/trainings`,
     );
     if (!res.ok) {
       const errorData = await res.json();
@@ -721,7 +721,7 @@ async function loadStudentTrainings(studentId) {
 
 async function loadExercisesForTraining() {
   try {
-    const res = await fetch(`${API_URL}/instructor/exercises`);
+    const res = await apiFetch("/instructor/exercises");
     if (!res.ok) throw new Error("Erro ao carregar exercícios");
     allExercisesForTraining = await res.json();
     allExercisesForDetail = allExercisesForTraining; // Para uso no modal de detalhes
@@ -906,7 +906,7 @@ window.deleteTemplate = async (id) => {
     "Tem certeza que deseja excluir este exercício?",
     async () => {
       try {
-        const res = await fetch(`${API_URL}/instructor/exercises/${id}`, {
+        const res = await apiFetch(`/instructor/exercises/${id}`, {
           method: "DELETE",
         });
         if (res.ok) {
@@ -983,12 +983,12 @@ document
     };
 
     try {
-      const url = id
-        ? `${API_URL}/instructor/exercises/${id}`
-        : `${API_URL}/instructor/exercises`;
+      const endpoint = id
+        ? `/instructor/exercises/${id}`
+        : "/instructor/exercises";
       const method = id ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await apiFetch(endpoint, {
         method: method,
         headers: {
           "Content-Type": "application/json",
@@ -1015,7 +1015,7 @@ let allClasses = [];
 
 async function loadClasses() {
   try {
-    const res = await fetch(`${API_URL}/instructor/classes`);
+    const res = await apiFetch("/instructor/classes");
     myClasses = await res.json();
     allClasses = [...myClasses]; // Cópia para filtro
     renderClasses();
@@ -1078,8 +1078,8 @@ async function renderClasses() {
   const classesWithEnrollments = await Promise.all(
     myClasses.map(async (c) => {
       try {
-        const res = await fetch(
-          `${API_URL}/instructor/classes/${c.id}/participants`,
+        const res = await apiFetch(
+          `/instructor/classes/${c.id}/participants`,
         );
 
         if (!res.ok) {
@@ -1205,12 +1205,12 @@ document
     };
 
     try {
-      const url = id
-        ? `${API_URL}/instructor/classes/${id}`
-        : `${API_URL}/instructor/classes`;
+      const endpoint = id
+        ? `/instructor/classes/${id}`
+        : "/instructor/classes";
       const method = id ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await apiFetch(endpoint, {
         method: method,
         headers: {
           "Content-Type": "application/json",
@@ -1268,7 +1268,7 @@ window.cancelClassEdit = () => {
 window.deleteClass = async (id) => {
   showConfirmModal("Tem certeza que deseja cancelar esta aula?", async () => {
     try {
-      const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
+      const res = await apiFetch(`/instructor/classes/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -1311,8 +1311,8 @@ async function openClassDetailsModal(classId) {
 
   // Buscar alunos inscritos
   try {
-    const res = await fetch(
-      `${API_URL}/instructor/classes/${classId}/participants`,
+    const res = await apiFetch(
+      `/instructor/classes/${classId}/participants`,
     );
 
     if (!res.ok) {
@@ -1380,7 +1380,7 @@ document
     };
 
     try {
-      const res = await fetch(`${API_URL}/instructor/classes/${id}`, {
+      const res = await apiFetch(`/instructor/classes/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -1662,7 +1662,7 @@ window.openEditTrainingModal = async (trainingId) => {
     }
 
     // Carregar detalhes completos do treino (com exercícios e parâmetros)
-    const res = await fetch(`${API_URL}/instructor/trainings/${trainingId}`);
+    const res = await apiFetch(`/instructor/trainings/${trainingId}`);
     if (!res.ok) throw new Error("Erro ao carregar treino");
 
     const fullTraining = await res.json();
@@ -1717,8 +1717,8 @@ window.deleteTraining = async () => {
 
   showConfirmModal("Tem certeza que deseja deletar este treino?", async () => {
     try {
-      const res = await fetch(
-        `${API_URL}/instructor/trainings/${currentTrainingId}`,
+      const res = await apiFetch(
+        `/instructor/trainings/${currentTrainingId}`,
         {
           method: "DELETE",
         },
@@ -1759,8 +1759,8 @@ document
     try {
       if (isEditingTraining && currentTrainingId) {
         // Atualizar treino existente
-        const updateRes = await fetch(
-          `${API_URL}/instructor/trainings/${currentTrainingId}`,
+        const updateRes = await apiFetch(
+          `/instructor/trainings/${currentTrainingId}`,
           {
             method: "PUT",
             headers: {
@@ -1776,8 +1776,8 @@ document
         }
 
         // Exercícios atuais do treino
-        const currentRes = await fetch(
-          `${API_URL}/instructor/trainings/${currentTrainingId}`,
+        const currentRes = await apiFetch(
+          `/instructor/trainings/${currentTrainingId}`,
         );
         const currentTraining = await currentRes.json();
         const currentExerciseIds = currentTraining.exercises
@@ -1789,8 +1789,8 @@ document
         // Remover exercícios que não estão mais selecionados
         for (const exId of currentExerciseIds) {
           if (!newExerciseIds.includes(exId)) {
-            await fetch(
-              `${API_URL}/instructor/trainings/${currentTrainingId}/exercises/${exId}`,
+            await apiFetch(
+              `/instructor/trainings/${currentTrainingId}/exercises/${exId}`,
               {
                 method: "DELETE",
               },
@@ -1802,8 +1802,8 @@ document
         for (const sel of selectedExercises) {
           const exists = currentExerciseIds.includes(sel.exerciseId);
           if (!exists) {
-            await fetch(
-              `${API_URL}/instructor/trainings/${currentTrainingId}/exercises`,
+            await apiFetch(
+              `/instructor/trainings/${currentTrainingId}/exercises`,
               {
                 method: "POST",
                 headers: {
@@ -1815,8 +1815,8 @@ document
           }
 
           // Atualizar parâmetros do exercício no treino
-          await fetch(
-            `${API_URL}/instructor/trainings/${currentTrainingId}/exercises/${sel.exerciseId}`,
+          await apiFetch(
+            `/instructor/trainings/${currentTrainingId}/exercises/${sel.exerciseId}`,
             {
               method: "PUT",
               headers: {
@@ -1834,7 +1834,7 @@ document
         showStudentAlert("Treino atualizado com sucesso!");
       } else {
         // Criar novo treino
-        const createRes = await fetch(`${API_URL}/instructor/trainings`, {
+        const createRes = await apiFetch("/instructor/trainings", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1854,8 +1854,8 @@ document
 
         // Adicionar exercícios com parâmetros
         for (const sel of selectedExercises) {
-          await fetch(
-            `${API_URL}/instructor/trainings/${newTraining.id}/exercises`,
+          await apiFetch(
+            `/instructor/trainings/${newTraining.id}/exercises`,
             {
               method: "POST",
               headers: {
@@ -1865,8 +1865,8 @@ document
             },
           );
 
-          await fetch(
-            `${API_URL}/instructor/trainings/${newTraining.id}/exercises/${sel.exerciseId}`,
+          await apiFetch(
+            `/instructor/trainings/${newTraining.id}/exercises/${sel.exerciseId}`,
             {
               method: "PUT",
               headers: {
