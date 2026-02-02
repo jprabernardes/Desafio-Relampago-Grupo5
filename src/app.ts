@@ -15,9 +15,11 @@ import { generalRateLimiter } from './middlewares/rateLimit.middleware';
 export const createApp = (): Application => {
   const app = express();
 
+
   // Configuração CORS
+  app.set('trust proxy', true);
   app.use(cors({
-    origin: true, 
+    origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -43,9 +45,16 @@ export const createApp = (): Application => {
     next();
   });
 
-  // Configuração de ambiente para o frontend (carregado via <script src="config.js">)
+  // IMPORTANTE: Configuração de ambiente para o frontend 
+  // Rota para nginx proxy (sem prefixo)
   app.get('/config.js', (req, res) => {
-    res.type('application/javascript').send(
+    res.type('application/javascript');
+    res.send(`window.__APP_CONFIG__ = ${JSON.stringify({ APP_BASE_PATH: config.appBasePath, API_BASE_URL: config.apiBaseUrl })};`);
+  });
+  // Esta rota DEVE vir ANTES do express.static para não ser sobrescrita
+  app.get(`${config.appBasePath}/config.js`, (req, res) => {
+    res.type('application/javascript');
+    res.send(
       `window.__APP_CONFIG__ = ${JSON.stringify({
         APP_BASE_PATH: config.appBasePath,
         API_BASE_URL: config.apiBaseUrl
@@ -54,14 +63,22 @@ export const createApp = (): Application => {
   });
 
   // Servir arquivos estáticos do frontend (pasta public)
-  app.use(express.static(path.join(__dirname, '../public')));
+  app.use(config.appBasePath, express.static(path.join(__dirname, '../public')));
 
   // Configuração das rotas da API
   app.use('/api', routes);
 
   // Rota de verificação de saúde (Health Check)
   app.get('/api/health', (req, res) => {
-    res.status(200).json({ status: 'OK', message: 'Sistema de Academia funcionando!' });
+    res.status(200).json({
+      status: 'OK',
+      message: 'Sistema de Academia funcionando!',
+      config: {
+        appBasePath: config.appBasePath,
+        apiBaseUrl: config.apiBaseUrl,
+        nodeEnv: config.nodeEnv
+      }
+    });
   });
 
   // Middleware global de tratamento de erros (Deve ser o último)

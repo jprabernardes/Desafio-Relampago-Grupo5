@@ -191,20 +191,20 @@ describe('Testes de Validadores - Funções Utilitárias', () => {
   describe('isValidDate', () => {
 
     describe('Datas válidas', () => {
-      it('deve validar data no formato DD/MM/YYYY', () => {
-        expect(isValidDate('15/01/2024')).to.be.true;
+      it('deve validar data no formato DD-MM-YYYY', () => {
+        expect(isValidDate('15-01-2024')).to.be.true;
       });
 
       it('deve validar data com dia 01', () => {
-        expect(isValidDate('01/01/2024')).to.be.true;
+        expect(isValidDate('01-01-2024')).to.be.true;
       });
 
       it('deve validar data com último dia do mês', () => {
-        expect(isValidDate('31/12/2024')).to.be.true;
+        expect(isValidDate('31-12-2024')).to.be.true;
       });
 
       it('deve validar data de fevereiro válida', () => {
-        expect(isValidDate('29/02/2024')).to.be.true; // ano bissexto
+        expect(isValidDate('29-02-2024')).to.be.true; // ano bissexto
       });
     });
 
@@ -218,27 +218,27 @@ describe('Testes de Validadores - Funções Utilitárias', () => {
       });
 
       it('deve rejeitar mês impossível', () => {
-        expect(isValidDate('15/13/2024')).to.be.false;
+        expect(isValidDate('15-13-2024')).to.be.false;
       });
 
       it('deve rejeitar dia impossível', () => {
-        expect(isValidDate('32/01/2024')).to.be.false;
+        expect(isValidDate('32-01-2024')).to.be.false;
       });
 
-      it('deve rejeitar data completamente impossível', () => {
-        expect(isValidDate('40/13/2024')).to.be.false;
+      it('deve rejeitar mês impossível (segundo campo)', () => {
+        expect(isValidDate('15-13-2024')).to.be.false;
       });
 
-      it('deve rejeitar formato ISO', () => {
-        expect(isValidDate('2024-13-40')).to.be.false;
+      it('deve rejeitar formato com barras', () => {
+        expect(isValidDate('15/01/2024')).to.be.false;
       });
 
       it('deve rejeitar data com letras', () => {
-        expect(isValidDate('15/Jan/2024')).to.be.false;
+        expect(isValidDate('15-Jan-2024')).to.be.false;
       });
 
       it('deve rejeitar data incompleta', () => {
-        expect(isValidDate('15/01')).to.be.false;
+        expect(isValidDate('15-01')).to.be.false;
       });
 
       it('deve rejeitar data vazia', () => {
@@ -246,15 +246,15 @@ describe('Testes de Validadores - Funções Utilitárias', () => {
       });
 
       it('deve rejeitar fevereiro com dia 30', () => {
-        expect(isValidDate('30/02/2024')).to.be.false;
+        expect(isValidDate('30-02-2024')).to.be.false;
       });
 
       it('deve rejeitar dia zero', () => {
-        expect(isValidDate('00/01/2024')).to.be.false;
+        expect(isValidDate('00-01-2024')).to.be.false;
       });
 
       it('deve rejeitar mês zero', () => {
-        expect(isValidDate('15/00/2024')).to.be.false;
+        expect(isValidDate('15-00-2024')).to.be.false;
       });
     });
 

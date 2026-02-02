@@ -208,7 +208,12 @@ async function seedClasses() {
   for (let i = 0; i < 7; i++) {
     const date = new Date(today);
     date.setDate(today.getDate() + i);
-    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // Converter para formato DD-MM-YYYY
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const dateStr = `${day}-${month}-${year}`; // DD-MM-YYYY
 
     // 1 aula por dia
     const type = classTypes[Math.floor(Math.random() * classTypes.length)];

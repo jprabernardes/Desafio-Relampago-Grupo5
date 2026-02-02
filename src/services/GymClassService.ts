@@ -46,7 +46,7 @@ export class GymClassService {
     const classes = await this.gymClassRepository.findAll();
     return await Promise.all(classes.map(async (cls: GymClass) => {
       const enrollmentCount = await this.enrollmentRepository.countByClassId(cls.id!);
-      
+
       return {
         id: cls.id,
         title: cls.name,
@@ -138,7 +138,7 @@ export class GymClassService {
     const students = await Promise.all(
       enrollments.map(e => this.userRepository.findById(e.student_id))
     );
-    
+
     return students.filter(s => s !== undefined).map(s => ({
       id: s!.id,
       name: s!.name,
@@ -176,7 +176,7 @@ export class GymClassService {
       if (enrollment.gym_class_id) {
         const cls = await this.gymClassRepository.findById(enrollment.gym_class_id);
         if (cls) {
-           classes.push({
+          classes.push({
             id: cls.id,
             title: cls.name,
             description: `Aula de ${cls.name} às ${cls.time}`,
@@ -184,7 +184,7 @@ export class GymClassService {
             location: 'Sala 1',
             max_participants: cls.slots_limit,
             instructor_id: cls.instructor_id
-           });
+          });
         }
       }
     }
