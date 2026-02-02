@@ -1,6 +1,38 @@
 const { resolveAppPath } = window.AppConfig;
 // ...
 
+// Função auxiliar para converter data DD-MM-YYYY, DD/MM/YYYY ou YYYY-MM-DD para objeto Date
+function parseDateBR(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return new Date();
+
+  // Se contém 'T' (formato datetime), extrair apenas a parte da data
+  if (dateStr.includes('T')) {
+    dateStr = dateStr.split('T')[0];
+  }
+
+  // Se for DD-MM-YYYY (formato backend atual)
+  if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split("-");
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+
+  // Se for DD/MM/YYYY (formato com barras)
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split("/");
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+
+  // Se for YYYY-MM-DD (formato ISO)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split("-");
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+
+  // Tentar parse padrão como fallback
+  const parsed = new Date(dateStr);
+  return isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
 // Lógica do Modal de Confirmação
 let pendingConfirmAction = null;
 
@@ -130,20 +162,19 @@ async function loadWorkouts() {
                   👤 <strong>Instrutor:</strong> ${workout.instructor_name || workout.instructor_id}
                 </p>
                 <div class="exercises-list">
-                  ${
-                    Array.isArray(workout.exercises)
-                      ? workout.exercises
-                          .map(
-                            (ex) => `
+                  ${Array.isArray(workout.exercises)
+            ? workout.exercises
+              .map(
+                (ex) => `
                       <div class="workout-exercise-item">
                         <strong>${ex.name}</strong><br>
                         ${ex.series}x${ex.repetitions} ${ex.weight ? `• ${ex.weight}KG` : ""}
                       </div>
                     `,
-                          )
-                          .join("")
-                      : `<pre>${workout.exercises}</pre>`
-                  }
+              )
+              .join("")
+            : `<pre>${workout.exercises}</pre>`
+          }
                 </div>
               </div>
               <div class="workout-actions">
@@ -243,11 +274,10 @@ async function printWorkout(workoutId) {
           <div class="workout-title">${workout.name.toUpperCase()}</div>
 
           <div class="section">
-            ${
-              Array.isArray(workout.exercises) && workout.exercises.length > 0
-                ? workout.exercises
-                    .map(
-                      (ex) => `
+            ${Array.isArray(workout.exercises) && workout.exercises.length > 0
+        ? workout.exercises
+          .map(
+            (ex) => `
               <div class="exercise-item">
                 <span class="ex-header">${ex.name}</span>
                 <div class="ex-details">
@@ -255,10 +285,10 @@ async function printWorkout(workoutId) {
                 </div>
               </div>
             `,
-                    )
-                    .join("")
-                : '<div class="text-center">Sem exercícios cadastrados.</div>'
-            }
+          )
+          .join("")
+        : '<div class="text-center">Sem exercícios cadastrados.</div>'
+      }
           </div>
 
           <div class="footer">
@@ -333,11 +363,13 @@ function renderAvailableClasses() {
         statusClass = "status-available";
       }
 
-      const date = new Date(cls.date);
-      const timeStr = date.toLocaleTimeString("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      const date = parseDateBR(cls.date);
+      // Extrair horário da string original se contiver 'T'
+      let timeStr = "--:--";
+      if (cls.date && cls.date.includes('T')) {
+        const timePart = cls.date.split('T')[1];
+        timeStr = timePart ? timePart.substring(0, 5) : "--:--";
+      }
       const dateStr = date.toLocaleDateString("pt-BR");
 
       return `
@@ -361,11 +393,13 @@ function openClassModal(classId) {
 
   const isInscrito = myEnrollmentIds.includes(cls.id);
   const isFull = cls.current_participants >= cls.max_participants;
-  const date = new Date(cls.date);
-  const timeStr = date.toLocaleTimeString("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const date = parseDateBR(cls.date);
+  // Extrair horário da string original se contiver 'T'
+  let timeStr = "--:--";
+  if (cls.date && cls.date.includes('T')) {
+    const timePart = cls.date.split('T')[1];
+    timeStr = timePart ? timePart.substring(0, 5) : "--:--";
+  }
   const dateStr = date.toLocaleDateString("pt-BR");
 
   document.getElementById("modalClassTitle").textContent = cls.title;
@@ -472,12 +506,14 @@ async function loadMyClasses() {
 
     container.innerHTML = classes
       .map((cls) => {
-        const date = new Date(cls.date);
+        const date = parseDateBR(cls.date);
         const isPast = date < new Date();
-        const timeStr = date.toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        // Extrair horário da string original se contiver 'T'
+        let timeStr = "--:--";
+        if (cls.date && cls.date.includes('T')) {
+          const timePart = cls.date.split('T')[1];
+          timeStr = timePart ? timePart.substring(0, 5) : "--:--";
+        }
         const dateStr = date.toLocaleDateString("pt-BR");
 
         let statusLabel = isPast
@@ -602,13 +638,10 @@ async function loadHistoryData() {
     if (response.ok) {
       const myClasses = await response.json();
       classHistory = myClasses.map((cls) => ({
-        date: new Date(cls.date),
+        date: parseDateBR(cls.date),
         type: "class",
         title: cls.title,
-        time: new Date(cls.date).toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        time: cls.date && cls.date.includes('T') ? cls.date.split('T')[1].substring(0, 5) : "--:--",
       }));
     } else {
       console.warn("Não foi possível carregar histórico de aulas");

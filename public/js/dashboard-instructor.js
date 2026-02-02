@@ -1026,28 +1026,56 @@ async function loadClasses() {
 
 // Formatar data para dd/mm/yyyy
 function formatDateBR(dateStr) {
-  const [year, month, day] = dateStr.split("-");
-  return `${day}/${month}/${year}`;
+  if (!dateStr) return "";
+
+  // Se contém 'T' (formato datetime), extrair apenas a parte da data
+  if (dateStr.includes('T')) {
+    dateStr = dateStr.split('T')[0];
+  }
+
+  // Se for YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split("-");
+    return `${day}/${month}/${year}`;
+  }
+
+  // Se for DD-MM-YYYY (padrão backend atual), apenas troca hífens por barras
+  if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+    return dateStr.replace(/-/g, "/");
+  }
+
+  return dateStr;
 }
 
 // Converte data do input HTML (YYYY-MM-DD) para formato backend (DD-MM-YYYY)
 function convertDateForBackend(dateStr) {
   if (!dateStr) return "";
-  console.log("convertDateForBackend - INPUT:", dateStr);
-  const [year, month, day] = dateStr.split("-");
-  const result = `${day}-${month}-${year}`;
-  console.log("convertDateForBackend - OUTPUT:", result);
-  return result;
+
+  // Se vier no formato YYYY-MM-DD (input date)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split("-");
+    return `${day}-${month}-${year}`;
+  }
+
+  return dateStr;
 }
 
 // Converte data do backend (DD-MM-YYYY) para input HTML (YYYY-MM-DD)
 function convertDateFromBackend(dateStr) {
   if (!dateStr) return "";
-  console.log("convertDateFromBackend - INPUT:", dateStr);
-  const [day, month, year] = dateStr.split("-");
-  const result = `${year}-${month}-${day}`;
-  console.log("convertDateFromBackend - OUTPUT:", result);
-  return result;
+
+  // Se for DD-MM-YYYY (padrão backend)
+  if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split("-");
+    return `${year}-${month}-${day}`;
+  }
+
+  // Se já estiver em YYYY-MM-DD (caso algum dado tenha passado)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return dateStr;
+  }
+
+  return dateStr;
 }
 
 // CORREÇÃO: Função de filtro de aulas
@@ -1242,7 +1270,7 @@ window.editClass = (id) => {
   // Populate Create Tab
   document.getElementById("classId").value = c.id;
   document.getElementById("className").value = c.name || c.nome_aula;
-  document.getElementById("classDate").value = c.date || c.data;
+  document.getElementById("classDate").value = convertDateFromBackend(c.date || c.data);
   document.getElementById("classTime").value = c.time || c.hora;
   document.getElementById("classLimit").value = c.slots_limit || c.limite_vagas;
 

@@ -66,7 +66,7 @@ export const isValidCPF = (cpf: string): boolean => {
 
   // Verifica se todos os caracteres são dígitos
   const isOnlyDigits = /^\d{11}$/.test(cleanCPF);
-  
+
   return isOnlyDigits;
 };
 
