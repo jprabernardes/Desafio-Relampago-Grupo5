@@ -240,10 +240,11 @@ export class GymClassService {
       throw new Error('Aula não encontrada.');
     }
 
-    // Instrutores só podem ver alunos de suas próprias aulas
-    if (role === 'instrutor' && classData.instructor_id !== instructorId) {
-      throw new Error('Você só pode ver alunos de suas próprias aulas.');
-    }
+    // Instrutores, recepcionistas e administradores podem ver alunos de qualquer aula.
+    // O controle "editar/deletar" já é feito nas rotas de update/delete.
+    // if (role === 'instrutor' && classData.instructor_id !== instructorId) {
+    //   throw new Error('Você só pode ver alunos de suas próprias aulas.');
+    // }
 
     const enrollments = await this.enrollmentRepository.findByClassId(classId);
     const students = await Promise.all(

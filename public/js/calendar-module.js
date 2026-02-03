@@ -543,8 +543,16 @@ window.CalendarModule = (function () {
                   </div>
                 `).join("");
                     }
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    if (res.status === 403) {
+                        studentsList.innerHTML = '<p class="text-gray-italic">Você não tem permissão para ver os alunos desta aula.</p>';
+                    } else {
+                        studentsList.innerHTML = `<p class="text-error">Erro: ${err.error || "Erro ao carregar"}</p>`;
+                    }
                 }
             } catch (e) {
+                console.error(e);
                 studentsList.innerHTML = '<p class="text-error">Erro ao carregar alunos.</p>';
             }
         }

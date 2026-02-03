@@ -1185,3 +1185,35 @@ tbody tr:hover {
   color: #666;
   font-size: 0.85rem;
 }
+
+/* Shared styles for student list items in calendar modal */
+.student-list-item {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.student-avatar-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+}
+
+.student-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.student-email {
+  font-size: 0.875rem;
+  color: #666;
+}
+
