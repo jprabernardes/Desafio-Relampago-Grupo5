@@ -50,7 +50,7 @@ export const seedDefaultUsers = async (): Promise<void> => {
   return new Promise(async (resolve, reject) => {
     try {
       // Default users list
-      const alunoPlanType = process.env.SEED_ALUNO_PLAN_TYPE as 'mensal' | 'trimestral' | 'semestral' | 'anual';
+      const alunoPlanType = process.env.SEED_ALUNO_PLAN_TYPE as 'Fit' | 'Fit Pro' | 'Fit Diamond';
       const defaultUsers = [
         {
           name: process.env.SEED_ADMIN_NAME!,
@@ -78,13 +78,8 @@ export const seedDefaultUsers = async (): Promise<void> => {
           email: process.env.SEED_ALUNO_EMAIL!,
           password: process.env.SEED_ALUNO_PASSWORD!,
           role: 'aluno',
-<<<<<<< HEAD
-          document: '33333333333',
-          planType: 'fit' as const,
-=======
           document: process.env.SEED_ALUNO_DOCUMENT!,
           planType: alunoPlanType,
->>>>>>> main
         },
       ];
 
@@ -102,13 +97,7 @@ export const seedDefaultUsers = async (): Promise<void> => {
                 rej(err);
               } else {
                 if (this.changes > 0) {
-<<<<<<< HEAD
-                  console.log(
-                    `✅ Usuário ${user.role} criado (email: ${user.email}, senha: ${user.password})`
-                  );
-=======
                   console.log(`✅ Usuário ${user.role} criado (email: ${user.email})`);
->>>>>>> main
                   res(this.lastID);
                 } else {
                   console.log(`ℹ️  Usuário ${user.role} já existe (email: ${user.email})`);
@@ -411,43 +400,6 @@ async function seedHistoryCheckIns() {
       ? userTrainings[Math.floor(Math.random() * userTrainings.length)].id
       : undefined;
 
-<<<<<<< HEAD
-    // Forçar João a ter alta frequência
-    if (student.email === 'joao@academia.com') {
-      frequency = 6; // Quase todos os dias
-    }
-
-    const userTrainings = await trainingRepository.findByUserId(student.id);
-
-    // Iterar últimos 30 dias
-    for (let d = 30; d >= 0; d--) {
-      if (Math.random() > (frequency / 7)) continue;
-
-      const date = new Date(today);
-      date.setDate(today.getDate() - d);
-
-      const dateStr = date.toISOString().split('T')[0];
-      const timeStr = `${10 + Math.floor(Math.random() * 10)}:${Math.floor(Math.random() * 60)
-        .toString()
-        .padStart(2, '0')}`; // entre 10h e 20h
-      const fullDate = `${dateStr}T${timeStr}:00Z`;
-
-      const trainingId =
-        userTrainings.length > 0
-          ? userTrainings[Math.floor(Math.random() * userTrainings.length)].id
-          : undefined;
-
-      try {
-        await checkInRepository.create({
-          student_id: student.id,
-          training_id: trainingId,
-          checkin_at: fullDate
-        });
-        checkInCount++;
-      } catch (e) {
-        // Ignore
-      }
-=======
     try {
       await checkInRepository.create({
         student_id: student.id,
@@ -457,7 +409,6 @@ async function seedHistoryCheckIns() {
       checkInCount++;
     } catch (e) {
       // Ignore
->>>>>>> main
     }
   }
   console.log(`  ✓ ${checkInCount} check-ins históricos criados.`);
@@ -477,13 +428,6 @@ export async function runSeed() {
     console.log('\n--- 1. Criando Usuários Padrão Essenciais ---');
     await seedDefaultUsers();
 
-<<<<<<< HEAD
-    // 1.1) Criar exercícios padrão
-    console.log('\n--- 1.1. Criando Exercícios Padrão ---');
-    await seedDefaultExercises();
-
-=======
->>>>>>> main
     // Verificar quantos usuários já existem
     try {
       const existingUsers = await userService.findAll();
@@ -492,68 +436,7 @@ export async function runSeed() {
       console.log('Não foi possível verificar usuários existentes');
     }
 
-<<<<<<< HEAD
-    // 2) Busca usuários aleatórios da API
-    console.log('\nBuscando nomes e emails reais da API...');
-
-    // Se já tiver muitos usuários (>10), assume que users já foram seedados e pula essa parte pesada
-    const usersCount = (await userService.findAll()).length;
-    if (usersCount < 10) {
-      try {
-        const response = await axios.get('https://randomuser.me/api/?results=300&nat=br');
-        const randomUsers = response.data.results;
-        console.log(`✓ ${randomUsers.length} nomes obtidos com sucesso!\n`);
-
-        const roles = ['aluno', 'recepcionista', 'instrutor'];
-        let userIndex = 0;
-
-        for (const role of roles) {
-          console.log(`\nCriando 100 usuários do tipo: ${role}...`);
-          let successCount = 0;
-
-          for (let i = 0; i < 100; i++) {
-            const userData = randomUsers[userIndex];
-            if (!userData) break;
-
-            const firstName = userData.name.first;
-            const lastName = userData.name.last;
-            const fakeDocument = (userIndex + 10000000000).toString();
-
-            try {
-              const newUser = {
-                name: `${firstName} ${lastName}`,
-                email: createValidEmail(firstName, lastName, userIndex),
-                password: 'senha123',
-                document: fakeDocument,
-                role: role as any,
-              };
-
-              await userService.create(
-                newUser,
-                'administrador',
-                role === 'aluno' ? 'fit' : undefined
-              );
-              successCount++;
-            } catch (err: any) {
-              // Pula erros silenciosamente no seed massivo
-              // Se quiser debugar alunos, descomenta abaixo:
-              // if (role === 'aluno' && i < 3) console.error('ERRO ALUNO:', err?.message || err);
-            }
-            userIndex++;
-          }
-          console.log(`✓ ${role}: ${successCount} criados.`);
-        }
-      } catch (e) {
-        console.error('Erro ao buscar/criar usuários da API:', e);
-      }
-    } else {
-      console.log('  ! Usuários já populados, pulando criação massiva.');
-    }
-
-    // Etapas do seed (mantive as mesmas)
-=======
     // Novas etapas do Seed
->>>>>>> main
     await seedExercises();
     await seedClasses();
     await seedEnrollments();
