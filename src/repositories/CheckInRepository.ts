@@ -104,4 +104,21 @@ export class CheckInRepository {
       );
     });
   }
+
+  /**
+   * Lista check-ins recentes a partir de uma data (YYYY-MM-DD).
+   * Usado para estatísticas (ex: dia da semana mais movimentado).
+   */
+  findSinceDate(dateOnly: string): Promise<Array<{ student_id: number; checkin_at: string }>> {
+    return new Promise((resolve, reject) => {
+      db.all(
+        `SELECT student_id, checkin_at FROM checkins WHERE substr(checkin_at, 1, 10) >= ?`,
+        [dateOnly],
+        (err, rows: any[]) => {
+          if (err) reject(err);
+          else resolve((rows || []) as Array<{ student_id: number; checkin_at: string }>);
+        }
+      );
+    });
+  }
 }
