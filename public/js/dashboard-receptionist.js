@@ -5,6 +5,11 @@ let allUsers = [];
 let filteredUsers = [];
 let paginator = null;
 
+// Weekday chart UI state
+// Mantemos apenas a versão em colunas (vertical)
+let weekdayChartMode = 'vertical';
+const weekdayChartCache = {};
+
 const { resolveAppPath } = window.AppConfig;
 
 async function loadUserInfo() {
@@ -83,12 +88,14 @@ async function loadTab(tab) {
     document.getElementById("homeView").classList.remove("hidden");
     document.getElementById("tableTitle").textContent = "Visão Geral";
     await loadHomeMetrics();
+    await loadWeekdayChart("weekdayChartHome", 30);
   } else if (tab === "students") {
     document.getElementById("navAlunos").classList.add("active");
     document.querySelector(".table-container").style.display = "block";
     document.getElementById("tableTitle").textContent = "Gerenciar Alunos";
 
     document.getElementById("searchInput").classList.remove("hidden");
+    document.getElementById("searchInput").placeholder = "Pesquisar...";
     document.getElementById("searchInput").value = "";
     document.getElementById("addBtn").classList.remove("hidden");
     document.getElementById("addBtn").textContent = "+ Adicionar Aluno";
@@ -103,6 +110,7 @@ async function loadTab(tab) {
     document.getElementById("tableTitle").textContent = "Gerenciar Instrutores";
 
     document.getElementById("searchInput").classList.remove("hidden");
+    document.getElementById("searchInput").placeholder = "Pesquisar...";
     document.getElementById("searchInput").value = "";
     document.getElementById("addBtn").classList.remove("hidden");
     document.getElementById("addBtn").textContent = "+ Adicionar Instrutor";
@@ -118,7 +126,7 @@ async function loadTab(tab) {
     document.getElementById("tableTitle").textContent = "Financeiro";
 
     document.getElementById("searchInput").classList.remove("hidden");
-    document.getElementById("searchInput").placeholder = "Buscar aluno por nome, email ou CPF...";
+    document.getElementById("searchInput").placeholder = "Buscar aluno";
     document.getElementById("searchInput").value = "";
 
     document.getElementById("usersTable").innerHTML =
@@ -163,6 +171,112 @@ async function loadHomeMetrics() {
   } catch (err) {
     console.error("Erro ao carregar métricas:", err);
   }
+}
+
+async function loadWeekdayChart(containerId, days) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  // Loading state
+  el.innerHTML = '<div class="weekday-empty">Carregando gráfico...</div>';
+
+  try {
+    const res = await apiFetch(`/receptionist/checkins/weekday?days=${Number(days || 30)}`);
+    if (!res.ok) throw new Error('Erro ao buscar estatísticas de check-in');
+    const json = await res.json();
+
+    const data = json.data || [];
+    weekdayChartCache[containerId] = data;
+    renderWeekdayChart(el, data, weekdayChartMode);
+    updateWeekdayChartControls();
+  } catch (err) {
+    el.innerHTML = `<div class="weekday-empty">Não foi possível carregar o gráfico.</div>`;
+  }
+}
+
+function setWeekdayChartMode(mode) {
+  weekdayChartMode = mode || 'horizontal';
+  updateWeekdayChartControls();
+
+  const containerId = 'weekdayChartHome';
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  const data = weekdayChartCache[containerId];
+  if (!data) return;
+
+  renderWeekdayChart(el, data, weekdayChartMode);
+}
+
+function updateWeekdayChartControls() {
+  const controls = document.getElementById('weekdayChartControls');
+  if (!controls) return;
+
+  controls.querySelectorAll('button[data-mode]')
+    .forEach((btn) => {
+      const mode = btn.getAttribute('data-mode');
+      if (mode === weekdayChartMode) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+}
+
+function renderWeekdayChart(containerEl, data, mode = 'horizontal') {
+  if (!Array.isArray(data) || data.length === 0) {
+    containerEl.classList.remove('weekday-chart--thick', 'weekday-chart--vertical');
+    containerEl.innerHTML = '<div class="weekday-empty">Sem dados de check-ins.</div>';
+    return;
+  }
+
+  // Usar volume de check-ins para evidenciar diferença entre dias.
+  // Alunos únicos continuam disponíveis via tooltip.
+  const max = Math.max(...data.map((d) => Number(d.checkinCount || 0)), 1);
+
+  containerEl.classList.remove('weekday-chart--thick', 'weekday-chart--vertical');
+
+  if (mode === 'vertical') {
+    containerEl.classList.add('weekday-chart--vertical');
+
+    containerEl.innerHTML = data
+      .map((d) => {
+        const checkins = Number(d.checkinCount || 0);
+        const students = Number(d.studentCount || 0);
+        const pct = Math.round((checkins / max) * 100);
+
+        return `
+          <div class="weekday-col" title="${students} alunos únicos / ${checkins} check-ins">
+            <div class="weekday-col-count">${checkins}</div>
+            <div class="weekday-col-bar">
+              <div class="weekday-col-fill" style="height: ${pct}%;"></div>
+            </div>
+            <div class="weekday-col-label">${d.label}</div>
+          </div>
+        `;
+      })
+      .join('');
+
+    return;
+  }
+
+  if (mode === 'horizontalThick') {
+    containerEl.classList.add('weekday-chart--thick');
+  }
+
+  containerEl.innerHTML = data
+    .map((d) => {
+      const checkins = Number(d.checkinCount || 0);
+      const students = Number(d.studentCount || 0);
+      const pct = Math.round((checkins / max) * 100);
+      return `
+        <div class="weekday-row" title="${students} alunos únicos / ${checkins} check-ins">
+          <div class="weekday-label">${d.label}</div>
+          <div class="weekday-bar">
+            <div class="weekday-bar-fill" style="width: ${pct}%;"></div>
+          </div>
+          <div class="weekday-count">${checkins}</div>
+        </div>
+      `;
+    })
+    .join('');
 }
 
 function updateTableHeaders(type) {

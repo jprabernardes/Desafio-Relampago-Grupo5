@@ -245,6 +245,139 @@ body {
   margin-bottom: 2rem;
 }
 
+.metric-card-full {
+  grid-column: 1 / -1;
+}
+
+.weekday-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.weekday-control-btn {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: var(--text-gray);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.35rem 0.6rem;
+  border-radius: 9999px;
+  cursor: pointer;
+}
+
+.weekday-control-btn.active {
+  border-color: #93c5fd;
+  background: rgba(59, 130, 246, 0.08);
+  color: #2563eb;
+}
+
+.weekday-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.weekday-chart--thick .weekday-bar {
+  height: 16px;
+}
+
+.weekday-chart--thick .weekday-row {
+  grid-template-columns: 42px 1fr 56px;
+}
+
+.weekday-chart--vertical {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.weekday-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.weekday-col-count {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  line-height: 1;
+}
+
+.weekday-col-bar {
+  width: 100%;
+  height: 120px;
+  border-radius: 12px;
+  background: #eef2ff;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: flex-end;
+}
+
+.weekday-col-fill {
+  width: 100%;
+  height: 0;
+  background: linear-gradient(180deg, #22c55e, #0ea5e9);
+  transition: height 300ms ease;
+}
+
+.weekday-col-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-gray);
+  text-transform: uppercase;
+}
+
+.weekday-row {
+  display: grid;
+  grid-template-columns: 42px 1fr 44px;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.weekday-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-gray);
+  text-transform: uppercase;
+}
+
+.weekday-bar {
+  height: 10px;
+  border-radius: 9999px;
+  background: #eef2ff;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.weekday-bar-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #0ea5e9, #22c55e);
+  transition: width 300ms ease;
+}
+
+.weekday-count {
+  text-align: right;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.weekday-empty {
+  font-size: 0.875rem;
+  color: var(--text-gray);
+  padding: 0.75rem 0;
+}
+
 .metric-card {
   background: white;
   border-radius: 12px;
