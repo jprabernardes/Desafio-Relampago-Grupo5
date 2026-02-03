@@ -158,7 +158,7 @@ export class GymClassService {
         max_participants: cls.slots_limit,
         current_participants: enrollmentCount,
         instructor_id: cls.instructor_id,
-        instructor_name: instructor ? (instructor.name || instructor.nome) : "Desconhecido"
+        instructor_name: instructor ? instructor.name : "Desconhecido"
       };
     }));
   }

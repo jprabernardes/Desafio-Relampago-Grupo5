@@ -339,74 +339,169 @@ async function loadAvailableClasses() {
   }
 }
 
+// Keep track of active category across re-renders
+let currentActiveCategoryName = null;
+
+// Função para renderizar as categorias de aulas
 function renderAvailableClasses() {
-  const container = document.getElementById("classesList");
-  
+  const categoriesContainer = document.getElementById("classCategoriesContainer");
+  const sessionsContainer = document.getElementById("classSessionsContainer");
+  const sessionsTitle = document.getElementById("sessionsTitle");
+
+  // Limpar containers
+  categoriesContainer.innerHTML = "";
+  // IMPORTANT: Do *not* clear sessionsContainer yet if we are going to restore state
+  // But we need to rebuild categories anyway.
+
   // Filtrar aulas: do dia atual até os próximos 15 dias
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Zerar horas para comparação apenas de data
-  
+  today.setHours(0, 0, 0, 0);
+
   const maxDate = new Date(today);
-  maxDate.setDate(today.getDate() + 15); // 15 dias a partir de hoje
-  
+  maxDate.setDate(today.getDate() + 15);
+
   const filteredClasses = allAvailableClasses.filter((cls) => {
     try {
       const classDate = parseDateBR(cls.date);
-      classDate.setHours(0, 0, 0, 0); // Zerar horas para comparação apenas de data
-      
-      // Incluir apenas aulas de hoje em diante até 15 dias
+      classDate.setHours(0, 0, 0, 0);
       return classDate >= today && classDate <= maxDate;
     } catch (e) {
       console.warn("Erro ao processar data da aula:", cls, e);
       return false;
     }
   });
-  
+
   if (filteredClasses.length === 0) {
-    container.innerHTML = "<p>Nenhuma aula disponível nos próximos 15 dias.</p>";
+    categoriesContainer.innerHTML = "<p>Nenhuma aula disponível nos próximos 15 dias.</p>";
     return;
   }
 
-  container.innerHTML = filteredClasses
-    .map((cls) => {
-      const isInscrito = myEnrollmentIds.includes(cls.id);
-      const isFull = cls.current_participants >= cls.max_participants;
+  // Agrupar por nome (Case Insensitive)
+  // Agrupar por nome (Case Insensitive) e Forçar Capitalização no Display
+  const grouped = {};
+  filteredClasses.forEach(cls => {
+    const rawName = (cls.title || cls.name || "Aula").trim();
+    const key = rawName.toLowerCase();
 
-      let statusText = "";
-      let statusClass = "";
+    if (!grouped[key]) {
+      // Formatar nome para exibição: Primeira letra maiúscula, resto como está na chave (minúsculo)
+      // Isso unifica "Yoga", "yoga", "YOGA" em "Yoga"
+      const displayName = key.charAt(0).toUpperCase() + key.slice(1);
 
-      if (isInscrito) {
-        statusText = "Inscrito";
-        statusClass = "status-enrolled";
-      } else if (isFull) {
-        statusText = "Sem vagas";
-        statusClass = "status-full";
-      } else {
-        statusText = `${cls.current_participants || 0} / ${cls.max_participants}`;
-        statusClass = "status-available";
-      }
+      grouped[key] = {
+        name: displayName,
+        key: key,
+        classes: []
+      };
+    }
+    grouped[key].classes.push(cls);
+  });
 
-      const date = parseDateBR(cls.date);
-      // Extrair horário da string original se contiver 'T'
-      let timeStr = "--:--";
-      if (cls.date && cls.date.includes('T')) {
-        const timePart = cls.date.split('T')[1];
-        timeStr = timePart ? timePart.substring(0, 5) : "--:--";
-      }
-      const dateStr = date.toLocaleDateString("pt-BR");
+  // Renderizar Cards de Categoria
+  Object.values(grouped).forEach(group => {
+    const card = document.createElement("div");
+    card.className = "category-card";
 
-      return `
+    // Restore active state if matches
+    if (currentActiveCategoryName === group.name) {
+      card.classList.add("active");
+    }
+
+    card.innerHTML = `
+      <div class="category-name">${group.name}</div>
+      <div class="category-count">${group.classes.length} sessões</div>
+    `;
+
+    card.onclick = () => {
+      // Update state
+      currentActiveCategoryName = group.name;
+
+      // Remover active de todos
+      document.querySelectorAll(".category-card").forEach(c => c.classList.remove("active"));
+      // Ativar atual
+      card.classList.add("active");
+
+      renderClassSessions(group.classes);
+    };
+
+    categoriesContainer.appendChild(card);
+  });
+
+  // If we have an active category in state, re-render its sessions
+  if (currentActiveCategoryName) {
+    const key = currentActiveCategoryName.toLowerCase();
+    if (grouped[key]) {
+      // If the category still exists (has classes)
+      renderClassSessions(grouped[key].classes);
+    } else {
+      // Reset if category no longer has classes
+      currentActiveCategoryName = null;
+      sessionsContainer.innerHTML = "";
+      sessionsTitle.style.display = "none";
+    }
+  } else {
+    // Ensure cleared if no active category
+    sessionsContainer.innerHTML = "";
+    sessionsTitle.style.display = "none";
+  }
+}
+
+// Renderizar as sessões específicas de uma categoria selecionada
+function renderClassSessions(classesList) {
+  const container = document.getElementById("classSessionsContainer");
+  const title = document.getElementById("sessionsTitle");
+
+  title.style.display = "block";
+  container.innerHTML = "";
+
+  // Ordenar por data
+  classesList.sort((a, b) => {
+    const da = parseDateBR(a.date);
+    const db = parseDateBR(b.date);
+    return da - db;
+  });
+
+  container.innerHTML = classesList.map((cls) => {
+    const isInscrito = myEnrollmentIds.includes(cls.id);
+    const isFull = cls.current_participants >= cls.max_participants;
+
+    let statusText = "";
+    let statusClass = "";
+
+    if (isInscrito) {
+      statusText = "Inscrito";
+      statusClass = "status-enrolled";
+    } else if (isFull) {
+      statusText = "Sem vagas";
+      statusClass = "status-full";
+    } else {
+      statusText = `${cls.current_participants || 0} / ${cls.max_participants}`;
+      statusClass = "status-available";
+    }
+
+    const date = parseDateBR(cls.date);
+    let timeStr = "--:--";
+    if (cls.date && cls.date.includes('T')) {
+      const timePart = cls.date.split('T')[1];
+      timeStr = timePart ? timePart.substring(0, 5) : "--:--";
+    }
+    const dateStr = date.toLocaleDateString("pt-BR");
+
+    return `
             <div class="class-card class-card-clickable" onclick="openClassModal(${cls.id})">
               <div>
                 <h3 class="card-title">${cls.title}</h3>
                 <p class="card-location">📍 ${cls.location || "Sala Principal"}</p>
                 <p class="card-date">📅 ${dateStr} • ⏰ ${timeStr}</p>
+                <p class="card-subtitle" style="margin-top:0.5rem; font-size:0.8rem;">👤 ${cls.instructor_name || "Instrutor"}</p>
               </div>
               <span class="class-status ${statusClass}">${statusText}</span>
             </div>
           `;
-    })
-    .join("");
+  }).join("");
+
+  // Scroll suave até a sessão
+  title.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // Modal de Detalhes da Aula
@@ -832,7 +927,7 @@ function openStudentInfoModal() {
   document.getElementById("studentInfoEmail").textContent = currentUserData.email || "-";
   document.getElementById("studentInfoPhone").textContent = currentUserData.phone || "-";
   document.getElementById("studentInfoCpf").textContent = currentUserData.document || "-";
-  
+
   // Formatar tipo de plano
   const planType = currentUserData.planType || currentUserData.plan_type || "mensal";
   const planTypeMap = {
@@ -845,7 +940,7 @@ function openStudentInfoModal() {
 
   // Ocultar formulário de mudança de senha se estiver visível
   document.getElementById("changePasswordSection").style.display = "none";
-  
+
   // Limpar mensagens e campos
   document.getElementById("passwordMessage").textContent = "";
   document.getElementById("currentPassword").value = "";
