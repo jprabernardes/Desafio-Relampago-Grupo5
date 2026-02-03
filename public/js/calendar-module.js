@@ -330,6 +330,7 @@ window.CalendarModule = (function () {
 
         if (selectedDayForCreation) {
             document.getElementById("recurringStartDate").value = formatDateForInput(selectedDayForCreation);
+            document.getElementById("recurringEndDate").value = formatDateForInput(selectedDayForCreation);
         }
 
         document.getElementById("recurringPreview").innerHTML = "";

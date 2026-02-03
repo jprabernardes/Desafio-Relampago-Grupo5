@@ -808,3 +808,72 @@ td {
   z-index: 9999 !important;
 }
 
+
+/* Enhanced Calendar Hover Effects */
+.calendar-day:hover {
+  border-color: #667eea !important;
+  background-color: #f8f9fa !important;
+}
+
+.calendar-day:has(.class-indicator:hover) {
+  background-color: white !important;
+  border-color: #e2e8f0 !important;
+}
+
+.calendar-day:not(:has(.class-indicator:hover)):hover::after {
+  content: '+';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 1.2rem;
+  color: #667eea;
+  line-height: 1;
+  font-weight: bold;
+}
+
+.class-indicator:hover {
+  transform: scale(1.02) !important;
+  z-index: 10 !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+  filter: brightness(0.95);
+  cursor: pointer !important;
+}
+
+
+/* Improved Hover effects */
+.day-classes {
+  overflow: visible !important;
+}
+
+.class-indicator:hover {
+  transform: scale(1.05) !important;
+  z-index: 50 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+  filter: brightness(1.0) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
+.class-indicator.own-class:hover {
+  border-color: #434190 !important;
+  background-color: #ebf4ff !important;
+}
+
+.class-indicator.other-class:hover {
+  border-color: #9b2c2c !important;
+  background-color: #fff5f5 !important;
+}
+
+
+/* Green Today Indicator */
+.calendar-day.today {
+  background-color: #f0fff4 !important;
+  border-color: #38a169 !important;
+  border-width: 2px !important;
+}
+
+.calendar-day.today:hover {
+  background-color: #f8f9fa !important;
+  border-color: #667eea !important;
+}
+
