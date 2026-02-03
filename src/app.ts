@@ -25,9 +25,6 @@ export const createApp = (): Application => {
     allowedHeaders: ['Content-Type', 'Authorization'],
   }));
 
-  // Rate limiting global para todas as rotas da API
-  app.use('/api', generalRateLimiter);
-
   // Middleware para lidar com cookies
   app.use(cookieParser());
 
@@ -66,16 +63,24 @@ export const createApp = (): Application => {
   app.use(config.appBasePath, express.static(path.join(__dirname, '../public')));
 
   // Configuração das rotas da API
-  app.use('/api', routes);
+  // Suporta tanto /api quanto /server10/api baseado no APP_BASE_PATH
+  const apiPath = `${config.appBasePath}/api`;
+  
+  // Rate limiting para a API com prefixo correto
+  app.use(apiPath, generalRateLimiter);
+  
+  // Rotas da API
+  app.use(apiPath, routes);
 
   // Rota de verificação de saúde (Health Check)
-  app.get('/api/health', (req, res) => {
+  app.get(`${apiPath}/health`, (req, res) => {
     res.status(200).json({
       status: 'OK',
       message: 'Sistema de Academia funcionando!',
       config: {
         appBasePath: config.appBasePath,
         apiBaseUrl: config.apiBaseUrl,
+        apiPath: apiPath,
         nodeEnv: config.nodeEnv
       }
     });
