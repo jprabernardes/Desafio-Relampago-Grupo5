@@ -359,7 +359,9 @@ body {
 /* Grid Layout for Workouts and Classes */
 #workoutsList,
 #classesList,
-#myClassesList {
+#myClassesList,
+#classSessionsContainer,
+.cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
@@ -570,6 +572,7 @@ body {
   font-size: 0.9rem;
   color: #718096;
 }
+
 /* Refactored styles */
 .modal-location-icon {
   font-size: 1.2rem;
@@ -668,10 +671,10 @@ body {
 
 .openMenuButton span {
   display: block;
-  height: 4px;              
+  height: 4px;
   width: 100%;
-  background-color: #333;   
-  border-radius: 2px;       
+  background-color: #333;
+  border-radius: 2px;
 }
 
 @media (max-width: 768px) {
@@ -689,16 +692,20 @@ body {
     font-size: 0.7rem;
     aspect-ratio: auto;
   }
+
   .calendar-header {
     font-size: 12px;
     padding: 2px;
   }
+
   .day-number {
     font-size: 0.7rem;
   }
+
   .check-mark {
     font-size: 1rem;
   }
+
   .class-mark {
     font-size: 0.9rem;
   }
@@ -793,4 +800,64 @@ body {
   background: #d4edda;
   color: #155724;
   border: 1px solid #c3e6cb;
+}
+
+/* Class Categories */
+.categories-scroll {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.category-card {
+  height: 100px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+.category-card:hover {
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.category-card.active {
+  border-color: #667eea;
+  background: #ebf8ff;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.category-name {
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.category-count {
+  font-size: 0.75rem;
+  color: #718096;
+  margin-top: 0.25rem;
+}
+
+
+/* Force grid layout for sessions container */
+#classSessionsContainer {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  gap: 1.5rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }

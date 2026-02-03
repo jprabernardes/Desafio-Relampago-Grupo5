@@ -1,248 +1,247 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard - Aluno</title>
-    <script src="./config.js"></script>
-    <script src="./js/base-path.js"></script>
-    <link rel="stylesheet" href="./css/dashboard-student.css" />
-    <link rel="stylesheet" href="./css/common.css" />
-  </head>
 
-  <body class="closed-menu">
-    <div class="black-layer" onclick="openCloseMenu()"></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Aluno</title>
+  <script src="./config.js"></script>
+  <script src="./js/base-path.js"></script>
+  <link rel="stylesheet" href="./css/dashboard-student.css" />
+  <link rel="stylesheet" href="./css/common.css" />
+</head>
 
-    <div class="container">
-      <!-- Sidebar -->
-      <aside class="sidebar">
-        <div class="logo">💪 FitManager</div>
-        <nav>
-          <div class="nav-item active" data-section="workouts">
-            💪 Meus Treinos
-          </div>
-          <div class="nav-item" data-section="classes">
-            🏋️ Aulas Disponíveis
-          </div>
-          <div class="nav-item" data-section="my-classes">
-            📅 Minhas Inscrições
-          </div>
-          <div class="nav-item" data-section="calendar">🗓️ Calendário</div>
-        </nav>
-        <button class="logout-btn" onclick="logout()">🚪 Sair</button>
-      </aside>
+<body class="closed-menu">
+  <div class="black-layer" onclick="openCloseMenu()"></div>
 
-      <!-- Main Content -->
-      <main class="main-content">
-        <div class="header">
-          <button class="openMenuButton" onclick="openCloseMenu()">
-            <span></span><span></span><span></span>
-          </button>
-          <h1>Dashboard Aluno</h1>
-          <div class="user-info" onclick="openStudentInfoModal()">
-            <div class="user-avatar" id="userAvatar">A</div>
-            <span id="userName">Carregando...</span>
-          </div>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">💪 FitManager</div>
+      <nav>
+        <div class="nav-item active" data-section="workouts">
+          💪 Meus Treinos
         </div>
-
-        <!-- Alert -->
-        <div class="alert" id="alert"></div>
-
-        <!-- Workouts Section -->
-        <section class="section active" id="workouts">
-          <h2>Meus Treinos</h2>
-          <div id="workoutsList">
-            <p>Carregando...</p>
-          </div>
-        </section>
-
-        <!-- Available Classes Section -->
-        <section class="section" id="classes">
-          <h2>Aulas Disponíveis</h2>
-          <div id="classesList">
-            <p>Carregando...</p>
-          </div>
-        </section>
-
-        <!-- My Classes Section -->
-        <section class="section" id="my-classes">
-          <h2>Minhas Inscrições</h2>
-          <div id="myClassesList">
-            <p>Carregando...</p>
-          </div>
-        </section>
-
-        <!-- Calendar Section -->
-        <section class="section" id="calendar">
-          <h2>Calendário de Atividades</h2>
-
-          <div class="calendar-stats">
-            <div class="stat-card">
-              <h3>Check-ins</h3>
-              <span id="totalCheckins">0</span>
-            </div>
-            <div class="stat-card">
-              <h3>Aulas</h3>
-              <span id="totalClasses">0</span>
-            </div>
-          </div>
-
-          <div class="calendar-controls">
-            <button class="btn btn-secondary" onclick="changeMonth(-1)">
-              ❮ Anterior
-            </button>
-            <h3 id="currentMonthLabel"></h3>
-            <button class="btn btn-secondary" onclick="changeMonth(1)">
-              Próximo ❯
-            </button>
-          </div>
-
-          <div class="calendar-grid" id="calendarGrid">
-            <!-- Calendar will be populated by JS -->
-          </div>
-        </section>
-      </main>
-    </div>
-
-    <!-- Class Details Modal -->
-    <div class="modal" id="classDetailsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 id="modalClassTitle">Detalhes da Aula</h2>
+        <div class="nav-item" data-section="classes">
+          🏋️ Aulas Disponíveis
         </div>
-        <div id="modalClassBody">
-          <div class="modal-info-item">
-            <span class="modal-location-icon">📍</span>
-            <span id="modalClassInfo" class="modal-location-text"></span>
-          </div>
-          <div class="modal-section-wrapper">
-            <h4 class="modal-section-title">Descrição</h4>
-            <p id="modalClassDescription" class="modal-description-text"></p>
-          </div>
-          <div id="modalClassStatus" class="modal-status-container"></div>
+        <div class="nav-item" data-section="my-classes">
+          📅 Minhas Inscrições
         </div>
-        <div class="form-actions" id="modalClassActions">
-          <!-- Botão será inserido dinamicamente -->
+        <div class="nav-item" data-section="calendar">🗓️ Calendário</div>
+      </nav>
+      <button class="logout-btn" onclick="logout()">🚪 Sair</button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="header">
+        <button class="openMenuButton" onclick="openCloseMenu()">
+          <span></span><span></span><span></span>
+        </button>
+        <h1>Dashboard Aluno</h1>
+        <div class="user-info" onclick="openStudentInfoModal()">
+          <div class="user-avatar" id="userAvatar">A</div>
+          <span id="userName">Carregando...</span>
         </div>
       </div>
-    </div>
 
-    <div class="modal" id="calendarModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 id="calendarModalDate">Detalhes do Dia</h2>
-          <button class="close-btn" onclick="closeCalendarModal()">
-            &times;
+      <!-- Alert -->
+      <div class="alert" id="alert"></div>
+
+      <!-- Workouts Section -->
+      <section class="section active" id="workouts">
+        <h2>Meus Treinos</h2>
+        <div id="workoutsList">
+          <p>Carregando...</p>
+        </div>
+      </section>
+
+      <!-- Available Classes Section -->
+      <section class="section" id="classes">
+        <h2>Aulas Disponíveis</h2>
+        <div class="classes-sections">
+          <h4 style="margin-bottom: 1rem; color: #555;">Categorias</h4>
+          <div id="classCategoriesContainer" class="categories-scroll">
+            <p>Carregando categorias...</p>
+          </div>
+
+          <h4 id="sessionsTitle" style="display:none; margin-bottom: 1rem; color: #555;">Próximas Sessões</h4>
+          <div id="classSessionsContainer" class="cards-grid">
+            <!-- Cards will be populated here -->
+          </div>
+
+          <!-- Hidden original container if needed for fallback logic, or just remove it. I'll remove it. -->
+          <div id="classesList" style="display: none;"></div>
+        </div>
+      </section>
+
+      <!-- My Classes Section -->
+      <section class="section" id="my-classes">
+        <h2>Minhas Inscrições</h2>
+        <div id="myClassesList">
+          <p>Carregando...</p>
+        </div>
+      </section>
+
+      <!-- Calendar Section -->
+      <section class="section" id="calendar">
+        <h2>Calendário de Atividades</h2>
+
+        <div class="calendar-stats">
+          <div class="stat-card">
+            <h3>Check-ins</h3>
+            <span id="totalCheckins">0</span>
+          </div>
+          <div class="stat-card">
+            <h3>Aulas</h3>
+            <span id="totalClasses">0</span>
+          </div>
+        </div>
+
+        <div class="calendar-controls">
+          <button class="btn btn-secondary" onclick="changeMonth(-1)">
+            ❮ Anterior
+          </button>
+          <h3 id="currentMonthLabel"></h3>
+          <button class="btn btn-secondary" onclick="changeMonth(1)">
+            Próximo ❯
           </button>
         </div>
-        <div id="calendarModalBody">
-          <!-- Details will be populated by JS -->
+
+        <div class="calendar-grid" id="calendarGrid">
+          <!-- Calendar will be populated by JS -->
         </div>
-        <div class="form-actions">
-          <button class="btn btn-secondary" onclick="closeCalendarModal()">
-            Fechar
-          </button>
+      </section>
+    </main>
+  </div>
+
+  <!-- Class Details Modal -->
+  <div class="modal" id="classDetailsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalClassTitle">Detalhes da Aula</h2>
+      </div>
+      <div id="modalClassBody">
+        <div class="modal-info-item">
+          <span class="modal-location-icon">📍</span>
+          <span id="modalClassInfo" class="modal-location-text"></span>
         </div>
+        <div class="modal-section-wrapper">
+          <h4 class="modal-section-title">Descrição</h4>
+          <p id="modalClassDescription" class="modal-description-text"></p>
+        </div>
+        <div id="modalClassStatus" class="modal-status-container"></div>
+      </div>
+      <div class="form-actions" id="modalClassActions">
+        <!-- Botão será inserido dinamicamente -->
       </div>
     </div>
+  </div>
 
-    <div class="modal" id="confirmModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Confirmação</h2>
-        </div>
-        <p id="confirmMessage" class="confirm-modal-message">Tem certeza?</p>
-        <div class="form-actions">
-          <button class="btn" onclick="closeConfirmModal()">Não</button>
-          <button class="btn btn-danger" onclick="confirmAction()">
-            Sim, tenho certeza
-          </button>
-        </div>
+  <div class="modal" id="calendarModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="calendarModalDate">Detalhes do Dia</h2>
+        <button class="close-btn" onclick="closeCalendarModal()">
+          &times;
+        </button>
+      </div>
+      <div id="calendarModalBody">
+        <!-- Details will be populated by JS -->
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-secondary" onclick="closeCalendarModal()">
+          Fechar
+        </button>
       </div>
     </div>
+  </div>
 
-    <!-- Student Info Modal -->
-    <div class="modal" id="studentInfoModal" onclick="handleStudentModalClick(event)">
-      <div class="modal-content" onclick="event.stopPropagation()">
-        <div class="modal-header">
-          <h2>Minhas Informações</h2>
-          <button class="close-btn" onclick="closeStudentInfoModal()">
-            &times;
+  <div class="modal" id="confirmModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Confirmação</h2>
+      </div>
+      <p id="confirmMessage" class="confirm-modal-message">Tem certeza?</p>
+      <div class="form-actions">
+        <button class="btn" onclick="closeConfirmModal()">Não</button>
+        <button class="btn btn-danger" onclick="confirmAction()">
+          Sim, tenho certeza
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Student Info Modal -->
+  <div class="modal" id="studentInfoModal" onclick="handleStudentModalClick(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Minhas Informações</h2>
+        <button class="close-btn" onclick="closeStudentInfoModal()">
+          &times;
+        </button>
+      </div>
+      <div id="studentInfoBody">
+        <div class="student-info-section">
+          <div class="info-row">
+            <span class="info-label">Nome:</span>
+            <span class="info-value" id="studentInfoName">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Email:</span>
+            <span class="info-value" id="studentInfoEmail">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Telefone:</span>
+            <span class="info-value" id="studentInfoPhone">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">CPF:</span>
+            <span class="info-value" id="studentInfoCpf">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Tipo de Plano:</span>
+            <span class="info-value" id="studentInfoPlanType">-</span>
+          </div>
+        </div>
+        <div class="form-actions" style="margin-top: 1.5rem;">
+          <button class="btn btn-primary" onclick="toggleChangePasswordForm()">
+            🔒 Mudar Senha
           </button>
         </div>
-        <div id="studentInfoBody">
-          <div class="student-info-section">
-            <div class="info-row">
-              <span class="info-label">Nome:</span>
-              <span class="info-value" id="studentInfoName">-</span>
+        <div id="changePasswordSection" style="display: none; margin-top: 1.5rem;">
+          <div class="password-form">
+            <div class="form-group">
+              <label for="currentPassword">Senha Atual</label>
+              <input type="password" id="currentPassword" class="form-input" placeholder="Digite sua senha atual" />
             </div>
-            <div class="info-row">
-              <span class="info-label">Email:</span>
-              <span class="info-value" id="studentInfoEmail">-</span>
+            <div class="form-group">
+              <label for="newPassword">Nova Senha</label>
+              <input type="password" id="newPassword" class="form-input"
+                placeholder="Digite a nova senha (mín. 6 caracteres)" />
             </div>
-            <div class="info-row">
-              <span class="info-label">Telefone:</span>
-              <span class="info-value" id="studentInfoPhone">-</span>
+            <div class="form-group">
+              <label for="confirmPassword">Repetir Nova Senha</label>
+              <input type="password" id="confirmPassword" class="form-input" placeholder="Repita a nova senha" />
             </div>
-            <div class="info-row">
-              <span class="info-label">CPF:</span>
-              <span class="info-value" id="studentInfoCpf">-</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Tipo de Plano:</span>
-              <span class="info-value" id="studentInfoPlanType">-</span>
-            </div>
-          </div>
-          <div class="form-actions" style="margin-top: 1.5rem;">
-            <button class="btn btn-primary" onclick="toggleChangePasswordForm()">
-              🔒 Mudar Senha
-            </button>
-          </div>
-          <div id="changePasswordSection" style="display: none; margin-top: 1.5rem;">
-            <div class="password-form">
-              <div class="form-group">
-                <label for="currentPassword">Senha Atual</label>
-                <input
-                  type="password"
-                  id="currentPassword"
-                  class="form-input"
-                  placeholder="Digite sua senha atual"
-                />
-              </div>
-              <div class="form-group">
-                <label for="newPassword">Nova Senha</label>
-                <input
-                  type="password"
-                  id="newPassword"
-                  class="form-input"
-                  placeholder="Digite a nova senha (mín. 6 caracteres)"
-                />
-              </div>
-              <div class="form-group">
-                <label for="confirmPassword">Repetir Nova Senha</label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  class="form-input"
-                  placeholder="Repita a nova senha"
-                />
-              </div>
-              <div id="passwordMessage" class="password-message"></div>
-              <div class="form-actions">
-                <button class="btn btn-secondary" onclick="cancelChangePassword()">
-                  Cancelar
-                </button>
-                <button class="btn btn-primary" onclick="changePassword()">
-                  Confirmar
-                </button>
-              </div>
+            <div id="passwordMessage" class="password-message"></div>
+            <div class="form-actions">
+              <button class="btn btn-secondary" onclick="cancelChangePassword()">
+                Cancelar
+              </button>
+              <button class="btn btn-primary" onclick="changePassword()">
+                Confirmar
+              </button>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <script src="./js/app-config.js"></script>
-    <script src="./js/api.js"></script>
-    <script src="./js/dashboard-student.js"></script>
-  </body>
+  </div>
+  <script src="./js/app-config.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/dashboard-student.js"></script>
+</body>
+
 </html>
