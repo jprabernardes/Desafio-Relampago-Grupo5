@@ -39,7 +39,7 @@
             <span></span><span></span><span></span>
           </button>
           <h1>Dashboard Aluno</h1>
-          <div class="user-info">
+          <div class="user-info" onclick="openStudentInfoModal()">
             <div class="user-avatar" id="userAvatar">A</div>
             <span id="userName">Carregando...</span>
           </div>
@@ -157,6 +157,87 @@
           <button class="btn btn-danger" onclick="confirmAction()">
             Sim, tenho certeza
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Student Info Modal -->
+    <div class="modal" id="studentInfoModal" onclick="handleStudentModalClick(event)">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Minhas Informações</h2>
+          <button class="close-btn" onclick="closeStudentInfoModal()">
+            &times;
+          </button>
+        </div>
+        <div id="studentInfoBody">
+          <div class="student-info-section">
+            <div class="info-row">
+              <span class="info-label">Nome:</span>
+              <span class="info-value" id="studentInfoName">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Email:</span>
+              <span class="info-value" id="studentInfoEmail">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Telefone:</span>
+              <span class="info-value" id="studentInfoPhone">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">CPF:</span>
+              <span class="info-value" id="studentInfoCpf">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Tipo de Plano:</span>
+              <span class="info-value" id="studentInfoPlanType">-</span>
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top: 1.5rem;">
+            <button class="btn btn-primary" onclick="toggleChangePasswordForm()">
+              🔒 Mudar Senha
+            </button>
+          </div>
+          <div id="changePasswordSection" style="display: none; margin-top: 1.5rem;">
+            <div class="password-form">
+              <div class="form-group">
+                <label for="currentPassword">Senha Atual</label>
+                <input
+                  type="password"
+                  id="currentPassword"
+                  class="form-input"
+                  placeholder="Digite sua senha atual"
+                />
+              </div>
+              <div class="form-group">
+                <label for="newPassword">Nova Senha</label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  class="form-input"
+                  placeholder="Digite a nova senha (mín. 6 caracteres)"
+                />
+              </div>
+              <div class="form-group">
+                <label for="confirmPassword">Repetir Nova Senha</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  class="form-input"
+                  placeholder="Repita a nova senha"
+                />
+              </div>
+              <div id="passwordMessage" class="password-message"></div>
+              <div class="form-actions">
+                <button class="btn btn-secondary" onclick="cancelChangePassword()">
+                  Cancelar
+                </button>
+                <button class="btn btn-primary" onclick="changePassword()">
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
