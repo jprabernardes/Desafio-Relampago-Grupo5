@@ -341,12 +341,33 @@ async function loadAvailableClasses() {
 
 function renderAvailableClasses() {
   const container = document.getElementById("classesList");
-  if (allAvailableClasses.length === 0) {
-    container.innerHTML = "<p>Nenhuma aula disponível no momento.</p>";
+  
+  // Filtrar aulas: do dia atual até os próximos 15 dias
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Zerar horas para comparação apenas de data
+  
+  const maxDate = new Date(today);
+  maxDate.setDate(today.getDate() + 15); // 15 dias a partir de hoje
+  
+  const filteredClasses = allAvailableClasses.filter((cls) => {
+    try {
+      const classDate = parseDateBR(cls.date);
+      classDate.setHours(0, 0, 0, 0); // Zerar horas para comparação apenas de data
+      
+      // Incluir apenas aulas de hoje em diante até 15 dias
+      return classDate >= today && classDate <= maxDate;
+    } catch (e) {
+      console.warn("Erro ao processar data da aula:", cls, e);
+      return false;
+    }
+  });
+  
+  if (filteredClasses.length === 0) {
+    container.innerHTML = "<p>Nenhuma aula disponível nos próximos 15 dias.</p>";
     return;
   }
 
-  container.innerHTML = allAvailableClasses
+  container.innerHTML = filteredClasses
     .map((cls) => {
       const isInscrito = myEnrollmentIds.includes(cls.id);
       const isFull = cls.current_participants >= cls.max_participants;

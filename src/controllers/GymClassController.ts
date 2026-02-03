@@ -22,6 +22,29 @@ export class GymClassController {
     }
   };
 
+  createRecurring = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const creatorRole = (req as any).user.role;
+      const instructorId = (req as any).user.id;
+      const { name, time, slots_limit, daysOfWeek, startDate, endDate } = req.body;
+      
+      const result = await this.gymClassService.createRecurring(
+        name,
+        time,
+        slots_limit,
+        daysOfWeek,
+        startDate,
+        endDate,
+        creatorRole,
+        instructorId
+      );
+      
+      return res.status(201).json(result);
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
+    }
+  };
+
   findAll = async (req: Request, res: Response): Promise<Response> => {
     try {
       const classes = await this.gymClassService.findAll();
