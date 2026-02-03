@@ -4,11 +4,8 @@ import path from 'path';
 import cors from 'cors';
 import routes from './routes';
 import cookieParser from 'cookie-parser';
-<<<<<<< HEAD
 import planRoutes from './routes/plansRoutes';
-=======
 import { config } from './config/env';
->>>>>>> main
 
 import { errorMiddleware } from './middlewares/error.middleware';
 import { generalRateLimiter } from './middlewares/rateLimit.middleware';
