@@ -45,6 +45,7 @@ router.delete('/trainings/:id/users/:userId', trainingController.removeUser);
 
 router.get('/classes', gymClassController.findMyClasses);
 router.post('/classes', gymClassController.create);
+router.post('/classes/recurring', gymClassController.createRecurring);
 router.put('/classes/:id', gymClassController.update);
 router.delete('/classes/:id', gymClassController.delete);
 router.get('/classes/:id/participants', gymClassController.getEnrolledStudents);
