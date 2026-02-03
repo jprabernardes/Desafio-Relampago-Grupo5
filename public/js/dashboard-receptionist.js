@@ -68,10 +68,21 @@ async function loadTab(tab) {
   document
     .querySelectorAll(".nav-item")
     .forEach((i) => i.classList.remove("active"));
-  document.getElementById("usersTable").innerHTML =
-    '<tr><td colspan="5" class="text-center-padded">Carregando...</td></tr>';
 
-  if (tab === "students") {
+  // Hide all main containers first
+  document.querySelector(".table-container").style.display = "none";
+  document.getElementById("homeView").classList.add("hidden");
+
+  // Reset search and add button visibility
+  document.getElementById("searchInput").classList.add("hidden");
+  document.getElementById("addBtn").classList.add("hidden");
+
+  if (tab === "home") {
+    document.getElementById("navHome").classList.add("active");
+    document.getElementById("homeView").classList.remove("hidden");
+    document.getElementById("tableTitle").textContent = "Visão Geral";
+    await loadHomeMetrics();
+  } else if (tab === "students") {
     document.getElementById("navAlunos").classList.add("active");
     document.querySelector(".table-container").style.display = "block";
     document.getElementById("tableTitle").textContent = "Gerenciar Alunos";
@@ -81,6 +92,8 @@ async function loadTab(tab) {
     document.getElementById("addBtn").classList.remove("hidden");
     document.getElementById("addBtn").textContent = "+ Adicionar Aluno";
 
+    document.getElementById("usersTable").innerHTML =
+      '<tr><td colspan="5" class="text-center-padded">Carregando...</td></tr>';
     updateTableHeaders("students");
     await loadUsers("students");
   } else if (tab === "instructors") {
@@ -93,8 +106,44 @@ async function loadTab(tab) {
     document.getElementById("addBtn").classList.remove("hidden");
     document.getElementById("addBtn").textContent = "+ Adicionar Instrutor";
 
+    document.getElementById("usersTable").innerHTML =
+      '<tr><td colspan="5" class="text-center-padded">Carregando...</td></tr>';
     updateTableHeaders("instructors");
     await loadUsers("instructors");
+  } else if (tab === "financeiro") {
+    document.getElementById("navFinance").classList.add("active");
+    document.querySelector(".table-container").style.display = "block";
+    document.getElementById("tableTitle").textContent = "Financeiro";
+    document.getElementById("usersTable").innerHTML =
+      '<tr><td colspan="5" class="text-center-padded">Módulo financeiro será implementado em breve.</td></tr>';
+    document.getElementById("tableHead").innerHTML = "";
+    if (paginator) paginator.updateItems([]);
+  }
+}
+
+async function loadHomeMetrics() {
+  try {
+    const res = await apiFetch("/receptionist/metrics");
+    if (!res.ok) throw new Error("Erro ao buscar métricas");
+
+    const data = await res.json();
+
+    // Atualizar UI com dados reais
+    document.getElementById("metricTotalStudents").textContent = data.totalStudents || 0;
+
+    // Total funcionários = instrutores + recepcionistas + admins
+    const totalStaff = (data.totalInstructors || 0) + (data.totalReceptionists || 0) + (data.totalAdmins || 0);
+    document.getElementById("metricTotalStaff").textContent = totalStaff;
+
+    document.getElementById("metricCheckinsToday").textContent = data.checkinsToday || 0;
+
+    // Placeholders para Financeiro (conforme solicitado para fase posterior)
+    // Aqui podemos colocar dados estáticos ou lógicas simples se o banco não prover
+    document.getElementById("metricPaidPercent").textContent = "85%";
+    document.getElementById("metricUnpaidPercent").textContent = "15%";
+
+  } catch (err) {
+    console.error("Erro ao carregar métricas:", err);
   }
 }
 
@@ -140,7 +189,7 @@ async function loadUsers(type) {
       email: u.email,
       cpf: u.document || u.cpf,
       phone: u.phone,
-      plan: u.plan_type || u.plan || "mensal",
+      plan: u.planType || u.plan_type || u.plan || "mensal",
     }));
 
     filteredUsers = [...allUsers];
@@ -428,4 +477,4 @@ phoneInputs.forEach((id) => {
 });
 
 // Init
-loadTab("students");
+loadTab("home");

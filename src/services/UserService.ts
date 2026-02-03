@@ -33,9 +33,11 @@ export class UserService {
   private async enrichUser(user: any): Promise<any> {
     if (user.role === 'aluno') {
       const profile: any = await this.studentProfileRepository.findByUserId(user.id);
+      const plan = profile?.plan_type || 'mensal';
       return {
         ...user,
-        planType: profile?.plan_type || 'mensal'
+        planType: plan,
+        plan_type: plan
       };
     }
     return user;
@@ -115,14 +117,14 @@ export class UserService {
   async findById(id: number) {
     const user = await this.userRepository.findById(id);
     if (!user) return undefined;
-    
+
     const enrichedUser = await this.enrichUser(user);
     return this.removePassword(enrichedUser);
   }
 
   async findAll(role?: string) {
     const users = await this.userRepository.findAll(role);
-    
+
     // Enriquecer cada usuário
     const enrichedUsers = await Promise.all(
       users.map(async (user) => {
@@ -130,7 +132,7 @@ export class UserService {
         return this.removePassword(enriched);
       })
     );
-    
+
     return enrichedUsers;
   }
 
@@ -143,7 +145,7 @@ export class UserService {
     }
 
     const users = await this.userRepository.search(query);
-    
+
     // Enriquecer cada usuário
     const enrichedUsers = await Promise.all(
       users.map(async (user) => {
@@ -151,7 +153,7 @@ export class UserService {
         return this.removePassword(enriched);
       })
     );
-    
+
     return enrichedUsers;
   }
 
@@ -160,12 +162,12 @@ export class UserService {
    * - Aceita planType para atualizar tipo de plano de alunos
    */
   async update(
-    id: number, 
-    data: Partial<User>, 
+    id: number,
+    data: Partial<User>,
     updaterRole: string,
     planType?: 'mensal' | 'trimestral' | 'semestral' | 'anual'
   ): Promise<void> {
-    
+
     // Verificar se usuário existe
     const existingUser = await this.userRepository.findById(id);
     if (!existingUser) {

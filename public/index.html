@@ -9,40 +9,152 @@
     <script src="./config.js"></script>
     <script src="./js/base-path.js"></script>
     
-    <!-- CSS com caminho relativo que se adapta ao ambiente -->
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lexend:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    
+    <!-- CSS -->
     <link rel="stylesheet" href="./css/login.css" />
   </head>
 
   <body>
-    <div class="login-container">
-      <div class="logo">
-        <h1>💪 FitManager</h1>
-        <p>Sistema de Gerenciamento de Academia</p>
+    <div class="page-container">
+      <!-- Left Panel - Login Form -->
+      <div class="login-panel">
+        <div class="login-content">
+          <!-- Logo -->
+          <div class="logo">
+            <div class="logo-icon">
+              <span class="material-symbols-outlined">fitness_center</span>
+            </div>
+            <span class="logo-text">Fit<span class="logo-accent">Manager</span></span>
+          </div>
+
+          <h1 class="login-title">Informe seus dados</h1>
+
+          <!-- Alert -->
+          <div id="alert" class="alert"></div>
+
+          <!-- Login Form -->
+          <form id="loginForm" class="login-form">
+            <div class="form-group">
+              <label>E-mail <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <input type="email" id="email" required placeholder="nome@empresa.com" />
+                <span class="material-symbols-outlined input-icon">mail</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Senha <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <input type="password" id="senha" required placeholder="••••••••" />
+                <div class="input-icons">
+                  <span class="material-symbols-outlined">lock</span>
+                  <span class="material-symbols-outlined toggle-password" onclick="togglePassword()">visibility_off</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="links-section">
+              <a href="#" onclick="forgotPassword(); return false;" class="link">Esqueci minha senha</a>
+            </div>
+
+            <button type="submit" class="btn-submit">Entrar</button>
+
+            <div class="signup-section">
+              <p>Não tem uma conta? <a href="#" class="link-bold">Experimente grátis!</a></p>
+            </div>
+          </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="login-footer">
+          <p>É de uma academia de artes marciais? <a href="#" class="link">Acesse o FitManager Dojo aqui</a></p>
+        </div>
       </div>
 
-      <div id="alert" class="alert"></div>
+      <!-- Right Panel - Marketing -->
+      <div class="marketing-panel">
+        <div class="blur-circle blur-blue"></div>
+        <div class="blur-circle blur-green"></div>
+        
+        <div class="marketing-content">
+          <h2 class="marketing-title">
+            Juntos, a gente dá conta de <span class="highlight-italic">automatizar</span> o que é repetitivo com o <span class="highlight">FitManager</span>
+          </h2>
+          
+          <p class="marketing-description">
+            — o <strong>Sistema do FitManager</strong> que monitora a frequência, prevê cancelamentos e automatiza cobranças de forma inteligente.
+          </p>
 
-      <form id="loginForm">
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="email" required placeholder="seu@email.com" />
-        </div>
+          <div class="cta-badge">
+            <span>Entre na sua conta e experimente.</span>
+          </div>
 
-        <div class="form-group">
-          <label>Senha</label>
-          <input type="password" id="senha" required placeholder="••••••" />
-          <div class="forgot-password-container">
-            <a href="#" onclick="forgotPassword()" class="forgot-password-link"
-              >Esqueci minha senha</a
-            >
+          <!-- Dashboard Preview -->
+          <div class="dashboard-preview">
+            <div class="preview-card">
+              <div class="preview-header">
+                <div class="window-dots">
+                  <span class="dot red"></span>
+                  <span class="dot yellow"></span>
+                  <span class="dot green"></span>
+                </div>
+                <div class="url-bar"></div>
+              </div>
+              
+              <div class="preview-content">
+                <div class="preview-item">
+                  <div class="preview-icon blue">
+                    <span class="material-symbols-outlined">groups</span>
+                  </div>
+                  <div class="preview-text">
+                    <span class="preview-label">Alunos Ativos</span>
+                    <span class="preview-value">247 membros com plano ativo</span>
+                  </div>
+                </div>
+
+                <div class="preview-item highlight-item">
+                  <div class="preview-icon green">
+                    <span class="material-symbols-outlined">fitness_center</span>
+                  </div>
+                  <div class="preview-text">
+                    <span class="preview-label">Check-ins Hoje</span>
+                    <span class="preview-value">89 alunos treinaram hoje</span>
+                  </div>
+                  <span class="material-symbols-outlined chevron">chevron_right</span>
+                </div>
+
+                <div class="preview-item faded">
+                  <div class="preview-icon gray">
+                    <span class="material-symbols-outlined">calendar_month</span>
+                  </div>
+                  <div class="preview-text">
+                    <span class="preview-label">Aulas Agendadas</span>
+                    <span class="preview-value">12 aulas coletivas esta semana</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="efficiency-badge">
+                <div class="efficiency-icon">
+                  <span class="material-symbols-outlined">trending_up</span>
+                </div>
+                <div class="efficiency-text">
+                  <span class="efficiency-label">Frequência</span>
+                  <span class="efficiency-value">+18%</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-
-        <button type="submit" class="btn">Entrar</button>
-      </form>
+      </div>
     </div>
 
-    <!-- Scripts com caminhos relativos que se adaptam ao ambiente -->
+    <!-- Scripts -->
     <script src="./js/app-config.js"></script>
     <script src="./js/api.js"></script>
     <script src="./js/login.js"></script>

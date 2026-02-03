@@ -11,3 +11,4 @@ npm-debug.log
 .idea/
 .agent/
 .env.test
+AGENTS.md
