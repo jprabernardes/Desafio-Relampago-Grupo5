@@ -5,7 +5,7 @@ let allUsers = [];
 let filteredUsers = [];
 let paginator = null;
 
-const API_URL = "/api";
+const { resolveAppPath } = window.AppConfig;
 
 // --------------------
 // Plans
@@ -63,7 +63,7 @@ function toPlanClassFromCode(planCode) {
 }
 
 async function loadUserInfo() {
-  const res = await fetch(`${API_URL}/auth/me`);
+  const res = await apiFetch("/auth/me");
   const data = await res.json();
   return data;
 }
@@ -94,8 +94,12 @@ async function loadTab(tab) {
     const userData = await loadUserInfo();
     if (userData.error) {
       document.cookie = "";
+<<<<<<< HEAD
       window.location.href = "/";
       return;
+=======
+      window.location.href = resolveAppPath("/");
+>>>>>>> main
     }
 
     if (userData.role && userData.role !== "recepcionista") {
@@ -109,8 +113,12 @@ async function loadTab(tab) {
     document.getElementById("userAvatar").textContent = displayName.charAt(0).toUpperCase();
   } catch (error) {
     console.error("Erro:", error);
+<<<<<<< HEAD
     window.location.href = "/";
     return;
+=======
+    window.location.href = resolveAppPath("/");
+>>>>>>> main
   }
 
   currentTab = tab;
@@ -186,7 +194,12 @@ async function loadUsers(type) {
   else if (type === "instructors") endpoint = "/receptionist/instructors";
 
   try {
+<<<<<<< HEAD
     const res = await fetch(`${API_URL}${endpoint}`);
+=======
+    const res = await apiFetch(endpoint);
+
+>>>>>>> main
     if (!res.ok) throw new Error("Erro ao buscar dados");
 
     const data = await res.json();
@@ -333,7 +346,7 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
   }
 
   try {
-    const res = await fetch(`${API_URL}${endpoint}`, {
+    const res = await apiFetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -414,7 +427,7 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
   }
 
   try {
-    const res = await fetch(`${API_URL}/users/${id}`, {
+    const res = await apiFetch(`/users/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -443,7 +456,13 @@ function confirmDeleteUser() {
 
 async function deleteUser(id) {
   try {
+<<<<<<< HEAD
     const res = await fetch(`${API_URL}/users/${id}`, { method: "DELETE" });
+=======
+    const res = await apiFetch(`/users/${id}`, {
+      method: "DELETE",
+    });
+>>>>>>> main
 
     if (res.ok) {
       showEditAlert("Conta deletada com sucesso!", "success");
@@ -465,8 +484,8 @@ function showEditAlert(msg, type) {
 }
 
 async function logout() {
-  await fetch(`${API_URL}/auth/logout`, { method: "DELETE" });
-  window.location.href = "/";
+  await apiFetch("/auth/logout", { method: "DELETE" });
+  window.location.href = resolveAppPath("/");
 }
 
 // telefone mask

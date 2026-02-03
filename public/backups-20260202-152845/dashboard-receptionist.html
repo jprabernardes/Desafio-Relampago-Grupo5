@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - Recepcionista</title>
-    <script src="/server10/config.js"></script>
-    <script src="/server10/js/base-path.js"></script>
-    <link rel="stylesheet" href="/server10/css/dashboard-receptionist.css" />
+    <script src="config.js"></script>
+    <script src="js/base-path.js"></script>
+    <link rel="stylesheet" href="css/dashboard-receptionist.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
@@ -85,9 +85,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2 id="addModalTitle">Adicionar</h2>
-          <button class="close-btn" type="button" onclick="closeAddModal()">
-            &times;
-          </button>
+          <button class="close-btn" onclick="closeAddModal()">&times;</button>
         </div>
         <div id="addAlertContainer"></div>
         <form id="addForm">
@@ -120,11 +118,14 @@
             <input type="text" id="addTelefone" placeholder="(XX)9XXXXXXXX" />
           </div>
 
-          <!-- ✅ AGORA O PLANO VEM DO /api/plans (JS PREENCHE) -->
           <div class="form-group hidden" id="addTipoPlanoGroup">
-            <label>Plano *</label>
+            <label>Tipo de Plano *</label>
             <select id="addTipoPlano">
-              <option value="">Carregando planos...</option>
+              <option value="">Selecione...</option>
+              <option value="mensal">Mensal</option>
+              <option value="trimestral">Trimestral</option>
+              <option value="semestral">Semestral</option>
+              <option value="anual">Anual</option>
             </select>
           </div>
 
@@ -149,9 +150,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2 id="editModalTitle">Editar</h2>
-          <button class="close-btn" type="button" onclick="closeEditModal()">
-            &times;
-          </button>
+          <button class="close-btn" onclick="closeEditModal()">&times;</button>
         </div>
         <div id="editAlertContainer"></div>
         <form id="editForm">
@@ -173,11 +172,15 @@
             <input type="text" id="editCpf" maxlength="11" />
           </div>
 
-          <!-- ✅ AGORA O PLANO VEM DO /api/plans (JS PREENCHE) -->
+          <!-- Student Specific -->
           <div class="form-group hidden" id="editTipoPlanoGroup">
-            <label>Plano *</label>
+            <label>Tipo de Plano *</label>
             <select id="editTipoPlano">
-              <option value="">Carregando planos...</option>
+              <option value="">Selecione...</option>
+              <option value="mensal">Mensal</option>
+              <option value="trimestral">Trimestral</option>
+              <option value="semestral">Semestral</option>
+              <option value="anual">Anual</option>
             </select>
           </div>
 
@@ -192,6 +195,7 @@
               type="button"
               class="btn btn-danger"
               onclick="confirmDeleteUser()"
+              class="btn btn-danger btn-danger-white"
             >
               Deletar Conta
             </button>
@@ -209,22 +213,26 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2>Confirmação</h2>
-          <button class="close-btn" type="button" onclick="closeConfirmModal()">
+          <button class="close-btn" onclick="closeConfirmModal()">
             &times;
           </button>
         </div>
         <p id="confirmMessage" class="confirm-modal-message">Tem certeza?</p>
         <div class="form-actions">
           <button class="btn" onclick="closeConfirmModal()">Não</button>
-          <button class="btn btn-danger" onclick="confirmAction()">
+          <button
+            class="btn btn-danger"
+            onclick="confirmAction()"
+            class="btn btn-danger btn-danger-white"
+          >
             Sim, tenho certeza
           </button>
         </div>
       </div>
     </div>
-    <script src="/server10/js/app-config.js"></script>
-    <script src="/server10/js/api.js"></script>
-    <script src="/server10/js/pagination.js"></script>
-    <script src="/server10/js/dashboard-receptionist.js"></script>
+    <script src="js/app-config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/pagination.js"></script>
+    <script src="js/dashboard-receptionist.js"></script>
   </body>
 </html>

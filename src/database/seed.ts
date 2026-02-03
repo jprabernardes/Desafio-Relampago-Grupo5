@@ -1,5 +1,5 @@
-import axios from 'axios';
 import bcrypt from 'bcrypt';
+import dotenv from 'dotenv';
 import db from './db';
 import { UserService } from '../services/UserService';
 import { ExerciseRepository } from '../repositories/ExerciseRepository';
@@ -15,6 +15,8 @@ const gymClassRepository = new GymClassRepository();
 const enrollmentRepository = new EnrollmentRepository();
 const checkInRepository = new CheckInRepository();
 const trainingRepository = new TrainingRepository();
+
+dotenv.config();
 
 /**
  * ✅ Seed de Planos Padrão
@@ -48,35 +50,41 @@ export const seedDefaultUsers = async (): Promise<void> => {
   return new Promise(async (resolve, reject) => {
     try {
       // Default users list
+      const alunoPlanType = process.env.SEED_ALUNO_PLAN_TYPE as 'mensal' | 'trimestral' | 'semestral' | 'anual';
       const defaultUsers = [
         {
-          name: 'Administrador',
-          email: 'admin@academia.com',
-          password: 'admin123',
+          name: process.env.SEED_ADMIN_NAME!,
+          email: process.env.SEED_ADMIN_EMAIL!,
+          password: process.env.SEED_ADMIN_PASSWORD!,
           role: 'administrador',
-          document: '00000000000',
+          document: process.env.SEED_ADMIN_DOCUMENT!,
         },
         {
-          name: 'Recepcionista',
-          email: 'maria@academia.com',
-          password: 'senha123',
+          name: process.env.SEED_RECEPCIONISTA_NAME!,
+          email: process.env.SEED_RECEPCIONISTA_EMAIL!,
+          password: process.env.SEED_RECEPCIONISTA_PASSWORD!,
           role: 'recepcionista',
-          document: '11111111111',
+          document: process.env.SEED_RECEPCIONISTA_DOCUMENT!,
         },
         {
-          name: 'Instrutor',
-          email: 'carlos@academia.com',
-          password: 'senha123',
+          name: process.env.SEED_INSTRUTOR_NAME!,
+          email: process.env.SEED_INSTRUTOR_EMAIL!,
+          password: process.env.SEED_INSTRUTOR_PASSWORD!,
           role: 'instrutor',
-          document: '22222222222',
+          document: process.env.SEED_INSTRUTOR_DOCUMENT!,
         },
         {
-          name: 'Aluno',
-          email: 'joao@academia.com',
-          password: 'senha123',
+          name: process.env.SEED_ALUNO_NAME!,
+          email: process.env.SEED_ALUNO_EMAIL!,
+          password: process.env.SEED_ALUNO_PASSWORD!,
           role: 'aluno',
+<<<<<<< HEAD
           document: '33333333333',
           planType: 'fit' as const,
+=======
+          document: process.env.SEED_ALUNO_DOCUMENT!,
+          planType: alunoPlanType,
+>>>>>>> main
         },
       ];
 
@@ -94,9 +102,13 @@ export const seedDefaultUsers = async (): Promise<void> => {
                 rej(err);
               } else {
                 if (this.changes > 0) {
+<<<<<<< HEAD
                   console.log(
                     `✅ Usuário ${user.role} criado (email: ${user.email}, senha: ${user.password})`
                   );
+=======
+                  console.log(`✅ Usuário ${user.role} criado (email: ${user.email})`);
+>>>>>>> main
                   res(this.lastID);
                 } else {
                   console.log(`ℹ️  Usuário ${user.role} já existe (email: ${user.email})`);
@@ -150,207 +162,6 @@ export const seedDefaultUsers = async (): Promise<void> => {
 };
 
 /**
- * Cria exercícios padrão com valores predefinidos.
- */
-export const seedDefaultExercises = async (): Promise<void> => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const defaultExercises = [
-        {
-          name: 'Supino Reto com Barra',
-          description: 'Exercício composto para peitoral, com auxílio de tríceps e ombros.',
-          weight: 5,
-          series: 3,
-          repetitions: 10
-        },
-        {
-          name: 'Supino Inclinado com Halteres',
-          description: 'Exercício com foco na parte superior do peitoral, exigindo maior estabilização.',
-          weight: 5,
-          series: 3,
-          repetitions: 10
-        },
-        {
-          name: 'Crucifixo em Máquina',
-          description: 'Exercício de isolamento para o peitoral com movimento guiado.',
-          weight: 5,
-          series: 3,
-          repetitions: 12
-        },
-        {
-          name: 'Puxada Frontal na Polia',
-          description: 'Exercício para dorsais, simulando o movimento da barra fixa.',
-          weight: 5,
-          series: 3,
-          repetitions: 10
-        },
-        {
-          name: 'Remada Baixa na Polia',
-          description: 'Exercício que trabalha dorsais, romboides e bíceps.',
-          weight: 5,
-          series: 3,
-          repetitions: 10
-        },
-        {
-          name: 'Agachamento Livre',
-          description: 'Exercício composto para membros inferiores, com foco em quadríceps, glúteos e core.',
-          weight: 5,
-          series: 4,
-          repetitions: 8
-        },
-        {
-          name: 'Leg Press 45',
-          description: 'Exercício em máquina para membros inferiores, com foco em quadríceps e glúteos.',
-          weight: 5,
-          series: 3,
-          repetitions: 12
-        },
-        {
-          name: 'Cadeira Extensora',
-          description: 'Exercício de isolamento para o quadríceps.',
-          weight: 5,
-          series: 3,
-          repetitions: 12
-        },
-        {
-          name: 'Mesa Flexora',
-          description: 'Exercício de isolamento para os músculos posteriores da coxa.',
-          weight: 5,
-          series: 3,
-          repetitions: 12
-        },
-        {
-          name: 'Desenvolvimento com Halteres',
-          description: 'Exercício para ombros, com foco nas porções anterior e medial do deltoide.',
-          weight: 5,
-          series: 3,
-          repetitions: 10
-        },
-        {
-          name: 'Elevação Lateral',
-          description: 'Exercício de isolamento para a porção medial dos ombros.',
-          weight: 5,
-          series: 3,
-          repetitions: 12
-        },
-        {
-          name: 'Rosca Direta com Barra',
-          description: 'Exercício clássico para o bíceps braquial.',
-          weight: 5,
-          series: 3,
-          repetitions: 10
-        },
-        {
-          name: 'Tríceps Pulley',
-          description: 'Exercício de isolamento para o tríceps em polia alta.',
-          weight: 5,
-          series: 3,
-          repetitions: 12
-        },
-        {
-          name: 'Abdominal Crunch',
-          description: 'Exercício básico para o reto abdominal.',
-          weight: 5,
-          series: 3,
-          repetitions: 15
-        },
-        {
-          name: 'Prancha Isométrica',
-          description: 'Exercício isométrico para estabilização do core.',
-          weight: 5,
-          series: 3,
-          repetitions: 30
-        },
-        {
-          name: 'Rosca Martelo',
-          description: 'Exercício para bíceps e antebraço, trabalhando a porção lateral do braço.',
-          weight: 5,
-          series: 3,
-          repetitions: 12
-        },
-        {
-          name: 'Tríceps Testa',
-          description: 'Exercício de isolamento para tríceps realizado deitado com halteres ou barra.',
-          weight: 5,
-          series: 3,
-          repetitions: 10
-        },
-        {
-          name: 'Levantamento Terra',
-          description: 'Exercício composto fundamental que trabalha toda a cadeia posterior, glúteos e core.',
-          weight: 5,
-          series: 4,
-          repetitions: 8
-        },
-        {
-          name: 'Panturrilha em Pé',
-          description: 'Exercício de isolamento para os músculos da panturrilha (gastrocnêmio e sóleo).',
-          weight: 5,
-          series: 3,
-          repetitions: 15
-        },
-        {
-          name: 'Stiff',
-          description: 'Exercício para posterior de coxa e glúteos, realizado com barra ou halteres.',
-          weight: 5,
-          series: 3,
-          repetitions: 10
-        }
-      ];
-
-      for (const exercise of defaultExercises) {
-        await new Promise<void>((res, rej) => {
-          // Check if exists first
-          db.get('SELECT id FROM exercise WHERE name = ?', [exercise.name], (err, row) => {
-            if (err) return rej(err);
-
-            if (row) {
-              console.log(`ℹ️  Exercício "${exercise.name}" já existe`);
-              res();
-            } else {
-              db.run(
-                `INSERT INTO exercise (name, description, repetitions, weight, series)
-                 VALUES (?, ?, ?, ?, ?)`,
-                [exercise.name, exercise.description, exercise.repetitions, exercise.weight, exercise.series],
-                function (err) {
-                  if (err) return rej(err);
-                  console.log(`✅ Exercício "${exercise.name}" criado`);
-                  res();
-                }
-              );
-            }
-          });
-        });
-      }
-
-      console.log(`✅ ${defaultExercises.length} exercícios padrão processados.`);
-      resolve();
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
-
-/**
- * Função auxiliar para limpar nome e criar email válido
- */
-function createValidEmail(firstName: string, lastName: string, index: number): string {
-  const cleanFirst = firstName
-    .toLowerCase()
-    .replace(/\s+/g, '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-
-  const cleanLast = lastName
-    .toLowerCase()
-    .replace(/\s+/g, '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-
-  return `${cleanFirst}.${cleanLast}${index}@academia.com`;
-}
-
-/**
  * Seed de Exercícios Extras
  */
 async function seedExercises() {
@@ -363,7 +174,24 @@ async function seedExercises() {
     { name: 'Puxada Alta', description: 'Costas e bíceps.', repetitions: 12, weight: 45, series: 3 },
     { name: 'Elevação Lateral', description: 'Ombros.', repetitions: 15, weight: 8, series: 3 },
     { name: 'Rosca Scott', description: 'Bíceps isolado.', repetitions: 10, weight: 12, series: 3 },
-    { name: 'Tríceps Corda', description: 'Tríceps.', repetitions: 12, weight: 25, series: 3 }
+    { name: 'Tríceps Corda', description: 'Tríceps.', repetitions: 12, weight: 25, series: 3 },
+    { name: 'Supino Reto com Barra', description: 'Exercício composto para peitoral, com auxílio de tríceps e ombros.', repetitions: 10, weight: 5, series: 3 },
+    { name: 'Supino Inclinado com Halteres', description: 'Exercício com foco na parte superior do peitoral, exigindo maior estabilização.', repetitions: 10, weight: 5, series: 3 },
+    { name: 'Crucifixo em Máquina', description: 'Exercício de isolamento para o peitoral com movimento guiado.', repetitions: 12, weight: 5, series: 3 },
+    { name: 'Puxada Frontal na Polia', description: 'Exercício para dorsais, simulando o movimento da barra fixa.', repetitions: 10, weight: 5, series: 3 },
+    { name: 'Remada Baixa na Polia', description: 'Exercício que trabalha dorsais, romboides e bíceps.', repetitions: 10, weight: 5, series: 3 },
+    { name: 'Agachamento Livre', description: 'Exercício composto para membros inferiores, com foco em quadríceps, glúteos e core.', repetitions: 8, weight: 5, series: 4 },
+    { name: 'Mesa Flexora', description: 'Exercício de isolamento para os músculos posteriores da coxa.', repetitions: 12, weight: 5, series: 3 },
+    { name: 'Desenvolvimento com Halteres', description: 'Exercício para ombros, com foco nas porções anterior e medial do deltoide.', repetitions: 10, weight: 5, series: 3 },
+    { name: 'Rosca Direta com Barra', description: 'Exercício clássico para o bíceps braquial.', repetitions: 10, weight: 5, series: 3 },
+    { name: 'Tríceps Pulley', description: 'Exercício de isolamento para o tríceps em polia alta.', repetitions: 12, weight: 5, series: 3 },
+    { name: 'Abdominal Crunch', description: 'Exercício básico para o reto abdominal.', repetitions: 15, weight: 5, series: 3 },
+    { name: 'Prancha Isométrica', description: 'Exercício isométrico para estabilização do core.', repetitions: 30, weight: 5, series: 3 },
+    { name: 'Rosca Martelo', description: 'Exercício para bíceps e antebraço, trabalhando a porção lateral do braço.', repetitions: 12, weight: 5, series: 3 },
+    { name: 'Tríceps Testa', description: 'Exercício de isolamento para tríceps realizado deitado com halteres ou barra.', repetitions: 10, weight: 5, series: 3 },
+    { name: 'Levantamento Terra', description: 'Exercício composto fundamental que trabalha toda a cadeia posterior, glúteos e core.', repetitions: 8, weight: 5, series: 4 },
+    { name: 'Panturrilha em Pé', description: 'Exercício de isolamento para os músculos da panturrilha (gastrocnêmio e sóleo).', repetitions: 15, weight: 5, series: 3 },
+    { name: 'Stiff', description: 'Exercício para posterior de coxa e glúteos, realizado com barra ou halteres.', repetitions: 10, weight: 5, series: 3 }
   ];
 
   for (const ex of exercises) {
@@ -398,17 +226,15 @@ async function seedClasses() {
   const classTypes = ['Yoga', 'Pilates', 'Spinning', 'Zumba', 'Crossfit', 'Hidroginástica', 'Boxe'];
   const times = ['07:00', '08:00', '18:00', '19:00', '20:00'];
 
-  // Buscar instrutores
+  // Buscar instrutor padrão
   const allUsers = await userService.findAll();
-  let instructores = allUsers.filter((u: any) => u.role === 'instrutor');
+  const instructores = allUsers.filter((u: any) => u.role === 'instrutor');
+  const instructor = instructores.find((u: any) => u.email === process.env.SEED_INSTRUTOR_EMAIL!);
 
-  if (instructores.length === 0) {
+  if (!instructor?.id) {
     console.log('  ! Nenhum instrutor encontrado para criar aulas.');
     return;
   }
-
-  // Garantir que o Carlos esteja na lista (se existir)
-  const carlos = instructores.find((u: any) => u.email === 'carlos@academia.com');
 
   const today = new Date();
   let classesCreated = 0;
@@ -416,35 +242,30 @@ async function seedClasses() {
   for (let i = 0; i < 7; i++) {
     const date = new Date(today);
     date.setDate(today.getDate() + i);
-    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
 
-    // 3 aulas por dia
-    for (let j = 0; j < 3; j++) {
-      const type = classTypes[Math.floor(Math.random() * classTypes.length)];
-      const time = times[Math.floor(Math.random() * times.length)];
+    // Converter para formato DD-MM-YYYY
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const dateStr = `${day}-${month}-${year}`; // DD-MM-YYYY
 
-      // 50% chance de ser o Carlos (se ele existir), senão aleatório
-      let instructor = instructores[Math.floor(Math.random() * instructores.length)];
-      if (carlos && Math.random() > 0.5) {
-        instructor = carlos;
-      }
+    // 1 aula por dia
+    const type = classTypes[Math.floor(Math.random() * classTypes.length)];
+    const time = times[Math.floor(Math.random() * times.length)];
 
-      if (!instructor.id) continue;
+    const gymClass = {
+      name: type,
+      date: dateStr,
+      time: time,
+      slots_limit: 20, // Vagas limitadas
+      instructor_id: instructor.id
+    };
 
-      const gymClass = {
-        name: type,
-        date: dateStr,
-        time: time,
-        slots_limit: 20, // Vagas limitadas
-        instructor_id: instructor.id
-      };
-
-      try {
-        await gymClassRepository.create(gymClass);
-        classesCreated++;
-      } catch (e) {
-        // Ignora erros de validação
-      }
+    try {
+      await gymClassRepository.create(gymClass);
+      classesCreated++;
+    } catch (e) {
+      // Ignora erros de validação
     }
   }
   console.log(`  ✓ ${classesCreated} aulas criadas para a próxima semana.`);
@@ -459,8 +280,9 @@ async function seedEnrollments() {
   const classes = await gymClassRepository.findAll();
   const allUsers = await userService.findAll();
   const students = allUsers.filter((u: any) => u.role === 'aluno');
+  const student = students.find((u: any) => u.email === process.env.SEED_ALUNO_EMAIL!);
 
-  if (classes.length === 0 || students.length === 0) return;
+  if (classes.length === 0 || !student?.id) return;
 
   if (classes.length > 0) {
     const sample = await enrollmentRepository.findByClassId(classes[0].id!);
@@ -473,27 +295,20 @@ async function seedEnrollments() {
   let enrollmentsCount = 0;
 
   for (const cls of classes) {
-    // Matricular 5 a 15 alunos aleatórios por aula
-    const studentsCount = Math.floor(Math.random() * 10) + 5;
-    const shuffledStudents = [...students].sort(() => 0.5 - Math.random());
-    const selectedStudents = shuffledStudents.slice(0, Math.min(studentsCount, students.length));
+    if (!cls.id) continue;
 
-    for (const student of selectedStudents) {
-      if (!student.id || !cls.id) continue;
-
-      try {
-        // Verificar se já existe matrícula pra evitar erro de unique constraint
-        const existing = await enrollmentRepository.findByStudentAndClass(student.id, cls.id);
-        if (!existing) {
-          await enrollmentRepository.create({
-            student_id: student.id,
-            gym_class_id: cls.id
-          });
-          enrollmentsCount++;
-        }
-      } catch (e) {
-        // Ignora
+    try {
+      // Verificar se já existe matrícula pra evitar erro de unique constraint
+      const existing = await enrollmentRepository.findByStudentAndClass(student.id, cls.id);
+      if (!existing) {
+        await enrollmentRepository.create({
+          student_id: student.id,
+          gym_class_id: cls.id
+        });
+        enrollmentsCount++;
       }
+    } catch (e) {
+      // Ignora
     }
   }
   console.log(`  ✓ ${enrollmentsCount} matrículas realizadas.`);
@@ -511,9 +326,13 @@ async function seedTrainings() {
 
   if (students.length === 0 || instructores.length === 0 || exercises.length === 0) return;
 
-  const sampleStudent = students[0];
-  if (sampleStudent.id) {
-    const existingTrainings = await trainingRepository.findByUserId(sampleStudent.id);
+  const targetStudent = students.find((u: any) => u.email === process.env.SEED_ALUNO_EMAIL!);
+  const targetInstructor = instructores.find((u: any) => u.email === process.env.SEED_INSTRUTOR_EMAIL!);
+
+  if (!targetStudent?.id || !targetInstructor?.id) return;
+
+  if (targetStudent.id) {
+    const existingTrainings = await trainingRepository.findByUserId(targetStudent.id);
     if (existingTrainings.length > 0) {
       console.log('  ! Treinos já existem. Pulando criação.');
       return;
@@ -522,44 +341,34 @@ async function seedTrainings() {
 
   let trainingCount = 0;
 
-  // Para 50% dos alunos, criar uma ficha de treino A e B
-  const loopLimit = Math.min(students.length, 50); // Fazendo para os primeiros 50 para não demorar demais
+  const routines = ['A', 'B'];
 
-  for (let i = 0; i < loopLimit; i++) {
-    const student = students[i];
-    const instructor = instructores[Math.floor(Math.random() * instructores.length)];
+  for (const routine of routines) {
+    try {
+      // Criar treino
+      const training = await trainingRepository.create({
+        instructor_id: targetInstructor.id,
+        name: `Treino ${routine} - Hipertrofia`,
+        finish: false
+      });
 
-    const routines = ['A', 'B'];
+      if (!training.id) continue;
 
-    for (const routine of routines) {
-      try {
-        if (!instructor.id || !student.id) continue;
+      // Associar ao aluno
+      await trainingRepository.addUser(training.id, targetStudent.id);
 
-        // Criar treino
-        const training = await trainingRepository.create({
-          instructor_id: instructor.id,
-          name: `Treino ${routine} - Hipertrofia`,
-          finish: false
-        });
+      // Adicionar 4-6 exercícios aleatórios
+      const exercisesCount = Math.floor(Math.random() * 3) + 4;
+      const shuffledExercises = [...exercises].sort(() => 0.5 - Math.random());
+      const selectedExercises = shuffledExercises.slice(0, exercisesCount);
 
-        if (!training.id) continue;
-
-        // Associar ao aluno
-        await trainingRepository.addUser(training.id, student.id);
-
-        // Adicionar 4-6 exercícios aleatórios
-        const exercisesCount = Math.floor(Math.random() * 3) + 4;
-        const shuffledExercises = [...exercises].sort(() => 0.5 - Math.random());
-        const selectedExercises = shuffledExercises.slice(0, exercisesCount);
-
-        for (const ex of selectedExercises) {
-          if (!ex.id) continue;
-          await exerciseRepository.addToTraining(training.id, ex.id);
-        }
-        trainingCount++;
-      } catch (e) {
-        // Ignore
+      for (const ex of selectedExercises) {
+        if (!ex.id) continue;
+        await exerciseRepository.addToTraining(training.id, ex.id);
       }
+      trainingCount++;
+    } catch (e) {
+      // Ignore
     }
   }
   console.log(`  ✓ ${trainingCount} fichas de treino criadas.`);
@@ -572,37 +381,37 @@ async function seedHistoryCheckIns() {
   console.log('\n--- 5. Gerando Histórico de Check-ins (30 dias) ---');
   const allUsers = await userService.findAll();
   const students = allUsers.filter((u: any) => u.role === 'aluno');
+  const student = students.find((u: any) => u.email === process.env.SEED_ALUNO_EMAIL!);
+
+  if (!student?.id) return;
+
+  const existingCheckins = await checkInRepository.countByStudentId(student.id);
+  if (existingCheckins > 0) {
+    console.log('  ! Histórico de check-ins já populado. Pulando.');
+    return;
+  }
 
   let checkInCount = 0;
   const today = new Date();
+  const userTrainings = await trainingRepository.findByUserId(student.id);
+  const frequency = 5; // frequência fixa para o aluno padrão
 
-  const totalCheckins = await checkInRepository.countAll();
-  let targetStudents = students;
+  // Iterar últimos 30 dias
+  for (let d = 30; d >= 0; d--) {
+    if (Math.random() > (frequency / 7)) continue;
 
-  if (totalCheckins > 100) {
-    // Se já tem checkins, verificar se o João tem histórico decente
-    const joao = students.find((s: any) => s.email === 'joao@academia.com');
-    if (joao && joao.id) {
-      const joaoCheckins = await checkInRepository.countByStudentId(joao.id);
-      if (joaoCheckins < 10) {
-        console.log('  ! Histórico geral populado, mas João tem poucos check-ins. Reparando João...');
-        targetStudents = [joao];
-      } else {
-        console.log('  ! Histórico de check-ins já populado. Pulando.');
-        return;
-      }
-    } else {
-      console.log('  ! Histórico de check-ins já populado. Pulando.');
-      return;
-    }
-  }
+    const date = new Date(today);
+    date.setDate(today.getDate() - d);
 
-  // Processar cada aluno com um padrão diferente
-  for (const student of targetStudents) {
-    if (!student.id) continue;
+    const dateStr = date.toISOString().split('T')[0];
+    const timeStr = `${10 + Math.floor(Math.random() * 10)}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`; // entre 10h e 20h
+    const fullDate = `${dateStr}T${timeStr}:00Z`;
 
-    let frequency = Math.floor(Math.random() * 5) + 1; // 1 a 5 (padrão)
+    const trainingId = userTrainings.length > 0
+      ? userTrainings[Math.floor(Math.random() * userTrainings.length)].id
+      : undefined;
 
+<<<<<<< HEAD
     // Forçar João a ter alta frequência
     if (student.email === 'joao@academia.com') {
       frequency = 6; // Quase todos os dias
@@ -638,6 +447,17 @@ async function seedHistoryCheckIns() {
       } catch (e) {
         // Ignore
       }
+=======
+    try {
+      await checkInRepository.create({
+        student_id: student.id,
+        training_id: trainingId,
+        checkin_at: fullDate
+      });
+      checkInCount++;
+    } catch (e) {
+      // Ignore
+>>>>>>> main
     }
   }
   console.log(`  ✓ ${checkInCount} check-ins históricos criados.`);
@@ -657,10 +477,13 @@ export async function runSeed() {
     console.log('\n--- 1. Criando Usuários Padrão Essenciais ---');
     await seedDefaultUsers();
 
+<<<<<<< HEAD
     // 1.1) Criar exercícios padrão
     console.log('\n--- 1.1. Criando Exercícios Padrão ---');
     await seedDefaultExercises();
 
+=======
+>>>>>>> main
     // Verificar quantos usuários já existem
     try {
       const existingUsers = await userService.findAll();
@@ -669,6 +492,7 @@ export async function runSeed() {
       console.log('Não foi possível verificar usuários existentes');
     }
 
+<<<<<<< HEAD
     // 2) Busca usuários aleatórios da API
     console.log('\nBuscando nomes e emails reais da API...');
 
@@ -727,6 +551,9 @@ export async function runSeed() {
     }
 
     // Etapas do seed (mantive as mesmas)
+=======
+    // Novas etapas do Seed
+>>>>>>> main
     await seedExercises();
     await seedClasses();
     await seedEnrollments();

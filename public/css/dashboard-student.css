@@ -435,9 +435,7 @@ body {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   max-width: 1000px;
-  /* Limit width to reduce max card size */
   margin: 0 auto;
-  /* Center the grid */
 }
 
 .calendar-header {
@@ -644,4 +642,46 @@ body {
 
 .text-center {
   text-align: center;
+}
+
+.openMenuButton {
+  display: none;
+}
+
+.openMenuButton span {
+  display: block;
+  height: 4px;              
+  width: 100%;
+  background-color: #333;   
+  border-radius: 2px;       
+}
+
+@media (max-width: 768px) {
+  .calendar-controls {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .calendar-controls .btn {
+    padding: 2px;
+  }
+
+  .calendar-day {
+    padding: 0.2rem;
+    font-size: 0.7rem;
+    aspect-ratio: auto;
+  }
+  .calendar-header {
+    font-size: 12px;
+    padding: 2px;
+  }
+  .day-number {
+    font-size: 0.7rem;
+  }
+  .check-mark {
+    font-size: 1rem;
+  }
+  .class-mark {
+    font-size: 0.9rem;
+  }
 }

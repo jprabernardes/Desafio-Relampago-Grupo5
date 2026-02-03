@@ -4,7 +4,11 @@ import path from 'path';
 import cors from 'cors';
 import routes from './routes';
 import cookieParser from 'cookie-parser';
+<<<<<<< HEAD
 import planRoutes from './routes/plansRoutes';
+=======
+import { config } from './config/env';
+>>>>>>> main
 
 import { errorMiddleware } from './middlewares/error.middleware';
 import { generalRateLimiter } from './middlewares/rateLimit.middleware';
@@ -15,7 +19,9 @@ import { generalRateLimiter } from './middlewares/rateLimit.middleware';
 export const createApp = (): Application => {
   const app = express();
 
+
   // Configuração CORS
+  app.set('trust proxy', true);
   app.use(cors({
     origin: true,
     credentials: true,
@@ -43,15 +49,40 @@ export const createApp = (): Application => {
     next();
   });
 
+  // IMPORTANTE: Configuração de ambiente para o frontend 
+  // Rota para nginx proxy (sem prefixo)
+  app.get('/config.js', (req, res) => {
+    res.type('application/javascript');
+    res.send(`window.__APP_CONFIG__ = ${JSON.stringify({ APP_BASE_PATH: config.appBasePath, API_BASE_URL: config.apiBaseUrl })};`);
+  });
+  // Esta rota DEVE vir ANTES do express.static para não ser sobrescrita
+  app.get(`${config.appBasePath}/config.js`, (req, res) => {
+    res.type('application/javascript');
+    res.send(
+      `window.__APP_CONFIG__ = ${JSON.stringify({
+        APP_BASE_PATH: config.appBasePath,
+        API_BASE_URL: config.apiBaseUrl
+      })};`
+    );
+  });
+
   // Servir arquivos estáticos do frontend (pasta public)
-  app.use(express.static(path.join(__dirname, '../public')));
+  app.use(config.appBasePath, express.static(path.join(__dirname, '../public')));
 
   // Configuração das rotas da API
   app.use('/api', routes);
 
   // Rota de verificação de saúde (Health Check)
-  app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK', message: 'Sistema de Academia funcionando!' });
+  app.get('/api/health', (req, res) => {
+    res.status(200).json({
+      status: 'OK',
+      message: 'Sistema de Academia funcionando!',
+      config: {
+        appBasePath: config.appBasePath,
+        apiBaseUrl: config.apiBaseUrl,
+        nodeEnv: config.nodeEnv
+      }
+    });
   });
 
 

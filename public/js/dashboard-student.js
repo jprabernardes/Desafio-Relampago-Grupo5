@@ -1,5 +1,37 @@
-const API_URL = "http://localhost:3000/api";
+const { resolveAppPath } = window.AppConfig;
 // ...
+
+// Função auxiliar para converter data DD-MM-YYYY, DD/MM/YYYY ou YYYY-MM-DD para objeto Date
+function parseDateBR(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return new Date();
+
+  // Se contém 'T' (formato datetime), extrair apenas a parte da data
+  if (dateStr.includes('T')) {
+    dateStr = dateStr.split('T')[0];
+  }
+
+  // Se for DD-MM-YYYY (formato backend atual)
+  if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split("-");
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+
+  // Se for DD/MM/YYYY (formato com barras)
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split("/");
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+
+  // Se for YYYY-MM-DD (formato ISO)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split("-");
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+
+  // Tentar parse padrão como fallback
+  const parsed = new Date(dateStr);
+  return isNaN(parsed.getTime()) ? new Date() : parsed;
+}
 
 // Lógica do Modal de Confirmação
 let pendingConfirmAction = null;
@@ -72,7 +104,7 @@ function showAlert(message, type = "success") {
 // Carregar informações do usuário
 async function loadUserInfo() {
   try {
-    const response = await fetch(`${API_URL}/auth/me`);
+    const response = await apiFetch("/auth/me");
 
     if (!response.ok) throw new Error("Não autorizado");
 
@@ -101,7 +133,7 @@ async function loadUserInfo() {
 // Carregar treinos do aluno
 async function loadWorkouts() {
   try {
-    const response = await fetch(`${API_URL}/student/workouts`);
+    const response = await apiFetch("/student/workouts");
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -130,20 +162,19 @@ async function loadWorkouts() {
                   👤 <strong>Instrutor:</strong> ${workout.instructor_name || workout.instructor_id}
                 </p>
                 <div class="exercises-list">
-                  ${
-                    Array.isArray(workout.exercises)
-                      ? workout.exercises
-                          .map(
-                            (ex) => `
+                  ${Array.isArray(workout.exercises)
+            ? workout.exercises
+              .map(
+                (ex) => `
                       <div class="workout-exercise-item">
                         <strong>${ex.name}</strong><br>
                         ${ex.series}x${ex.repetitions} ${ex.weight ? `• ${ex.weight}KG` : ""}
                       </div>
                     `,
-                          )
-                          .join("")
-                      : `<pre>${workout.exercises}</pre>`
-                  }
+              )
+              .join("")
+            : `<pre>${workout.exercises}</pre>`
+          }
                 </div>
               </div>
               <div class="workout-actions">
@@ -165,7 +196,7 @@ async function loadWorkouts() {
 async function printWorkout(workoutId) {
   try {
     // Registrar check-in na API
-    const response = await fetch(`${API_URL}/student/checkin`, {
+    const response = await apiFetch("/student/checkin", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -243,11 +274,10 @@ async function printWorkout(workoutId) {
           <div class="workout-title">${workout.name.toUpperCase()}</div>
 
           <div class="section">
-            ${
-              Array.isArray(workout.exercises) && workout.exercises.length > 0
-                ? workout.exercises
-                    .map(
-                      (ex) => `
+            ${Array.isArray(workout.exercises) && workout.exercises.length > 0
+        ? workout.exercises
+          .map(
+            (ex) => `
               <div class="exercise-item">
                 <span class="ex-header">${ex.name}</span>
                 <div class="ex-details">
@@ -255,10 +285,10 @@ async function printWorkout(workoutId) {
                 </div>
               </div>
             `,
-                    )
-                    .join("")
-                : '<div class="text-center">Sem exercícios cadastrados.</div>'
-            }
+          )
+          .join("")
+        : '<div class="text-center">Sem exercícios cadastrados.</div>'
+      }
           </div>
 
           <div class="footer">
@@ -289,8 +319,8 @@ let myEnrollmentIds = [];
 async function loadAvailableClasses() {
   try {
     const [classesRes, myClassesRes] = await Promise.all([
-      fetch(`${API_URL}/student/classes`),
-      fetch(`${API_URL}/student/my-classes`),
+      apiFetch("/student/classes"),
+      apiFetch("/student/my-classes"),
     ]);
 
     if (!classesRes.ok || !myClassesRes.ok)
@@ -333,11 +363,13 @@ function renderAvailableClasses() {
         statusClass = "status-available";
       }
 
-      const date = new Date(cls.date);
-      const timeStr = date.toLocaleTimeString("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      const date = parseDateBR(cls.date);
+      // Extrair horário da string original se contiver 'T'
+      let timeStr = "--:--";
+      if (cls.date && cls.date.includes('T')) {
+        const timePart = cls.date.split('T')[1];
+        timeStr = timePart ? timePart.substring(0, 5) : "--:--";
+      }
       const dateStr = date.toLocaleDateString("pt-BR");
 
       return `
@@ -361,11 +393,13 @@ function openClassModal(classId) {
 
   const isInscrito = myEnrollmentIds.includes(cls.id);
   const isFull = cls.current_participants >= cls.max_participants;
-  const date = new Date(cls.date);
-  const timeStr = date.toLocaleTimeString("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const date = parseDateBR(cls.date);
+  // Extrair horário da string original se contiver 'T'
+  let timeStr = "--:--";
+  if (cls.date && cls.date.includes('T')) {
+    const timePart = cls.date.split('T')[1];
+    timeStr = timePart ? timePart.substring(0, 5) : "--:--";
+  }
   const dateStr = date.toLocaleDateString("pt-BR");
 
   document.getElementById("modalClassTitle").textContent = cls.title;
@@ -423,8 +457,8 @@ async function enrollFromModal(classId) {
 // Inscrever-se em aula (atualizada para suportar modal)
 async function enrollClass(classId, fromModal = false) {
   try {
-    const response = await fetch(
-      `${API_URL}/student/classes/${classId}/enroll`,
+    const response = await apiFetch(
+      `/student/classes/${classId}/enroll`,
       {
         method: "POST",
         headers: {
@@ -458,7 +492,7 @@ async function enrollClass(classId, fromModal = false) {
 // Carregar minhas inscrições
 async function loadMyClasses() {
   try {
-    const response = await fetch(`${API_URL}/student/my-classes`);
+    const response = await apiFetch("/student/my-classes");
 
     if (!response.ok) throw new Error("Erro ao carregar inscrições");
 
@@ -472,12 +506,14 @@ async function loadMyClasses() {
 
     container.innerHTML = classes
       .map((cls) => {
-        const date = new Date(cls.date);
+        const date = parseDateBR(cls.date);
         const isPast = date < new Date();
-        const timeStr = date.toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        // Extrair horário da string original se contiver 'T'
+        let timeStr = "--:--";
+        if (cls.date && cls.date.includes('T')) {
+          const timePart = cls.date.split('T')[1];
+          timeStr = timePart ? timePart.substring(0, 5) : "--:--";
+        }
         const dateStr = date.toLocaleDateString("pt-BR");
 
         let statusLabel = isPast
@@ -518,8 +554,8 @@ async function cancelEnrollment(classId) {
       console.log("Usuário confirmou cancelamento.");
 
       try {
-        const response = await fetch(
-          `${API_URL}/student/classes/${classId}/cancel`,
+        const response = await apiFetch(
+          `/student/classes/${classId}/cancel`,
           {
             method: "DELETE",
             headers: {
@@ -548,8 +584,8 @@ async function cancelEnrollment(classId) {
 
 // Logout
 async function logout() {
-  await fetch(`${API_URL}/auth/logout`, { method: "DELETE" });
-  window.location.href = "/";
+  await apiFetch("/auth/logout", { method: "DELETE" });
+  window.location.href = resolveAppPath("/");
 }
 
 // Inicializar
@@ -564,7 +600,7 @@ let classHistory = []; // Mock data store
 
 async function loadCalendar() {
   // Mock fetching history data (simulating API calls)
-  // In a real app, this would be: await fetch('${API_URL}/student/history');
+  // In a real app, this would be: await apiFetch('/student/history');
 
   // Reuse existing data if possible, or mock additional past data for demonstration
   await loadHistoryData();
@@ -576,7 +612,7 @@ async function loadCalendar() {
 async function loadHistoryData() {
   // Carregar check-ins reais da API
   try {
-    const checkinResponse = await fetch(`${API_URL}/student/checkins`);
+    const checkinResponse = await apiFetch("/student/checkins");
     if (checkinResponse.ok) {
       const checkins = await checkinResponse.json();
       checkinHistory = checkins.map((checkin) => ({
@@ -598,17 +634,14 @@ async function loadHistoryData() {
 
   // Carregar aulas inscritas
   try {
-    const response = await fetch(`${API_URL}/student/my-classes`);
+    const response = await apiFetch("/student/my-classes");
     if (response.ok) {
       const myClasses = await response.json();
       classHistory = myClasses.map((cls) => ({
-        date: new Date(cls.date),
+        date: parseDateBR(cls.date),
         type: "class",
         title: cls.title,
-        time: new Date(cls.date).toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        time: cls.date && cls.date.includes('T') ? cls.date.split('T')[1].substring(0, 5) : "--:--",
       }));
     } else {
       console.warn("Não foi possível carregar histórico de aulas");
@@ -753,4 +786,13 @@ function openCalendarModal(date, workouts, classes) {
 
 function closeCalendarModal() {
   document.getElementById("calendarModal").classList.remove("active");
+}
+
+function openCloseMenu() {
+  const body = document.querySelector("body");
+  if (body.classList.contains("closed-menu")) {
+    body.classList.remove("closed-menu");
+  } else {
+    body.classList.add("closed-menu");
+  }
 }

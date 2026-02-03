@@ -18,7 +18,7 @@ const startServer = async () => {
     // Inicia o servidor escutando na porta definida
     app.listen(config.port, () => {
       console.log(`\n🚀 Servidor rodando na porta ${config.port}`);
-      console.log(`📍 Verificação de saúde: http://localhost:${config.port}/health`);
+      console.log(`📍 Verificação de saúde: http://localhost:${config.port}/api/health`);
       console.log(`📍 Documentação da API: http://localhost:${config.port}/`);
       console.log(`\n✅ Sistema pronto para uso!\n`);
     });
