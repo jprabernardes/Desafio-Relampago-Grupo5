@@ -56,6 +56,7 @@ function confirmAction() {
 
 let currentUserId = null;
 let allWorkouts = []; // Cache para os treinos do aluno
+let currentUserData = null; // Armazena dados completos do usuário
 
 const GYM_INFO = {
   name: "💪 FITMANAGER ACADEMIA",
@@ -110,6 +111,7 @@ async function loadUserInfo() {
 
     const data = await response.json();
     currentUserId = data.id;
+    currentUserData = data; // Armazenar dados completos
     document.getElementById("userName").textContent = data.name || data.nome;
     document.getElementById("userAvatar").textContent = (
       data.name ||
@@ -794,5 +796,162 @@ function openCloseMenu() {
     body.classList.remove("closed-menu");
   } else {
     body.classList.add("closed-menu");
+  }
+}
+
+// Funções do Modal de Informações do Aluno
+function openStudentInfoModal() {
+  if (!currentUserData) {
+    showAlert("Carregando informações...", "error");
+    return;
+  }
+
+  // Preencher informações do aluno
+  document.getElementById("studentInfoName").textContent = currentUserData.name || currentUserData.nome || "-";
+  document.getElementById("studentInfoEmail").textContent = currentUserData.email || "-";
+  document.getElementById("studentInfoPhone").textContent = currentUserData.phone || "-";
+  document.getElementById("studentInfoCpf").textContent = currentUserData.document || "-";
+  
+  // Formatar tipo de plano
+  const planType = currentUserData.planType || currentUserData.plan_type || "mensal";
+  const planTypeMap = {
+    mensal: "Mensal",
+    trimestral: "Trimestral",
+    semestral: "Semestral",
+    anual: "Anual"
+  };
+  document.getElementById("studentInfoPlanType").textContent = planTypeMap[planType] || planType;
+
+  // Ocultar formulário de mudança de senha se estiver visível
+  document.getElementById("changePasswordSection").style.display = "none";
+  
+  // Limpar mensagens e campos
+  document.getElementById("passwordMessage").textContent = "";
+  document.getElementById("currentPassword").value = "";
+  document.getElementById("newPassword").value = "";
+  document.getElementById("confirmPassword").value = "";
+
+  // Abrir modal
+  document.getElementById("studentInfoModal").classList.add("active");
+}
+
+function closeStudentInfoModal() {
+  document.getElementById("studentInfoModal").classList.remove("active");
+  // Ocultar formulário de mudança de senha
+  document.getElementById("changePasswordSection").style.display = "none";
+  // Limpar campos
+  document.getElementById("currentPassword").value = "";
+  document.getElementById("newPassword").value = "";
+  document.getElementById("confirmPassword").value = "";
+  document.getElementById("passwordMessage").textContent = "";
+}
+
+function handleStudentModalClick(event) {
+  // Fechar modal se clicar no backdrop (fora do modal-content)
+  if (event.target.id === "studentInfoModal") {
+    closeStudentInfoModal();
+  }
+}
+
+function toggleChangePasswordForm() {
+  const section = document.getElementById("changePasswordSection");
+  if (section.style.display === "none") {
+    section.style.display = "block";
+  } else {
+    section.style.display = "none";
+    // Limpar campos ao ocultar
+    document.getElementById("currentPassword").value = "";
+    document.getElementById("newPassword").value = "";
+    document.getElementById("confirmPassword").value = "";
+    document.getElementById("passwordMessage").textContent = "";
+  }
+}
+
+function cancelChangePassword() {
+  toggleChangePasswordForm();
+}
+
+// Validação de senha (mesmas regras do backend)
+function isValidPassword(password) {
+  if (!password || typeof password !== 'string') {
+    return false;
+  }
+  if (password.includes(' ')) {
+    return false;
+  }
+  return password.length >= 6;
+}
+
+async function changePassword() {
+  const currentPassword = document.getElementById("currentPassword").value;
+  const newPassword = document.getElementById("newPassword").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+  const messageEl = document.getElementById("passwordMessage");
+
+  // Limpar mensagem anterior
+  messageEl.textContent = "";
+  messageEl.className = "password-message";
+
+  // Validações
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    messageEl.textContent = "Por favor, preencha todos os campos.";
+    messageEl.classList.add("error");
+    return;
+  }
+
+  if (!isValidPassword(newPassword)) {
+    messageEl.textContent = "A nova senha deve ter no mínimo 6 caracteres e não pode conter espaços.";
+    messageEl.classList.add("error");
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    messageEl.textContent = "As senhas não coincidem.";
+    messageEl.classList.add("error");
+    return;
+  }
+
+  if (currentPassword === newPassword) {
+    messageEl.textContent = "A nova senha deve ser diferente da senha atual.";
+    messageEl.classList.add("error");
+    return;
+  }
+
+  try {
+    const response = await apiFetch("/auth/password", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        currentPassword,
+        newPassword,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || "Erro ao alterar senha");
+    }
+
+    // Sucesso
+    messageEl.textContent = "Senha alterada com sucesso!";
+    messageEl.classList.add("success");
+
+    // Limpar campos após 2 segundos
+    setTimeout(() => {
+      document.getElementById("currentPassword").value = "";
+      document.getElementById("newPassword").value = "";
+      document.getElementById("confirmPassword").value = "";
+      messageEl.textContent = "";
+      messageEl.className = "password-message";
+      // Ocultar formulário após sucesso
+      document.getElementById("changePasswordSection").style.display = "none";
+    }, 2000);
+  } catch (error) {
+    console.error("Erro ao alterar senha:", error);
+    messageEl.textContent = error.message || "Erro ao alterar senha. Tente novamente.";
+    messageEl.classList.add("error");
   }
 }
