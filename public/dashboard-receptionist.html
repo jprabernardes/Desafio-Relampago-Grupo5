@@ -137,6 +137,24 @@
         </div>
       </div>
 
+      <!-- Finance View -->
+      <div id="financeView" class="hidden">
+        <div class="finance-summary-grid">
+          <div class="finance-summary-card">
+            <div class="finance-summary-label">Adimplentes</div>
+            <div class="finance-summary-value positive" id="financeAdimplentes">0</div>
+          </div>
+          <div class="finance-summary-card">
+            <div class="finance-summary-label">Inadimplentes</div>
+            <div class="finance-summary-value negative" id="financeInadimplentes">0</div>
+          </div>
+          <div class="finance-summary-card">
+            <div class="finance-summary-label">Total de alunos</div>
+            <div class="finance-summary-value" id="financeTotal">0</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Table Card -->
       <div class="table-container">
         <div class="table-header">
@@ -215,6 +233,10 @@
             <option value="anual">Anual</option>
           </select>
         </div>
+        <div class="form-group hidden" id="addPaymentDayGroup">
+          <label>Dia de Pagamento (1-31) <span class="required">*</span></label>
+          <input type="number" id="addPaymentDay" min="1" max="31" value="10" />
+        </div>
         <div class="form-group hidden" id="addSpecialtyGroup">
           <label>Especialidade <span class="required">*</span></label>
           <input type="text" id="addSpecialty" placeholder="Ex: Musculação" />
@@ -264,6 +286,10 @@
             <option value="semestral">Semestral</option>
             <option value="anual">Anual</option>
           </select>
+        </div>
+        <div class="form-group hidden" id="editPaymentDayGroup">
+          <label>Dia de Pagamento (1-31) <span class="required">*</span></label>
+          <input type="number" id="editPaymentDay" min="1" max="31" value="10" />
         </div>
         <div class="form-group hidden" id="editSpecialtyGroup">
           <label>Especialidade <span class="required">*</span></label>
