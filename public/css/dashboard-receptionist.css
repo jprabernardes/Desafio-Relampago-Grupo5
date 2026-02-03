@@ -4,6 +4,46 @@
   box-sizing: border-box;
 }
 
+/* ... seu CSS inteiro igual ... */
+
+.plan-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.plan-fit {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.plan-fit-pro {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.plan-fit-diamond {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.plan-unknown {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+
+/* (opcional) fallback */
+.plan-unknown {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* ... resto do seu CSS igual ... */
+
+
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: #f5f7fa;
@@ -242,34 +282,7 @@ td {
   color: #9f1239;
 }
 
-/* Plan Badge */
-.plan-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-transform: capitalize;
-}
 
-.plan-mensal {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.plan-anual {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.plan-trimestral {
-  background: #ffedd5;
-  color: #9a3412;
-}
-
-.plan-semestral {
-  background: #e0e7ff;
-  color: #3730a3;
-}
 
 /* Modal */
 .modal {

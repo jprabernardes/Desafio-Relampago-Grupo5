@@ -7,6 +7,61 @@ let paginator = null;
 
 const API_URL = "/api";
 
+// --------------------
+// Plans
+// --------------------
+let plansCache = []; // [{id, code, name, ...}]
+
+async function fetchPlans() {
+  const res = await fetch(`${API_URL}/plans`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || data.error || "Erro ao buscar planos");
+
+  // garante array e somente ativos
+  const list = Array.isArray(data) ? data : [];
+  plansCache = list.filter((p) => p && p.active); // active pode ser true/1/"1"
+  return plansCache;
+}
+
+function getPlanNameByCode(code) {
+  const found = plansCache.find((p) => p.code === code);
+  return found ? found.name : code; // fallback: mostra o code
+}
+
+function fillPlanSelect(selectId, selectedCode = "") {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+
+  // fallback se plansCache não carregou
+  const source =
+    plansCache.length > 0
+      ? plansCache
+      : [
+          { code: "fit", name: "Fit" },
+          { code: "fit_pro", name: "Fit Pro" },
+          { code: "fit_diamond", name: "Fit Diamond" },
+        ];
+
+  sel.innerHTML = `
+    <option value="">Selecione...</option>
+    ${source
+      .map((p) => {
+        const selected = p.code === selectedCode ? "selected" : "";
+        return `<option value="${p.code}" ${selected}>${p.name}</option>`;
+      })
+      .join("")}
+  `;
+}
+
+/**
+ * transforma code em classe CSS segura
+ * fit_pro -> fit-pro
+ */
+function toPlanClassFromCode(planCode) {
+  if (!planCode) return "unknown";
+  return planCode.toString().trim().toLowerCase().replace(/_/g, "-");
+}
+
 async function loadUserInfo() {
   const res = await fetch(`${API_URL}/auth/me`);
   const data = await res.json();
@@ -28,46 +83,39 @@ function closeConfirmModal() {
 }
 
 function confirmAction() {
-  if (pendingConfirmAction) {
-    pendingConfirmAction();
-  }
+  if (pendingConfirmAction) pendingConfirmAction();
   closeConfirmModal();
 }
 
 // --- Main Logic ---
 
-// Load Tab
 async function loadTab(tab) {
   try {
     const userData = await loadUserInfo();
     if (userData.error) {
       document.cookie = "";
       window.location.href = "/";
+      return;
     }
 
-    // Ensure user is receptionist
     if (userData.role && userData.role !== "recepcionista") {
       alert("Acesso negado. Você não é recepcionista.");
       logout();
+      return;
     }
 
-    // Display Name
     const displayName = userData.name || userData.nome || "Recepcionista";
     document.getElementById("userName").textContent = displayName;
-    document.getElementById("userAvatar").textContent = displayName
-      .charAt(0)
-      .toUpperCase();
+    document.getElementById("userAvatar").textContent = displayName.charAt(0).toUpperCase();
   } catch (error) {
     console.error("Erro:", error);
     window.location.href = "/";
+    return;
   }
 
   currentTab = tab;
 
-  // UI Updates
-  document
-    .querySelectorAll(".nav-item")
-    .forEach((i) => i.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach((i) => i.classList.remove("active"));
   document.getElementById("usersTable").innerHTML =
     '<tr><td colspan="5" class="text-center-padded">Carregando...</td></tr>';
 
@@ -80,6 +128,18 @@ async function loadTab(tab) {
     document.getElementById("searchInput").value = "";
     document.getElementById("addBtn").classList.remove("hidden");
     document.getElementById("addBtn").textContent = "+ Adicionar Aluno";
+
+    // carregar planos uma vez
+    try {
+      if (!plansCache.length) await fetchPlans();
+    } catch (e) {
+      console.error("Falha ao carregar planos:", e);
+      // segue com fallback
+    }
+
+    // preencher selects
+    fillPlanSelect("addTipoPlano");
+    fillPlanSelect("editTipoPlano");
 
     updateTableHeaders("students");
     await loadUsers("students");
@@ -102,25 +162,24 @@ function updateTableHeaders(type) {
   const thead = document.getElementById("tableHead");
   if (type === "students") {
     thead.innerHTML = `
-            <tr>
-                <th>Nome</th>
-                <th>Email</th>
-                <th>Plano</th>
-                <th>Ações</th>
-            </tr>
-        `;
+      <tr>
+        <th>Nome</th>
+        <th>Email</th>
+        <th>Plano</th>
+        <th>Ações</th>
+      </tr>
+    `;
   } else if (type === "instructors") {
     thead.innerHTML = `
-            <tr>
-                <th>Nome</th>
-                <th>Email</th>
-                <th>Ações</th>
-            </tr>
-        `;
+      <tr>
+        <th>Nome</th>
+        <th>Email</th>
+        <th>Ações</th>
+      </tr>
+    `;
   }
 }
 
-// MODIFICADO: Load Users com Paginação
 async function loadUsers(type) {
   let endpoint = "";
   if (type === "students") endpoint = "/receptionist/students";
@@ -128,20 +187,22 @@ async function loadUsers(type) {
 
   try {
     const res = await fetch(`${API_URL}${endpoint}`);
-
     if (!res.ok) throw new Error("Erro ao buscar dados");
 
     const data = await res.json();
 
-    // Normalize fields
-    allUsers = data.map((u) => ({
-      id: u.id,
-      nome: u.name || u.nome,
-      email: u.email,
-      cpf: u.document || u.cpf,
-      phone: u.phone,
-      plan: u.plan_type || u.plan || "mensal",
-    }));
+    allUsers = (data || []).map((u) => {
+      const planCode = u.planType || u.plan_type || u.planCode || u.plan || "fit"; // sempre code
+      return {
+        id: u.id,
+        nome: u.name || u.nome,
+        email: u.email,
+        cpf: u.document || u.cpf,
+        phone: u.phone,
+        planCode,
+        planName: getPlanNameByCode(planCode),
+      };
+    });
 
     filteredUsers = [...allUsers];
 
@@ -171,51 +232,45 @@ function renderTablePage(pageItems) {
 
   if (currentTab === "students") {
     tbody.innerHTML = pageItems
-      .map(
-        (u) => `
-            <tr>
-                <td>${u.nome}</td>
-                <td>${u.email}</td>
-                <td><span class="plan-badge plan-${u.plan}">${u.plan}</span></td>
-                <td>
-                    <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
-                </td>
-            </tr>
-        `,
-      )
+      .map((u) => {
+        const planClass = toPlanClassFromCode(u.planCode);
+        return `
+          <tr>
+            <td>${u.nome}</td>
+            <td>${u.email}</td>
+            <td><span class="plan-badge plan-${planClass}">${u.planName}</span></td>
+            <td>
+              <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
+            </td>
+          </tr>
+        `;
+      })
       .join("");
-  } else if (currentTab === "instructors") {
+  } else {
     tbody.innerHTML = pageItems
       .map(
         (u) => `
-            <tr>
-                <td>${u.nome}</td>
-                <td>${u.email}</td>
-                <td>
-                    <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
-                </td>
-            </tr>
-        `,
+          <tr>
+            <td>${u.nome}</td>
+            <td>${u.email}</td>
+            <td>
+              <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
+            </td>
+          </tr>
+        `
       )
       .join("");
   }
 }
 
 function handleSearch() {
-  const term = document
-    .getElementById("searchInput")
-    .value.toLowerCase()
-    .trim();
+  const term = document.getElementById("searchInput").value.toLowerCase().trim();
 
-  if (!term) {
-    filteredUsers = [...allUsers];
-  } else {
-    filteredUsers = allUsers.filter(
-      (u) =>
-        u.nome.toLowerCase().includes(term) ||
-        u.email.toLowerCase().includes(term),
-    );
-  }
+  filteredUsers = !term
+    ? [...allUsers]
+    : allUsers.filter(
+        (u) => u.nome.toLowerCase().includes(term) || u.email.toLowerCase().includes(term)
+      );
 
   if (paginator) {
     paginator.updateItems(filteredUsers);
@@ -225,20 +280,25 @@ function handleSearch() {
 
 // --- Modals ---
 
-// ADD Modal
 function openAddModal() {
   document.getElementById("addModal").classList.add("active");
   document.getElementById("addForm").reset();
   document.getElementById("addAlertContainer").innerHTML = "";
 
-  // Toggle Fields based on Tab
   const isStudent = currentTab === "students";
-  if (isStudent) {
-    document.getElementById("addTipoPlanoGroup").classList.remove("hidden");
-  } else {
-    document.getElementById("addTipoPlanoGroup").classList.add("hidden");
+
+  // só mostra plano se for aluno
+  const addPlanGroup = document.getElementById("addTipoPlanoGroup");
+  if (addPlanGroup) {
+    if (isStudent) addPlanGroup.classList.remove("hidden");
+    else addPlanGroup.classList.add("hidden");
   }
-  document.getElementById("addTipoPlano").required = isStudent;
+
+  const addPlanSelect = document.getElementById("addTipoPlano");
+  if (addPlanSelect) {
+    addPlanSelect.required = isStudent;
+    if (isStudent) fillPlanSelect("addTipoPlano", "fit");
+  }
 }
 
 function closeAddModal() {
@@ -260,6 +320,12 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
   if (currentTab === "students") {
     body.role = "aluno";
     body.planType = document.getElementById("addTipoPlano").value;
+
+    if (!body.planType) {
+      showAddAlert("Selecione um plano.", "error");
+      return;
+    }
+
     endpoint = "/receptionist/students";
   } else {
     body.role = "instrutor";
@@ -269,9 +335,7 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
   try {
     const res = await fetch(`${API_URL}${endpoint}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
 
@@ -290,12 +354,10 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
 });
 
 function showAddAlert(msg, type) {
-  const el = document.getElementById("addAlertContainer");
-  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  document.getElementById("addAlertContainer").innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
 }
 
-// EDIT Modal
-function openEditModal(id) {
+async function openEditModal(id) {
   const userToEdit = allUsers.find((u) => u.id === id);
   if (!userToEdit) return;
 
@@ -307,15 +369,21 @@ function openEditModal(id) {
   document.getElementById("editAlertContainer").innerHTML = "";
 
   const isStudent = currentTab === "students";
-  if (isStudent) {
-    document.getElementById("editTipoPlanoGroup").classList.remove("hidden");
-  } else {
-    document.getElementById("editTipoPlanoGroup").classList.add("hidden");
+  const editGroup = document.getElementById("editTipoPlanoGroup");
+
+  if (editGroup) {
+    if (isStudent) editGroup.classList.remove("hidden");
+    else editGroup.classList.add("hidden");
   }
 
   if (isStudent) {
-    document.getElementById("editTipoPlano").value =
-      userToEdit.plan.toLowerCase();
+    try {
+      if (!plansCache.length) await fetchPlans();
+    } catch (e) {
+      console.error("Falha ao carregar planos:", e);
+    }
+    // seleciona pelo CODE
+    fillPlanSelect("editTipoPlano", userToEdit.planCode || "fit");
   }
 
   document.getElementById("editModal").classList.add("active");
@@ -338,21 +406,23 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
 
   if (currentTab === "students") {
     body.planType = document.getElementById("editTipoPlano").value;
+
+    if (!body.planType) {
+      showEditAlert("Selecione um plano.", "error");
+      return;
+    }
   }
 
   try {
     const res = await fetch(`${API_URL}/users/${id}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
 
     const json = await res.json();
 
-    if (!res.ok)
-      throw new Error(json.message || json.error || "Erro ao atualizar");
+    if (!res.ok) throw new Error(json.message || json.error || "Erro ao atualizar");
 
     showEditAlert("Atualizado com sucesso!", "success");
     setTimeout(() => {
@@ -373,9 +443,7 @@ function confirmDeleteUser() {
 
 async function deleteUser(id) {
   try {
-    const res = await fetch(`${API_URL}/users/${id}`, {
-      method: "DELETE",
-    });
+    const res = await fetch(`${API_URL}/users/${id}`, { method: "DELETE" });
 
     if (res.ok) {
       showEditAlert("Conta deletada com sucesso!", "success");
@@ -385,16 +453,15 @@ async function deleteUser(id) {
       }, 1500);
     } else {
       const data = await res.json();
-      showEditAlert(data.error || "Erro ao deletar");
+      showEditAlert(data.error || "Erro ao deletar", "error");
     }
   } catch (e) {
-    showEditAlert("Erro de conexão");
+    showEditAlert("Erro de conexão", "error");
   }
 }
 
 function showEditAlert(msg, type) {
-  const el = document.getElementById("editAlertContainer");
-  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  document.getElementById("editAlertContainer").innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
 }
 
 async function logout() {
@@ -402,23 +469,18 @@ async function logout() {
   window.location.href = "/";
 }
 
-// Função para formatar telefone
+// telefone mask
 function formatPhoneNumber(value) {
   if (!value) return "";
   value = value.replace(/\D/g, "");
   if (value.length > 11) value = value.slice(0, 11);
 
-  if (value.length > 2) {
-    return `(${value.slice(0, 2)})${value.slice(2)}`;
-  } else if (value.length > 0) {
-    return `(${value}`;
-  }
+  if (value.length > 2) return `(${value.slice(0, 2)})${value.slice(2)}`;
+  if (value.length > 0) return `(${value}`;
   return value;
 }
 
-// Aplicar máscara nos campos de telefone
-const phoneInputs = ["addTelefone", "editTelefone"];
-phoneInputs.forEach((id) => {
+["addTelefone", "editTelefone"].forEach((id) => {
   const el = document.getElementById(id);
   if (el) {
     el.addEventListener("input", (e) => {

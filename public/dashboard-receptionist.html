@@ -83,7 +83,9 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2 id="addModalTitle">Adicionar</h2>
-          <button class="close-btn" onclick="closeAddModal()">&times;</button>
+          <button class="close-btn" type="button" onclick="closeAddModal()">
+            &times;
+          </button>
         </div>
         <div id="addAlertContainer"></div>
         <form id="addForm">
@@ -116,14 +118,11 @@
             <input type="text" id="addTelefone" placeholder="(XX)9XXXXXXXX" />
           </div>
 
+          <!-- ✅ AGORA O PLANO VEM DO /api/plans (JS PREENCHE) -->
           <div class="form-group hidden" id="addTipoPlanoGroup">
-            <label>Tipo de Plano *</label>
+            <label>Plano *</label>
             <select id="addTipoPlano">
-              <option value="">Selecione...</option>
-              <option value="mensal">Mensal</option>
-              <option value="trimestral">Trimestral</option>
-              <option value="semestral">Semestral</option>
-              <option value="anual">Anual</option>
+              <option value="">Carregando planos...</option>
             </select>
           </div>
 
@@ -148,7 +147,9 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2 id="editModalTitle">Editar</h2>
-          <button class="close-btn" onclick="closeEditModal()">&times;</button>
+          <button class="close-btn" type="button" onclick="closeEditModal()">
+            &times;
+          </button>
         </div>
         <div id="editAlertContainer"></div>
         <form id="editForm">
@@ -170,15 +171,11 @@
             <input type="text" id="editCpf" maxlength="11" />
           </div>
 
-          <!-- Student Specific -->
+          <!-- ✅ AGORA O PLANO VEM DO /api/plans (JS PREENCHE) -->
           <div class="form-group hidden" id="editTipoPlanoGroup">
-            <label>Tipo de Plano *</label>
+            <label>Plano *</label>
             <select id="editTipoPlano">
-              <option value="">Selecione...</option>
-              <option value="mensal">Mensal</option>
-              <option value="trimestral">Trimestral</option>
-              <option value="semestral">Semestral</option>
-              <option value="anual">Anual</option>
+              <option value="">Carregando planos...</option>
             </select>
           </div>
 
@@ -193,7 +190,6 @@
               type="button"
               class="btn btn-danger"
               onclick="confirmDeleteUser()"
-              class="btn btn-danger btn-danger-white"
             >
               Deletar Conta
             </button>
@@ -211,23 +207,20 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2>Confirmação</h2>
-          <button class="close-btn" onclick="closeConfirmModal()">
+          <button class="close-btn" type="button" onclick="closeConfirmModal()">
             &times;
           </button>
         </div>
         <p id="confirmMessage" class="confirm-modal-message">Tem certeza?</p>
         <div class="form-actions">
           <button class="btn" onclick="closeConfirmModal()">Não</button>
-          <button
-            class="btn btn-danger"
-            onclick="confirmAction()"
-            class="btn btn-danger btn-danger-white"
-          >
+          <button class="btn btn-danger" onclick="confirmAction()">
             Sim, tenho certeza
           </button>
         </div>
       </div>
     </div>
+
     <script src="js/pagination.js"></script>
     <script src="js/dashboard-receptionist.js"></script>
   </body>
