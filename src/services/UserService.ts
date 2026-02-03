@@ -34,10 +34,20 @@ export class UserService {
     if (user.role === 'aluno') {
       const profile: any = await this.studentProfileRepository.findByUserId(user.id);
       const plan = profile?.plan_type || 'mensal';
+      const paymentDay = profile?.payment_day ?? 10;
+      const paidUntil = profile?.paid_until ?? null;
+      const lastPaymentAt = profile?.last_payment_at ?? null;
+
       return {
         ...user,
         planType: plan,
-        plan_type: plan
+        plan_type: plan,
+        paymentDay,
+        payment_day: paymentDay,
+        paidUntil,
+        paid_until: paidUntil,
+        lastPaymentAt,
+        last_payment_at: lastPaymentAt
       };
     }
     return user;
@@ -51,7 +61,8 @@ export class UserService {
   async create(
     user: User,
     creatorRole: string,
-    planType?: 'mensal' | 'trimestral' | 'semestral' | 'anual'
+    planType?: 'mensal' | 'trimestral' | 'semestral' | 'anual',
+    paymentDay?: number
   ) {
     if (creatorRole === 'instrutor' || creatorRole === 'aluno') {
       throw new Error('Você não tem permissão para criar usuários.');
@@ -103,9 +114,16 @@ export class UserService {
     });
 
     if (newUser.role === 'aluno') {
+      const parsedPaymentDay = paymentDay !== undefined ? Number(paymentDay) : 10;
+      if (Number.isNaN(parsedPaymentDay) || parsedPaymentDay < 1 || parsedPaymentDay > 31) {
+        throw new Error('Dia de pagamento inválido. Use um número entre 1 e 31.');
+      }
+
       await this.studentProfileRepository.create(
         newUser.id!,
-        planType ?? 'mensal'
+        planType ?? 'mensal',
+        parsedPaymentDay,
+        null
       );
     }
 
@@ -165,7 +183,8 @@ export class UserService {
     id: number,
     data: Partial<User>,
     updaterRole: string,
-    planType?: 'mensal' | 'trimestral' | 'semestral' | 'anual'
+    planType?: 'mensal' | 'trimestral' | 'semestral' | 'anual',
+    paymentDay?: number
   ): Promise<void> {
 
     // Verificar se usuário existe
@@ -211,10 +230,22 @@ export class UserService {
 
     await this.userRepository.update(id, data);
 
+    const userAfterUpdate = await this.userRepository.findById(id);
+
     if (planType) {
-      const user = await this.userRepository.findById(id);
-      if (user && user.role === 'aluno') {
+      if (userAfterUpdate && userAfterUpdate.role === 'aluno') {
         await this.studentProfileRepository.updatePlanType(id, planType);
+      }
+    }
+
+    if (paymentDay !== undefined) {
+      const parsedPaymentDay = Number(paymentDay);
+      if (Number.isNaN(parsedPaymentDay) || parsedPaymentDay < 1 || parsedPaymentDay > 31) {
+        throw new Error('Dia de pagamento inválido. Use um número entre 1 e 31.');
+      }
+
+      if (userAfterUpdate && userAfterUpdate.role === 'aluno') {
+        await this.studentProfileRepository.updatePaymentDay(id, parsedPaymentDay);
       }
     }
   }

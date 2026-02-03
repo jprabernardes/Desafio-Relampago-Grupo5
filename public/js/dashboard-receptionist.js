@@ -72,6 +72,7 @@ async function loadTab(tab) {
   // Hide all main containers first
   document.querySelector(".table-container").style.display = "none";
   document.getElementById("homeView").classList.add("hidden");
+  document.getElementById("financeView").classList.add("hidden");
 
   // Reset search and add button visibility
   document.getElementById("searchInput").classList.add("hidden");
@@ -112,12 +113,18 @@ async function loadTab(tab) {
     await loadUsers("instructors");
   } else if (tab === "financeiro") {
     document.getElementById("navFinance").classList.add("active");
+    document.getElementById("financeView").classList.remove("hidden");
     document.querySelector(".table-container").style.display = "block";
     document.getElementById("tableTitle").textContent = "Financeiro";
+
+    document.getElementById("searchInput").classList.remove("hidden");
+    document.getElementById("searchInput").placeholder = "Buscar aluno por nome, email ou CPF...";
+    document.getElementById("searchInput").value = "";
+
     document.getElementById("usersTable").innerHTML =
-      '<tr><td colspan="5" class="text-center-padded">Módulo financeiro será implementado em breve.</td></tr>';
-    document.getElementById("tableHead").innerHTML = "";
-    if (paginator) paginator.updateItems([]);
+      '<tr><td colspan="9" class="text-center-padded">Carregando...</td></tr>';
+    updateTableHeaders("financeiro");
+    await loadFinance();
   }
 }
 
@@ -137,10 +144,21 @@ async function loadHomeMetrics() {
 
     document.getElementById("metricCheckinsToday").textContent = data.checkinsToday || 0;
 
-    // Placeholders para Financeiro (conforme solicitado para fase posterior)
-    // Aqui podemos colocar dados estáticos ou lógicas simples se o banco não prover
-    document.getElementById("metricPaidPercent").textContent = "85%";
-    document.getElementById("metricUnpaidPercent").textContent = "15%";
+    // Financeiro (real)
+    try {
+      const finRes = await apiFetch("/receptionist/finance/summary");
+      if (finRes.ok) {
+        const fin = await finRes.json();
+        document.getElementById("metricPaidPercent").textContent = `${fin.adimplentesPercent || 0}%`;
+        document.getElementById("metricUnpaidPercent").textContent = `${fin.inadimplentesPercent || 0}%`;
+      } else {
+        document.getElementById("metricPaidPercent").textContent = "--%";
+        document.getElementById("metricUnpaidPercent").textContent = "--%";
+      }
+    } catch {
+      document.getElementById("metricPaidPercent").textContent = "--%";
+      document.getElementById("metricUnpaidPercent").textContent = "--%";
+    }
 
   } catch (err) {
     console.error("Erro ao carregar métricas:", err);
@@ -163,6 +181,20 @@ function updateTableHeaders(type) {
             <tr>
                 <th>Nome</th>
                 <th>Email</th>
+                <th>Ações</th>
+            </tr>
+        `;
+  } else if (type === "financeiro") {
+    thead.innerHTML = `
+            <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Telefone</th>
+                <th>CPF</th>
+                <th>Dia Pgto</th>
+                <th>Pago até</th>
+                <th>Próximo</th>
+                <th>Situação</th>
                 <th>Ações</th>
             </tr>
         `;
@@ -190,6 +222,7 @@ async function loadUsers(type) {
       cpf: u.document || u.cpf,
       phone: u.phone,
       plan: u.planType || u.plan_type || u.plan || "mensal",
+      paymentDay: u.paymentDay || u.payment_day || 10,
     }));
 
     filteredUsers = [...allUsers];
@@ -209,12 +242,105 @@ async function loadUsers(type) {
   }
 }
 
+function formatDateBR(dateStr) {
+  if (!dateStr) return "-";
+  // YYYY-MM-DD -> DD/MM/YYYY
+  const parts = String(dateStr).split("-");
+  if (parts.length !== 3) return dateStr;
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
+function renderPaymentBadge(situation) {
+  const isPaid = situation === "adimplente";
+  const cls = isPaid ? "status-active" : "status-inactive";
+  const label = isPaid ? "Adimplente" : "Inadimplente";
+  return `<span class="status-badge ${cls}"><span class="dot"></span>${label}</span>`;
+}
+
+function showMainAlert(message, type) {
+  const el = document.getElementById("alert");
+  el.classList.remove("hidden");
+  el.classList.remove("success", "error", "alert-success", "alert-error");
+  el.classList.add(type);
+  el.textContent = message;
+
+  setTimeout(() => {
+    el.classList.add("hidden");
+  }, 3000);
+}
+
+async function loadFinance() {
+  try {
+    const [summaryRes, studentsRes] = await Promise.all([
+      apiFetch("/receptionist/finance/summary"),
+      apiFetch("/receptionist/finance/students"),
+    ]);
+
+    if (summaryRes.ok) {
+      const summary = await summaryRes.json();
+      document.getElementById("financeAdimplentes").textContent = summary.adimplentes || 0;
+      document.getElementById("financeInadimplentes").textContent = summary.inadimplentes || 0;
+      document.getElementById("financeTotal").textContent = summary.total || 0;
+    }
+
+    if (!studentsRes.ok) throw new Error("Erro ao buscar alunos do financeiro");
+    const data = await studentsRes.json();
+
+    allUsers = data.map((s) => ({
+      id: s.id,
+      nome: s.name,
+      email: s.email,
+      phone: s.phone,
+      cpf: s.document,
+      paymentDay: s.payment_day,
+      paidUntil: s.paid_until,
+      nextDueDate: s.next_due_date,
+      dueDate: s.due_date,
+      situation: s.situation,
+    }));
+
+    filteredUsers = [...allUsers];
+
+    if (!paginator) {
+      paginator = new Paginator(filteredUsers, 10, renderTablePage);
+    } else {
+      paginator.updateItems(filteredUsers);
+    }
+
+    paginator.goToPage(1);
+    paginator.render("paginationContainer");
+  } catch (err) {
+    console.error(err);
+    document.getElementById("usersTable").innerHTML =
+      `<tr><td colspan="9" class="text-error-center">Erro: ${err.message}</td></tr>`;
+  }
+}
+
+async function registerPayment(studentId) {
+  try {
+    const res = await apiFetch(`/receptionist/finance/students/${studentId}/pay`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ months: 1 }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || "Erro ao registrar pagamento");
+
+    showMainAlert("Pagamento registrado com sucesso!", "success");
+    await loadFinance();
+  } catch (err) {
+    showMainAlert(err.message || "Erro ao registrar pagamento", "error");
+  }
+}
+
 function renderTablePage(pageItems) {
   const tbody = document.getElementById("usersTable");
 
   if (pageItems.length === 0) {
+    const colspan = currentTab === "financeiro" ? 9 : 5;
     tbody.innerHTML =
-      '<tr><td colspan="5" class="text-center-padded-gray">Nenhum registro encontrado.</td></tr>';
+      `<tr><td colspan="${colspan}" class="text-center-padded-gray">Nenhum registro encontrado.</td></tr>`;
     return;
   }
 
@@ -247,6 +373,26 @@ function renderTablePage(pageItems) {
         `,
       )
       .join("");
+  } else if (currentTab === "financeiro") {
+    tbody.innerHTML = pageItems
+      .map(
+        (u) => `
+            <tr>
+                <td>${u.nome}</td>
+                <td>${u.email}</td>
+                <td>${u.phone || "-"}</td>
+                <td>${u.cpf || "-"}</td>
+                <td>${u.paymentDay || 10}</td>
+                <td>${formatDateBR(u.paidUntil)}</td>
+                <td>${formatDateBR(u.nextDueDate)}</td>
+                <td>${renderPaymentBadge(u.situation)}</td>
+                <td>
+                  <button class="btn btn-secondary" onclick="registerPayment(${u.id})">Registrar pagamento</button>
+                </td>
+            </tr>
+        `,
+      )
+      .join("");
   }
 }
 
@@ -259,11 +405,12 @@ function handleSearch() {
   if (!term) {
     filteredUsers = [...allUsers];
   } else {
-    filteredUsers = allUsers.filter(
-      (u) =>
-        u.nome.toLowerCase().includes(term) ||
-        u.email.toLowerCase().includes(term),
-    );
+    filteredUsers = allUsers.filter((u) => {
+      const nome = (u.nome || "").toLowerCase();
+      const email = (u.email || "").toLowerCase();
+      const cpf = (u.cpf || "").toLowerCase();
+      return nome.includes(term) || email.includes(term) || cpf.includes(term);
+    });
   }
 
   if (paginator) {
@@ -284,10 +431,13 @@ function openAddModal() {
   const isStudent = currentTab === "students";
   if (isStudent) {
     document.getElementById("addTipoPlanoGroup").classList.remove("hidden");
+    document.getElementById("addPaymentDayGroup").classList.remove("hidden");
   } else {
     document.getElementById("addTipoPlanoGroup").classList.add("hidden");
+    document.getElementById("addPaymentDayGroup").classList.add("hidden");
   }
   document.getElementById("addTipoPlano").required = isStudent;
+  document.getElementById("addPaymentDay").required = isStudent;
 }
 
 function closeAddModal() {
@@ -309,6 +459,7 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
   if (currentTab === "students") {
     body.role = "aluno";
     body.planType = document.getElementById("addTipoPlano").value;
+    body.paymentDay = Number(document.getElementById("addPaymentDay").value || 10);
     endpoint = "/receptionist/students";
   } else {
     body.role = "instrutor";
@@ -358,13 +509,16 @@ function openEditModal(id) {
   const isStudent = currentTab === "students";
   if (isStudent) {
     document.getElementById("editTipoPlanoGroup").classList.remove("hidden");
+    document.getElementById("editPaymentDayGroup").classList.remove("hidden");
   } else {
     document.getElementById("editTipoPlanoGroup").classList.add("hidden");
+    document.getElementById("editPaymentDayGroup").classList.add("hidden");
   }
 
   if (isStudent) {
     document.getElementById("editTipoPlano").value =
       userToEdit.plan.toLowerCase();
+    document.getElementById("editPaymentDay").value = String(userToEdit.paymentDay || 10);
   }
 
   document.getElementById("editModal").classList.add("active");
@@ -387,6 +541,7 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
 
   if (currentTab === "students") {
     body.planType = document.getElementById("editTipoPlano").value;
+    body.paymentDay = Number(document.getElementById("editPaymentDay").value || 10);
   }
 
   try {

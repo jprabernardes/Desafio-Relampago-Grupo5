@@ -40,9 +40,48 @@ export const createTables = (): Promise<void> => {
           user_id INTEGER PRIMARY KEY,
           plan_type TEXT CHECK(plan_type IN ('mensal', 'trimestral', 'semestral', 'anual')) NOT NULL,
           active INTEGER DEFAULT 1,
+          -- Dia do pagamento recorrente (1-31)
+          payment_day INTEGER DEFAULT 10,
+          -- Data (YYYY-MM-DD) até quando está pago (normalmente uma data de vencimento)
+          paid_until TEXT,
+          last_payment_at TEXT,
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
-      `);
+      `, () => {
+        // Migration check for payment columns (for existing databases)
+        db.all("PRAGMA table_info(student_profile)", (err, rows: any[]) => {
+          if (err || !rows) return;
+
+          const columns = rows.map(r => r.name);
+          const hasPaymentDay = columns.includes('payment_day');
+          const hasPaidUntil = columns.includes('paid_until');
+          const hasLastPaymentAt = columns.includes('last_payment_at');
+
+          if (!hasPaymentDay) {
+            db.run("ALTER TABLE student_profile ADD COLUMN payment_day INTEGER", (err) => {
+              if (err) console.error("Error adding payment_day column:", err);
+              else db.run("UPDATE student_profile SET payment_day = 10 WHERE payment_day IS NULL");
+            });
+          }
+
+          if (!hasPaidUntil) {
+            db.run("ALTER TABLE student_profile ADD COLUMN paid_until TEXT", (err) => {
+              if (err) console.error("Error adding paid_until column:", err);
+            });
+          }
+
+          if (!hasLastPaymentAt) {
+            db.run("ALTER TABLE student_profile ADD COLUMN last_payment_at TEXT", (err) => {
+              if (err) console.error("Error adding last_payment_at column:", err);
+            });
+          }
+
+          // Garantir default (quando coluna já existe, mas valor está null)
+          if (hasPaymentDay) {
+            db.run("UPDATE student_profile SET payment_day = 10 WHERE payment_day IS NULL");
+          }
+        });
+      });
 
 
 
