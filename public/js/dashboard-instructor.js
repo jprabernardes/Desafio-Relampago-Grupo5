@@ -335,7 +335,7 @@ async function loadUserInfo() {
   const data = await res.json();
   document.getElementById("userName").textContent =
     data.name || data.nome || "Instrutor";
-  
+
   // Armazenar ID do instrutor atual
   currentInstructorId = data.id;
 
@@ -1229,7 +1229,7 @@ if (createClassForm) {
       console.error("Elementos do formulário não encontrados");
       return;
     }
-    
+
     const id = idEl.value;
     const dateValue = dateInput.value;
 
@@ -1243,12 +1243,12 @@ if (createClassForm) {
     const nameEl = document.getElementById("className");
     const timeEl = document.getElementById("classTime");
     const limitEl = document.getElementById("classLimit");
-    
+
     if (!nameEl || !timeEl || !limitEl) {
       console.error("Elementos do formulário não encontrados");
       return;
     }
-    
+
     const data = {
       name: nameEl.value,
       date: convertDateForBackend(dateValue), // Converte YYYY-MM-DD para DD-MM-YYYY
@@ -1453,7 +1453,7 @@ loadTemplates();
 // Setar data mínima e adicionar validação customizada ao carregar a página
 window.addEventListener("DOMContentLoaded", () => {
   const today = new Date().toISOString().split("T")[0];
-  
+
   // Verificar se os elementos existem antes de usar (formulário antigo pode não existir)
   const classDateInput = document.getElementById("classDate");
   if (classDateInput) {
@@ -1470,13 +1470,13 @@ window.addEventListener("DOMContentLoaded", () => {
       validateDate(this);
     });
   }
-  
+
   // Configurar data mínima para campos do modal de edição
   const editClassDateInput = document.getElementById("editClassDate");
   if (editClassDateInput) {
     editClassDateInput.setAttribute("min", today);
   }
-  
+
   // Configurar data mínima para campos do modal de criação recorrente
   const recurringStartDate = document.getElementById("recurringStartDate");
   const recurringEndDate = document.getElementById("recurringEndDate");
@@ -2009,580 +2009,33 @@ function convertDateFromBackend(dateStr) {
   return dateStr;
 }
 
-let loadCalendarAttempts = 0;
-const MAX_CALENDAR_ATTEMPTS = 5;
+// ===========================================
+// CALENDAR LOGIC (Delegated to CalendarModule)
+// ===========================================
 
-async function loadCalendar() {
-  // Verificar se os elementos existem
-  const grid = document.getElementById("calendarGrid");
-  const monthLabel = document.getElementById("currentMonthLabel");
-  
-  if (!grid || !monthLabel) {
-    loadCalendarAttempts++;
-    if (loadCalendarAttempts < MAX_CALENDAR_ATTEMPTS) {
-      console.warn(`Elementos do calendário não encontrados. Tentativa ${loadCalendarAttempts}/${MAX_CALENDAR_ATTEMPTS}...`);
-      // Tentar novamente após um pequeno delay
-      setTimeout(() => {
-        loadCalendar();
-      }, 500);
-    } else {
-      console.error("Não foi possível carregar o calendário após várias tentativas. Elementos não encontrados.");
-      loadCalendarAttempts = 0; // Reset para próxima vez
-    }
-    return;
-  }
-  
-  // Reset contador se encontrou os elementos
-  loadCalendarAttempts = 0;
-  
+// Initialize Shared Calendar Module
+document.addEventListener("DOMContentLoaded", async () => {
   try {
-    // Carregar todas as aulas (não apenas do instrutor) para mostrar no calendário
-    const res = await apiFetch("/classes");
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    }
-    const allClasses = await res.json();
-    // Converter formato da API para formato esperado
-    calendarClasses = allClasses.map(cls => {
-      let dateStr = cls.date;
-      let timeStr = cls.time;
-      
-      // Se date vem no formato ISO (YYYY-MM-DDTHH:mm), separar
-      if (dateStr && dateStr.includes('T')) {
-        const [datePart, timePart] = dateStr.split('T');
-        dateStr = datePart;
-        if (timePart) {
-          timeStr = timePart.substring(0, 5); // HH:mm
-        }
-      }
-      
-      // Converter YYYY-MM-DD para DD-MM-YYYY para compatibilidade com parseDateBR
-      if (dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-        const [year, month, day] = dateStr.split('-');
-        dateStr = `${day}-${month}-${year}`;
-      }
-      
-      return {
-        id: cls.id,
-        name: cls.title || cls.name,
-        nome_aula: cls.title || cls.name,
-        date: dateStr,
-        data: dateStr,
-        time: timeStr,
-        hora: timeStr,
-        slots_limit: cls.max_participants || cls.slots_limit,
-        limite_vagas: cls.max_participants || cls.slots_limit,
-        instructor_id: cls.instructor_id
-      };
-    });
-    renderCalendar(calendarCurrentDate);
-  } catch (e) {
-    console.error("Erro ao carregar aulas:", e);
-    showAlert("Erro ao carregar aulas", "error");
-    // Renderizar calendário vazio mesmo com erro
-    try {
-      renderCalendar(calendarCurrentDate);
-    } catch (renderError) {
-      console.error("Erro ao renderizar calendário:", renderError);
-    }
-  }
-}
-
-function renderCalendar(date) {
-  try {
-    const grid = document.getElementById("calendarGrid");
-    const monthLabel = document.getElementById("currentMonthLabel");
-    if (!grid || !monthLabel) {
-      console.error("Elementos do calendário não encontrados:", { grid, monthLabel });
-      return;
-    }
-
-    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
-      console.error("Data inválida para renderizar calendário:", date);
-      date = new Date(); // Usar data atual como fallback
-    }
-
-    grid.innerHTML = "";
-    monthLabel.textContent = date
-      .toLocaleDateString("pt-BR", { month: "long", year: "numeric" })
-      .replace(/^\w/, (c) => c.toUpperCase());
-
-    // Cabeçalho dos dias da semana
-    const daysOfWeek = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-    daysOfWeek.forEach((day) => {
-      const div = document.createElement("div");
-      div.className = "calendar-header";
-      div.textContent = day;
-      grid.appendChild(div);
-    });
-
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDayOfMonth = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    // Células vazias do mês anterior
-    for (let i = 0; i < firstDayOfMonth; i++) {
-      const div = document.createElement("div");
-      div.className = "calendar-day empty";
-      grid.appendChild(div);
-    }
-
-    // Dias do mês
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dayDate = new Date(year, month, d);
-      const div = document.createElement("div");
-      div.className = "calendar-day";
-
-      // Verificar se é hoje
-      const today = new Date();
-      if (dayDate.toDateString() === today.toDateString()) {
-        div.classList.add("today");
-      }
-
-      div.innerHTML = `<span class="day-number">${d}</span>`;
-
-      // Buscar aulas deste dia
-      const dayClasses = (calendarClasses || []).filter((c) => {
-        try {
-          const classDate = parseDateBR(c.date || c.data);
-          return classDate.toDateString() === dayDate.toDateString();
-        } catch (e) {
-          console.warn("Erro ao processar data da aula:", c, e);
-          return false;
-        }
-      });
-
-      if (dayClasses.length > 0) {
-        div.classList.add("has-class");
-        const classesContainer = document.createElement("div");
-        classesContainer.className = "day-classes";
-        
-        dayClasses.forEach((cls) => {
-          const indicator = document.createElement("div");
-          const isOwnClass = cls.instructor_id === currentInstructorId;
-          indicator.className = `class-indicator ${isOwnClass ? 'own-class' : 'other-class'}`;
-          
-          // Mostrar nome e horário
-          const className = cls.name || cls.nome_aula || "Aula";
-          const classTime = cls.time || cls.hora || "";
-          indicator.textContent = `${className}${classTime ? ` - ${classTime}` : ''}`;
-          indicator.title = `${className} - ${classTime}`;
-          indicator.setAttribute('data-class-id', cls.id);
-          classesContainer.appendChild(indicator);
-        });
-        
-        div.appendChild(classesContainer);
-        
-        // Clique em aula existente abre modal de edição
-        div.onclick = (e) => {
-          try {
-            if (e.target.classList.contains("class-indicator")) {
-              const classId = parseInt(e.target.getAttribute('data-class-id'));
-              if (classId) {
-                openEditClassModal(classId);
-              }
-            } else {
-              // Clique no dia sem aula abre modal de criação
-              openCreateRecurringClassModal(dayDate);
-            }
-          } catch (error) {
-            console.error("Erro ao processar clique no calendário:", error);
-          }
-        };
-      } else {
-        // Clique no dia vazio abre modal de criação
-        div.onclick = () => {
-          try {
-            openCreateRecurringClassModal(dayDate);
-          } catch (error) {
-            console.error("Erro ao abrir modal de criação:", error);
-          }
-        };
-      }
-
-      grid.appendChild(div);
-    }
-  } catch (error) {
-    console.error("Erro ao renderizar calendário:", error);
-    const grid = document.getElementById("calendarGrid");
-    if (grid) {
-      grid.innerHTML = '<div style="padding: 2rem; text-align: center; color: #e53e3e;">Erro ao carregar calendário. Por favor, recarregue a página.</div>';
-    }
-  }
-}
-
-function changeCalendarMonth(delta) {
-  calendarCurrentDate.setDate(1);
-  calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + delta);
-  renderCalendar(calendarCurrentDate);
-}
-
-// Tornar função global para ser chamada do HTML
-window.changeCalendarMonth = changeCalendarMonth;
-
-// Modal de Criação Recorrente
-let selectedDayForCreation = null;
-
-window.openCreateRecurringClassModal = function(dayDate = null) {
-  selectedDayForCreation = dayDate || new Date();
-  const modal = document.getElementById("createRecurringClassModal");
-  if (!modal) {
-    console.error("Modal createRecurringClassModal não encontrado");
-    return;
-  }
-  const form = document.getElementById("createRecurringClassForm");
-  if (!form) {
-    console.error("Form createRecurringClassForm não encontrado");
-    return;
-  }
-  
-  form.reset();
-  
-  // Pré-preencher data início com o dia clicado
-  if (selectedDayForCreation) {
-    document.getElementById("recurringStartDate").value = formatDateForInput(selectedDayForCreation);
-  }
-  
-  // Data mínima é hoje
-  const today = formatDateForInput(new Date());
-  document.getElementById("recurringStartDate").setAttribute("min", today);
-  document.getElementById("recurringEndDate").setAttribute("min", today);
-  
-  // Limpar preview
-  document.getElementById("recurringPreview").innerHTML = "";
-  
-  // Limpar seleções de dias
-  for (let i = 0; i < 7; i++) {
-    const selector = document.getElementById(`day${i}`);
-    if (selector) {
-      selector.classList.remove("selected");
-    }
-  }
-  
-  modal.classList.add("active");
-  
-  // Configurar listeners e atualizar preview
-  setupRecurringPreviewListeners();
-  updateRecurringPreview();
-}
-
-window.closeCreateRecurringClassModal = function() {
-  document.getElementById("createRecurringClassModal").classList.remove("active");
-  selectedDayForCreation = null;
-}
-
-function updateRecurringPreview() {
-  const startDate = document.getElementById("recurringStartDate").value;
-  const endDate = document.getElementById("recurringEndDate").value;
-  const preview = document.getElementById("recurringPreview");
-  
-  if (!startDate || !endDate) {
-    preview.innerHTML = "";
-    return;
-  }
-  
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  
-  if (start > end) {
-    preview.innerHTML = '<p style="color: #e53e3e;">Data início deve ser anterior à data fim.</p>';
-    return;
-  }
-  
-  // Obter dias da semana selecionados
-  const selectedDays = [];
-  for (let i = 0; i < 7; i++) {
-    const selector = document.getElementById(`day${i}`);
-    if (selector && selector.classList.contains("selected")) {
-      selectedDays.push(i);
-    }
-  }
-  
-  if (selectedDays.length === 0) {
-    preview.innerHTML = '<p style="color: #d69e2e;">Selecione pelo menos um dia da semana.</p>';
-    return;
-  }
-  
-  // Calcular datas
-  const dates = [];
-  const current = new Date(start);
-  while (current <= end) {
-    if (selectedDays.includes(current.getDay())) {
-      dates.push(new Date(current));
-    }
-    current.setDate(current.getDate() + 1);
-  }
-  
-  if (dates.length === 0) {
-    preview.innerHTML = '<p style="color: #d69e2e;">Nenhuma data encontrada no intervalo selecionado.</p>';
-    return;
-  }
-  
-  preview.innerHTML = `
-    <h4>Serão criadas ${dates.length} aula(s):</h4>
-    <ul>
-      ${dates.slice(0, 10).map(d => `<li>${d.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}</li>`).join("")}
-      ${dates.length > 10 ? `<li>... e mais ${dates.length - 10} aula(s)</li>` : ""}
-    </ul>
-  `;
-}
-
-// Event listeners para atualizar preview (configurados quando o modal é aberto)
-function setupRecurringPreviewListeners() {
-  const startDate = document.getElementById("recurringStartDate");
-  const endDate = document.getElementById("recurringEndDate");
-  
-  if (startDate) {
-    startDate.removeEventListener("change", updateRecurringPreview);
-    startDate.addEventListener("change", updateRecurringPreview);
-  }
-  
-  if (endDate) {
-    endDate.removeEventListener("change", updateRecurringPreview);
-    endDate.addEventListener("change", updateRecurringPreview);
-  }
-  
-  for (let i = 0; i < 7; i++) {
-    const selector = document.getElementById(`day${i}`);
-    if (selector) {
-      // Remover listeners anteriores
-      const newSelector = selector.cloneNode(true);
-      selector.parentNode.replaceChild(newSelector, selector);
-      
-      // Adicionar listener de clique
-      newSelector.addEventListener("click", (e) => {
-        e.preventDefault();
-        toggleWeekdaySelector(i);
-        updateRecurringPreview();
-      });
-    }
-  }
-}
-
-// Toggle do seletor de dia da semana
-function toggleWeekdaySelector(dayIndex) {
-  const selector = document.getElementById(`day${dayIndex}`);
-  if (selector) {
-    selector.classList.toggle("selected");
-  }
-}
-
-// Submit do formulário de criação recorrente
-document.getElementById("createRecurringClassForm")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  
-  const name = document.getElementById("recurringClassName").value.trim();
-  const time = document.getElementById("recurringClassTime").value;
-  const slots_limit = parseInt(document.getElementById("recurringClassLimit").value);
-  const startDate = document.getElementById("recurringStartDate").value;
-  const endDate = document.getElementById("recurringEndDate").value;
-  
-  // Obter dias selecionados
-  const daysOfWeek = [];
-  for (let i = 0; i < 7; i++) {
-    const selector = document.getElementById(`day${i}`);
-    if (selector && selector.classList.contains("selected")) {
-      daysOfWeek.push(i);
-    }
-  }
-  
-  if (daysOfWeek.length === 0) {
-    showAlert("Selecione pelo menos um dia da semana", "error");
-    return;
-  }
-  
-  if (!name || !time || !slots_limit || !startDate || !endDate) {
-    showAlert("Preencha todos os campos", "error");
-    return;
-  }
-  
-  try {
-    const res = await apiFetch("/instructor/classes/recurring", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name,
-        time,
-        slots_limit,
-        daysOfWeek,
-        startDate: convertDateForBackend(startDate),
-        endDate: convertDateForBackend(endDate),
-      }),
-    });
-    
+    const res = await apiFetch("/auth/me");
     if (res.ok) {
-      const data = await res.json();
-      showAlert(`${data.count || 0} aula(s) criada(s) com sucesso!`, "success");
-      closeCreateRecurringClassModal();
-      await loadCalendar();
-      await loadClasses(); // Atualizar lista de aulas também
-    } else {
-      const err = await res.json();
-      showAlert(err.error || "Erro ao criar aulas", "error");
+      const user = await res.json();
+      if (window.CalendarModule) {
+        console.log("Initializing Shared Calendar for Instructor");
+        window.CalendarModule.init(user.id, user.role);
+        window.CalendarModule.loadCalendar();
+      } else {
+        console.error("CalendarModule not found");
+      }
     }
   } catch (e) {
-    console.error(e);
-    showAlert("Erro de conexão", "error");
+    console.error("Error initializing calendar:", e);
   }
 });
 
-// Modal de Edição Individual
-window.openEditClassModal = async function(classId) {
-  try {
-    const classData = calendarClasses.find((c) => c.id === classId);
-    if (!classData) {
-      // Buscar da API se não estiver no cache
-      const res = await apiFetch(`/instructor/classes/${classId}`);
-      if (!res.ok) throw new Error("Aula não encontrada");
-      const data = await res.json();
-      populateEditModal(data);
-      return;
-    }
-    populateEditModal(classData);
-  } catch (e) {
-    console.error(e);
-    showAlert("Erro ao carregar aula", "error");
+// Helper for other parts of dashboard if they try to call loadCalendar
+window.loadCalendar = async function () {
+  if (window.CalendarModule) {
+    await window.CalendarModule.loadCalendar();
   }
-}
-
-async function populateEditModal(classData) {
-  const isOwnClass = classData.instructor_id === currentInstructorId;
-  
-  document.getElementById("editClassId").value = classData.id;
-  document.getElementById("editClassName").value = classData.name || classData.nome_aula;
-  document.getElementById("editClassDate").value = convertDateFromBackend(classData.date || classData.data);
-  document.getElementById("editClassTime").value = classData.time || classData.hora;
-  document.getElementById("editClassLimit").value = classData.slots_limit || classData.limite_vagas;
-  
-  // Desabilitar campos se não for do instrutor
-  const nameInput = document.getElementById("editClassName");
-  const dateInput = document.getElementById("editClassDate");
-  const timeInput = document.getElementById("editClassTime");
-  const limitInput = document.getElementById("editClassLimit");
-  const submitBtn = document.querySelector("#editClassFormModal button[type='submit']");
-  const deleteBtn = document.querySelector("#editClassFormModal .btn-danger");
-  
-  if (nameInput) nameInput.disabled = !isOwnClass;
-  if (dateInput) dateInput.disabled = !isOwnClass;
-  if (timeInput) timeInput.disabled = !isOwnClass;
-  if (limitInput) limitInput.disabled = !isOwnClass;
-  
-  // Desabilitar botão de salvar se não for do instrutor
-  if (submitBtn) {
-    submitBtn.disabled = !isOwnClass;
-    if (!isOwnClass) {
-      submitBtn.style.opacity = "0.5";
-      submitBtn.style.cursor = "not-allowed";
-    } else {
-      submitBtn.style.opacity = "1";
-      submitBtn.style.cursor = "pointer";
-    }
-  }
-  
-  if (deleteBtn) deleteBtn.style.display = isOwnClass ? "inline-block" : "none";
-  
-  // Adicionar indicador visual se for somente leitura
-  const modalTitle = document.getElementById("editClassModalTitle");
-  if (modalTitle) {
-    modalTitle.textContent = isOwnClass ? "Editar Aula" : "Visualizar Aula (Somente Leitura)";
-  }
-  
-  // Data mínima é hoje
-  const today = formatDateForInput(new Date());
-  if (dateInput) dateInput.setAttribute("min", today);
-  
-  // Carregar alunos inscritos
-  try {
-    const res = await apiFetch(`/instructor/classes/${classData.id}/participants`);
-    if (res.ok) {
-      const students = await res.json();
-      const list = document.getElementById("editEnrolledStudentsList");
-      if (!students || students.length === 0) {
-        list.innerHTML = '<p class="text-gray">Nenhum aluno inscrito ainda.</p>';
-      } else {
-        list.innerHTML = students
-          .map(
-            (s) => `
-          <div class="student-list-item">
-            <div class="student-avatar-small">
-              ${(s.name || s.nome || "A").charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <div class="student-name">${s.name || s.nome || "Sem nome"}</div>
-              <div class="student-email">${s.email || "Sem email"}</div>
-            </div>
-          </div>
-        `,
-          )
-          .join("");
-      }
-    }
-  } catch (e) {
-    console.error("Erro ao carregar alunos:", e);
-    document.getElementById("editEnrolledStudentsList").innerHTML =
-      '<p class="text-error">Erro ao carregar alunos.</p>';
-  }
-  
-  document.getElementById("editClassModal").classList.add("active");
-}
-
-window.closeEditClassModal = function() {
-  document.getElementById("editClassModal").classList.remove("active");
-}
-
-// Submit do formulário de edição
-document.getElementById("editClassFormModal")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  
-  const id = document.getElementById("editClassId").value;
-  const dateInput = document.getElementById("editClassDate");
-  const dateValue = dateInput.value;
-  
-  // Validação de data
-  const selectedDate = new Date(dateValue);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  if (selectedDate < today) {
-    showAlert("Não é possível agendar aulas para datas passadas!", "error");
-    return;
-  }
-  
-  const data = {
-    name: document.getElementById("editClassName").value,
-    date: convertDateForBackend(dateValue),
-    time: document.getElementById("editClassTime").value,
-    slots_limit: parseInt(document.getElementById("editClassLimit").value),
-  };
-  
-  try {
-    const res = await apiFetch(`/instructor/classes/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    
-    if (res.ok) {
-      showAlert("Aula atualizada com sucesso!");
-      closeEditClassModal();
-      await loadCalendar();
-      await loadClasses();
-    } else {
-      const err = await res.json();
-      showAlert(err.error || "Erro ao atualizar", "error");
-    }
-  } catch (e) {
-    showAlert("Erro de conexão", "error");
-  }
-});
-
-// Deletar aula do modal de edição
-window.deleteClassFromEditModal = function() {
-  const classId = document.getElementById("editClassId").value;
-  closeEditClassModal();
-  deleteClass(parseInt(classId));
 };
+

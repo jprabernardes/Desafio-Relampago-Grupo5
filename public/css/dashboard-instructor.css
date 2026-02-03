@@ -1159,6 +1159,49 @@ body {
   background-color: #f8f9fa;
 }
 
+/* Reset day hover when hovering a class (prevent double feedback) */
+.calendar-day:has(.class-indicator:hover) {
+  background-color: white !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Visual cue for creating class on empty space */
+.calendar-day:not(:has(.class-indicator:hover)):hover::after {
+  content: "+";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 1.2rem;
+  color: #667eea;
+  line-height: 1;
+  font-weight: bold;
+}
+
+.class-indicator:hover {
+  transform: scale(1.05);
+  z-index: 50;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  filter: brightness(1.0);
+  /* Remove brightness filter to keep colors pure */
+  cursor: pointer;
+  border-width: 1px;
+  border-style: solid;
+  /* Ensure border color is visible - will be defined by own/other overrides if needed, or defaults */
+}
+
+/* Enhancing own/other class hovers specifically */
+.class-indicator.own-class:hover {
+  border-color: #434190;
+  /* Darker Indigo */
+  background-color: #ebf4ff;
+}
+
+.class-indicator.other-class:hover {
+  border-color: #9b2c2c;
+  /* Darker Red */
+  background-color: #fff5f5;
+}
+
 .calendar-day.empty {
   background: none;
   border: none;
@@ -1180,36 +1223,49 @@ body {
 }
 
 .calendar-day.today {
-  background-color: #ebf8ff;
-  border-color: #667eea;
+  background-color: #f0fff4;
+  /* Green tint */
+  border-color: #38a169;
+  /* Green border */
   border-width: 2px;
 }
 
-.calendar-day.today.has-class {
-  background-color: #eef2ff;
+.calendar-day.today:hover {
+  background-color: #f8f9fa;
+  /* Standard hover bg */
   border-color: #667eea;
+  /* Standard hover border */
 }
+
+/* .calendar-day.today.has-class removed to use standard green today style */
 
 .day-classes {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-top: auto;
   width: 100%;
-  align-items: center;
+  flex: 1;
+  margin-top: 4px;
 }
 
 .class-indicator {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 4px 6px;
+  padding: 0 6px;
   border-radius: 4px;
   width: 100%;
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-bottom: 2px;
+
+  /* Layout responsivo */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+  min-height: 28px;
+  /* Altura mínima maior */
 }
 
 .class-indicator.own-class {

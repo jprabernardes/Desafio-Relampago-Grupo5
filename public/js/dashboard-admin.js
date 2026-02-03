@@ -182,9 +182,10 @@ function updateTableHeaders(tipo) {
 async function loadTab(tipo = "alunos") {
   currentTab = tipo;
 
+  let userData = null;
   try {
     // Carregar informações do usuário logado
-    const userData = await loadUserInfo();
+    userData = await loadUserInfo();
     if (userData.error) {
       document.cookie = "";
       window.location.href = resolveAppPath("/");
@@ -219,6 +220,31 @@ async function loadTab(tipo = "alunos") {
     document.getElementById("navAlunos").classList.add("active");
   } else if (tipo === "funcionarios") {
     document.getElementById("navFuncionarios").classList.add("active");
+  } else if (tipo === "classes") {
+    document.getElementById("navAulas").classList.add("active");
+  }
+
+  // Toggle Views
+  const classesView = document.getElementById("classesView");
+  const tableContainer = document.querySelector(".table-container");
+
+  if (tipo === "classes") {
+    if (classesView) classesView.classList.remove("hidden");
+    if (tableContainer) tableContainer.style.display = "none";
+
+    // Init Calendar
+    console.log("Admin Dashboard: Switching to Classes Tab. Checking CalendarModule:", !!window.CalendarModule);
+    if (window.CalendarModule) {
+      console.log("Admin Dashboard: Initializing CalendarModule with", userData.id, userData.role);
+      window.CalendarModule.init(userData.id, userData.role);
+      window.CalendarModule.loadCalendar();
+    } else {
+      console.error("Admin Dashboard: window.CalendarModule is missing!");
+    }
+    return; // Stop here, don't load user table
+  } else {
+    if (classesView) classesView.classList.add("hidden");
+    if (tableContainer) tableContainer.style.display = "block";
   }
 
   let roles = null;

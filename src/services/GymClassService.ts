@@ -17,8 +17,8 @@ export class GymClassService {
   }
 
   async create(classData: GymClass, creatorRole: string, instructorId: number): Promise<GymClass> {
-    if (creatorRole !== 'instrutor') {
-      throw new Error('Apenas instrutores podem criar aulas.');
+    if (!['instrutor', 'recepcionista', 'administrador'].includes(creatorRole)) {
+      throw new Error('Permissão negada para criar aulas.');
     }
 
     classData.instructor_id = instructorId;
@@ -52,8 +52,8 @@ export class GymClassService {
     creatorRole: string,
     instructorId: number
   ): Promise<{ count: number; classes: GymClass[] }> {
-    if (creatorRole !== 'instrutor') {
-      throw new Error('Apenas instrutores podem criar aulas.');
+    if (!['instrutor', 'recepcionista', 'administrador'].includes(creatorRole)) {
+      throw new Error('Permissão negada para criar aulas.');
     }
 
     if (!isNotEmpty(name)) {
@@ -96,7 +96,7 @@ export class GymClassService {
     // Calcular todas as datas que correspondem aos dias da semana
     const dates: Date[] = [];
     const current = new Date(start);
-    
+
     while (current <= end) {
       const dayOfWeek = current.getDay();
       if (daysOfWeek.includes(dayOfWeek)) {
@@ -116,10 +116,10 @@ export class GymClassService {
 
     // Criar uma aula para cada data
     const createdClasses: GymClass[] = [];
-    
+
     for (const date of dates) {
       const dateStr = `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()}`;
-      
+
       const classData: GymClass = {
         name,
         date: dateStr,
@@ -147,6 +147,7 @@ export class GymClassService {
     const classes = await this.gymClassRepository.findAll();
     return await Promise.all(classes.map(async (cls: GymClass) => {
       const enrollmentCount = await this.enrollmentRepository.countByClassId(cls.id!);
+      const instructor = await this.userRepository.findById(cls.instructor_id);
 
       return {
         id: cls.id,
@@ -156,7 +157,8 @@ export class GymClassService {
         location: 'Sala 1',
         max_participants: cls.slots_limit,
         current_participants: enrollmentCount,
-        instructor_id: cls.instructor_id
+        instructor_id: cls.instructor_id,
+        instructor_name: instructor ? (instructor.name || instructor.nome) : "Desconhecido"
       };
     }));
   }
@@ -170,25 +172,33 @@ export class GymClassService {
   }
 
   async update(id: number, classData: Partial<GymClass>, updaterRole: string, instructorId: number): Promise<void> {
-    if (updaterRole !== 'instrutor') {
-      throw new Error('Apenas instrutores podem atualizar aulas.');
+    if (!['instrutor', 'recepcionista', 'administrador'].includes(updaterRole)) {
+      throw new Error('Permissão negada para atualizar aulas.');
     }
 
     const existingClass = await this.gymClassRepository.findById(id);
     if (!existingClass) throw new Error('Aula não encontrada.');
-    if (existingClass.instructor_id !== instructorId) throw new Error('Você só pode editar suas próprias aulas.');
+
+    // Instrutores só podem editar suas próprias aulas. Admins/Recepcionistas podem editar qualquer uma.
+    if (updaterRole === 'instrutor' && existingClass.instructor_id !== instructorId) {
+      throw new Error('Você só pode editar suas próprias aulas.');
+    }
 
     await this.gymClassRepository.update(id, classData);
   }
 
   async delete(id: number, deleterRole: string, instructorId: number): Promise<void> {
-    if (deleterRole !== 'instrutor') {
-      throw new Error('Apenas instrutores podem deletar aulas.');
+    if (!['instrutor', 'recepcionista', 'administrador'].includes(deleterRole)) {
+      throw new Error('Permissão negada para deletar aulas.');
     }
 
     const existingClass = await this.gymClassRepository.findById(id);
     if (!existingClass) throw new Error('Aula não encontrada.');
-    if (existingClass.instructor_id !== instructorId) throw new Error('Você só pode deletar suas próprias aulas.');
+
+    // Instrutores só podem deletar suas próprias aulas. Admins/Recepcionistas podem deletar qualquer uma.
+    if (deleterRole === 'instrutor' && existingClass.instructor_id !== instructorId) {
+      throw new Error('Você só pode deletar suas próprias aulas.');
+    }
 
     await this.gymClassRepository.delete(id);
   }
@@ -226,14 +236,17 @@ export class GymClassService {
     await this.enrollmentRepository.delete(studentId, classId);
   }
 
-  async getEnrolledStudents(classId: number, instructorId: number): Promise<any[]> {
+  async getEnrolledStudents(classId: number, instructorId: number, role: string): Promise<any[]> {
     const classData = await this.gymClassRepository.findById(classId);
     if (!classData) {
       throw new Error('Aula não encontrada.');
     }
-    if (classData.instructor_id !== instructorId) {
-      throw new Error('Você só pode ver alunos de suas próprias aulas.');
-    }
+
+    // Instrutores, recepcionistas e administradores podem ver alunos de qualquer aula.
+    // O controle "editar/deletar" já é feito nas rotas de update/delete.
+    // if (role === 'instrutor' && classData.instructor_id !== instructorId) {
+    //   throw new Error('Você só pode ver alunos de suas próprias aulas.');
+    // }
 
     const enrollments = await this.enrollmentRepository.findByClassId(classId);
     const students = await Promise.all(
