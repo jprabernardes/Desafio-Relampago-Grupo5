@@ -42,6 +42,15 @@ export const createApp = (): Application => {
     next();
   });
 
+  if (config.appBasePath) {
+    app.use((req, res, next) => {
+      if (req.path === config.appBasePath && !req.path.endsWith('/')) {
+        return res.redirect(301, `${config.appBasePath}/`);
+      }
+      next();
+    });
+  }
+
   // IMPORTANTE: Configuração de ambiente para o frontend 
   // Rota para nginx proxy (sem prefixo)
   app.get('/config.js', (req, res) => {
