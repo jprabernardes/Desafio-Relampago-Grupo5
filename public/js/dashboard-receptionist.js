@@ -38,8 +38,9 @@ function confirmAction() {
 
 // Load Tab
 async function loadTab(tab) {
+  let userData = null;
   try {
-    const userData = await loadUserInfo();
+    userData = await loadUserInfo();
     if (userData.error) {
       document.cookie = "";
       window.location.href = resolveAppPath("/");
@@ -73,6 +74,7 @@ async function loadTab(tab) {
   document.querySelector(".table-container").style.display = "none";
   document.getElementById("homeView").classList.add("hidden");
   document.getElementById("financeView").classList.add("hidden");
+  document.getElementById("classesView").classList.add("hidden");
 
   // Reset search and add button visibility
   document.getElementById("searchInput").classList.add("hidden");
@@ -125,6 +127,21 @@ async function loadTab(tab) {
       '<tr><td colspan="9" class="text-center-padded">Carregando...</td></tr>';
     updateTableHeaders("financeiro");
     await loadFinance();
+  } else if (tab === "classes") {
+    document.getElementById("navAulas").classList.add("active");
+    document.getElementById("classesView").classList.remove("hidden");
+    document.getElementById("tableTitle").textContent = "Calendário de Aulas";
+
+    // Init Calendar
+    console.log("Recep Dashboard: Switching to Classes Tab. Checking CalendarModule:", !!window.CalendarModule);
+    if (window.CalendarModule) {
+      // Pass ID and Role to module
+      console.log("Recep Dashboard: Initializing CalendarModule with", userData.id, userData.role);
+      window.CalendarModule.init(userData.id, userData.role);
+      window.CalendarModule.loadCalendar();
+    } else {
+      console.error("Recep Dashboard: window.CalendarModule is missing!");
+    }
   }
 }
 

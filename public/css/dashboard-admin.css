@@ -500,3 +500,250 @@ td {
   text-align: center;
   padding: 2rem;
 }
+.calendar-legend {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #666;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.legend-color.own-class {
+  background-color: #667eea;
+}
+
+.legend-color.other-class {
+  background-color: #e53e3e;
+}
+
+.calendar-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.calendar-controls h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.25rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-header {
+  text-align: center;
+  font-weight: 600;
+  color: #666;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  min-height: 80px;
+}
+
+.calendar-day:hover {
+  border-color: #667eea;
+  background-color: #f8f9fa;
+}
+
+.calendar-day.empty {
+  background: none;
+  border: none;
+  cursor: default;
+}
+
+.day-number {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.calendar-day.has-class {
+  background-color: #f8f9fa;
+}
+
+.calendar-day.has-class:hover {
+  background-color: #f0f0f0;
+}
+
+.calendar-day.today {
+  background-color: #ebf8ff;
+  border-color: #667eea;
+  border-width: 2px;
+}
+
+.calendar-day.today.has-class {
+  background-color: #eef2ff;
+  border-color: #667eea;
+}
+
+.day-classes {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: auto;
+  width: 100%;
+  align-items: center;
+}
+
+.class-indicator {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 6px;
+  border-radius: 4px;
+  width: 100%;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 2px;
+}
+
+.class-indicator.own-class {
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.15);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.class-indicator.other-class {
+  color: #e53e3e;
+  background: rgba(229, 62, 62, 0.15);
+  border: 1px solid rgba(229, 62, 62, 0.3);
+}
+
+/* Form Row Layout */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Weekday Selectors - Design Sofisticado */
+.weekdays-selectors {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.weekday-selector {
+  width: 48px;
+  height: 48px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 0;
+  padding: 0;
+}
+
+.weekday-selector:hover {
+  border-color: #667eea;
+  background: #f0f4ff;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.weekday-selector.selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  transform: translateY(-2px);
+}
+
+.weekday-selector.selected .weekday-initial {
+  color: white;
+  font-weight: 700;
+}
+
+.weekday-initial {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #667eea;
+  transition: all 0.2s ease;
+}
+
+.weekday-selector.selected .weekday-initial {
+  color: white;
+}
+
+/* Recurring Preview */
+.recurring-preview {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.recurring-preview h4 {
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.recurring-preview ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recurring-preview li {
+  padding: 0.25rem 0;
+  color: #666;
+  font-size: 0.85rem;
+}

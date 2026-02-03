@@ -27,7 +27,7 @@ export class GymClassController {
       const creatorRole = (req as any).user.role;
       const instructorId = (req as any).user.id;
       const { name, time, slots_limit, daysOfWeek, startDate, endDate } = req.body;
-      
+
       const result = await this.gymClassService.createRecurring(
         name,
         time,
@@ -38,7 +38,7 @@ export class GymClassController {
         creatorRole,
         instructorId
       );
-      
+
       return res.status(201).json(result);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -121,7 +121,8 @@ export class GymClassController {
   getEnrolledStudents = async (req: Request, res: Response): Promise<Response> => {
     try {
       const instructorId = (req as any).user.id;
-      const students = await this.gymClassService.getEnrolledStudents(Number(req.params.id), instructorId);
+      const role = (req as any).user.role;
+      const students = await this.gymClassService.getEnrolledStudents(Number(req.params.id), instructorId, role);
       return res.status(200).json(students);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
