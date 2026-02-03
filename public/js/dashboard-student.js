@@ -59,7 +59,7 @@ let allWorkouts = []; // Cache para os treinos do aluno
 let currentUserData = null; // Armazena dados completos do usuário
 
 const GYM_INFO = {
-  name: "💪 FITMANAGER ACADEMIA",
+  name: "FITMANAGER ACADEMIA",
   address: "Rua Exemplo, 123",
   phone: "(11) 99999-9999",
 };
@@ -161,7 +161,8 @@ async function loadWorkouts() {
               <div>
                 <h3 class="card-title">${workout.name}</h3>
                 <p class="card-subtitle">
-                  👤 <strong>Instrutor:</strong> ${workout.instructor_name || workout.instructor_id}
+                  <span class="material-symbols-outlined">person</span>
+                  <strong>Instrutor:</strong> ${workout.instructor_name || workout.instructor_id}
                 </p>
                 <div class="exercises-list">
                   ${Array.isArray(workout.exercises)
@@ -181,7 +182,8 @@ async function loadWorkouts() {
               </div>
               <div class="workout-actions">
                 <button class="btn btn-primary btn-full" onclick="printWorkout(${workout.id})">
-                  🖨️ Imprimir Treino
+                  <span class="material-symbols-outlined">print</span>
+                  Imprimir Treino
                 </button>
               </div>
             </div>
@@ -341,19 +343,19 @@ async function loadAvailableClasses() {
 
 function renderAvailableClasses() {
   const container = document.getElementById("classesList");
-  
+
   // Filtrar aulas: do dia atual até os próximos 15 dias
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Zerar horas para comparação apenas de data
-  
+
   const maxDate = new Date(today);
   maxDate.setDate(today.getDate() + 15); // 15 dias a partir de hoje
-  
+
   const filteredClasses = allAvailableClasses.filter((cls) => {
     try {
       const classDate = parseDateBR(cls.date);
       classDate.setHours(0, 0, 0, 0); // Zerar horas para comparação apenas de data
-      
+
       // Incluir apenas aulas de hoje em diante até 15 dias
       return classDate >= today && classDate <= maxDate;
     } catch (e) {
@@ -361,7 +363,7 @@ function renderAvailableClasses() {
       return false;
     }
   });
-  
+
   if (filteredClasses.length === 0) {
     container.innerHTML = "<p>Nenhuma aula disponível nos próximos 15 dias.</p>";
     return;
@@ -399,8 +401,14 @@ function renderAvailableClasses() {
             <div class="class-card class-card-clickable" onclick="openClassModal(${cls.id})">
               <div>
                 <h3 class="card-title">${cls.title}</h3>
-                <p class="card-location">📍 ${cls.location || "Sala Principal"}</p>
-                <p class="card-date">📅 ${dateStr} • ⏰ ${timeStr}</p>
+                <p class="card-location">
+                  <span class="material-symbols-outlined">location_on</span>
+                  ${cls.location || "Sala Principal"}
+                </p>
+                <p class="card-date">
+                  <span class="material-symbols-outlined">calendar_today</span> ${dateStr} 
+                  <span class="material-symbols-outlined">schedule</span> ${timeStr}
+                </p>
               </div>
               <span class="class-status ${statusClass}">${statusText}</span>
             </div>
@@ -544,15 +552,21 @@ async function loadMyClasses() {
           : '<span class="class-status status-enrolled">Confirmada</span>';
 
         let actionBtn = !isPast
-          ? `<button class="btn btn-danger btn-sm btn-full mt-6" onclick="cancelEnrollment(${cls.id})">Cancelar Inscrição</button>`
+          ? `<button class="btn btn-danger btn-compact" onclick="cancelEnrollment(${cls.id})">Cancelar Inscrição</button>`
           : "";
 
         return `
             <div class="class-card flex-col-full ${isPast ? "class-card-past" : "class-card-future"}">
               <div>
                 <h3 class="card-title">${cls.title}</h3>
-                <p class="card-subtitle">📍 ${cls.location || "Sala Principal"}</p>
-                <p class="card-date">📅 ${dateStr} • ⏰ ${timeStr}</p>
+                <p class="card-location">
+                  <span class="material-symbols-outlined">location_on</span>
+                  ${cls.location || "Sala Principal"}
+                </p>
+                <p class="card-date">
+                  <span class="material-symbols-outlined">calendar_today</span> ${dateStr} 
+                  <span class="material-symbols-outlined">schedule</span> ${timeStr}
+                </p>
               </div>
               <div class="mt-auto-pt-4">
                 ${statusLabel}
@@ -741,10 +755,10 @@ function renderCalendar(date) {
       markers.className = "day-markers";
 
       if (dayCheckins.length > 0) {
-        markers.innerHTML += `<span class="check-mark">✔</span>`; // Green checkmark
+        markers.innerHTML += `<span class="material-symbols-outlined check-mark" title="Check-in">check_circle</span>`;
       }
       if (dayClasses.length > 0) {
-        markers.innerHTML += `<span class="class-mark">●</span>`; // Dot for class
+        markers.innerHTML += `<span class="material-symbols-outlined class-mark" title="Aula">event</span>`;
       }
       div.appendChild(markers);
 
@@ -787,7 +801,7 @@ function openCalendarModal(date, workouts, classes) {
         ? w.exercises.join(", ")
         : w.exercises;
       div.innerHTML = `
-                <h4>💪 Check-in: ${w.name || "Treino"}</h4>
+                <h4>Check-in: ${w.name || "Treino"}</h4>
             `;
       body.appendChild(div);
     });
@@ -797,7 +811,7 @@ function openCalendarModal(date, workouts, classes) {
       const div = document.createElement("div");
       div.className = "modal-list-item class";
       div.innerHTML = `
-                <h4>🏋️ Aula: ${c.title}</h4>
+                <h4><span class="material-symbols-outlined">fitness_center</span> Aula: ${c.title}</h4>
                 <p>Horário: ${c.time}</p>
             `;
       body.appendChild(div);
@@ -832,7 +846,7 @@ function openStudentInfoModal() {
   document.getElementById("studentInfoEmail").textContent = currentUserData.email || "-";
   document.getElementById("studentInfoPhone").textContent = currentUserData.phone || "-";
   document.getElementById("studentInfoCpf").textContent = currentUserData.document || "-";
-  
+
   // Formatar tipo de plano
   const planType = currentUserData.planType || currentUserData.plan_type || "mensal";
   const planTypeMap = {
@@ -845,7 +859,7 @@ function openStudentInfoModal() {
 
   // Ocultar formulário de mudança de senha se estiver visível
   document.getElementById("changePasswordSection").style.display = "none";
-  
+
   // Limpar mensagens e campos
   document.getElementById("passwordMessage").textContent = "";
   document.getElementById("currentPassword").value = "";

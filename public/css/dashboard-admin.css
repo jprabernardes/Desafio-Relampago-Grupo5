@@ -1,3 +1,7 @@
+@layer legacy, base;
+@import url("./dashboard-receptionist.css") layer(base);
+
+@layer legacy {
 * {
   margin: 0;
   padding: 0;
@@ -875,5 +879,15 @@ td {
 .calendar-day.today:hover {
   background-color: #f8f9fa !important;
   border-color: #667eea !important;
+}
+}
+
+/* Unlayered overrides (above all layers) */
+.main-content {
+  padding: 0;
+}
+
+.header {
+  margin-bottom: 0;
 }
 

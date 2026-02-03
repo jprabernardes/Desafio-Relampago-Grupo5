@@ -4,37 +4,75 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard - Administrador</title>
+  <title>FitManager - Painel do Administrador</title>
+
+  <!-- Config -->
   <script src="./config.js"></script>
   <script src="./js/base-path.js"></script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lexend:wght@400;600;700&display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+    rel="stylesheet" />
+
+  <!-- CSS -->
   <link rel="stylesheet" href="./css/dashboard-admin.css" />
 </head>
 
-<body class="closed-menu">
-  <div class="container">
-    <div class="sidebar">
-      <div class="logo">💪 FitManager</div>
-      <div class="nav-item active" id="navAlunos" onclick="loadTab('alunos')">
-        <i class="fas fa-user-graduate"></i> 👥 Alunos
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <span class="material-symbols-outlined">fitness_center</span>
       </div>
-      <div class="nav-item" id="navFuncionarios" onclick="loadTab('funcionarios')">
-        <i class="fas fa-user-tie"></i> 🏋️ Funcionários
-      </div>
-      <div class="nav-item" id="navAulas" onclick="loadTab('classes')">
-        <i class="fas fa-calendar-alt"></i> 📅 Aulas
-      </div>
-      <div style="flex: 1"></div>
-      <div class="logout-btn" onclick="logout()">🚪 Sair</div>
+      <span class="logo-text">Fit<span class="logo-accent">Manager</span></span>
     </div>
 
-    <div class="main-content">
-      <div class="header">
-        <h1>Dashboard - Administrador</h1>
-        <div class="user-info">
-          <span id="userName"></span>
-          <div class="user-avatar" id="userAvatar"></div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" id="navAlunos" onclick="loadTab('alunos')">
+        <span class="material-symbols-outlined">group</span>
+        <span>Alunos</span>
+      </a>
+      <a class="nav-item" id="navFuncionarios" onclick="loadTab('funcionarios')">
+        <span class="material-symbols-outlined">badge</span>
+        <span>Funcionários</span>
+      </a>
+      <a class="nav-item" id="navAulas" onclick="loadTab('classes')">
+        <span class="material-symbols-outlined">calendar_month</span>
+        <span>Aulas</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a class="logout-btn" onclick="logout()">
+        <span class="material-symbols-outlined">logout</span>
+        <span>Sair</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="header">
+      <h1 class="page-title">Painel do Administrador</h1>
+      <div class="user-info">
+        <div class="user-details">
+          <span class="user-name" id="userName">Carregando...</span>
+          <span class="user-role">Administrador</span>
+        </div>
+        <div class="user-avatar" id="userAvatar">
+          <span class="material-symbols-outlined">person</span>
         </div>
       </div>
+    </header>
+
+    <div class="content-area">
 
       <div id="classesView" class="hidden" style="margin-top: 2rem;">
         <div class="calendar-legend">
@@ -56,30 +94,36 @@
       <div class="table-container">
         <div class="table-header">
           <h2 id="tableTitle">Usuários do Sistema</h2>
-          <div class="flex-center-gap">
-            <input type="text" id="searchInput" placeholder="Pesquisar..." class="search-input"
-              oninput="handleSearch()" />
+          <div class="table-actions">
+            <div class="search-wrapper">
+              <span class="material-symbols-outlined search-icon">search</span>
+              <input type="text" id="searchInput" placeholder="Pesquisar..." class="search-input"
+                oninput="handleSearch()" />
+            </div>
             <button class="btn btn-primary" onclick="openAddModal()">
-              + Adicionar Conta
+              <span class="material-symbols-outlined">add</span>
+              Adicionar
             </button>
           </div>
         </div>
-        <table>
-          <thead id="tableHead">
-            <tr>
-              <th>Nome</th>
-              <th>Email</th>
-              <th>CPF</th>
-              <th>Função</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="usersTable"></tbody>
-        </table>
+        <div class="table-wrapper">
+          <table>
+            <thead id="tableHead">
+              <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>CPF</th>
+                <th>Função</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="usersTable"></tbody>
+          </table>
+        </div>
         <div id="paginationContainer"></div>
       </div>
     </div>
-  </div>
+  </main>
 
   <!-- Modal Adicionar -->
   <div class="modal" id="addModal">

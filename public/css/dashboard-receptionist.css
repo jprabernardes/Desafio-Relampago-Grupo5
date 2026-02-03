@@ -992,6 +992,38 @@ tbody tr:hover {
   display: none !important;
 }
 
+/* Used by instructor/admin/student modals */
+.modal-content-large {
+  max-width: 800px;
+}
+
+.modal-scrollable-list {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 1rem;
+  background: #f9fafb;
+}
+
+.label-bold {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.text-gray {
+  color: var(--text-gray);
+}
+
+.text-gray-light {
+  color: var(--text-light-gray);
+}
+
+.italic {
+  font-style: italic;
+}
+
 .flex-center-gap {
   display: flex;
   gap: 1rem;

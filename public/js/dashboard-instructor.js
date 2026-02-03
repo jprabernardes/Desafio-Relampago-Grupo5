@@ -373,12 +373,15 @@ function renderExerciseCard(exercise, options = {}) {
     showStats = true,
     showHint = false,
     onClick = null,
-    cardClass = "template-card",
+    cardClass = "exercise-card",
     cardId = null,
-    allowDetailView = true,
   } = options;
 
-  // Determinar evento de clique apenas para seleção (não abre modal)
+  const series = Number(exercise.series || 0);
+  const repetitions = Number(exercise.repetitions || 0);
+  const weight = Number(exercise.weight || 0);
+
+  // Clique no card
   let clickHandler = "";
   if (onClick) {
     clickHandler = `onclick="${onClick}" style="cursor: pointer;"`;
@@ -386,38 +389,62 @@ function renderExerciseCard(exercise, options = {}) {
 
   const idAttr = cardId ? `id="${cardId}"` : "";
 
-  // Ícone de info removido conforme solicitação
-  const infoIcon = "";
-
   return `
     <div class="${cardClass}" ${clickHandler} ${idAttr}>
-      <h4>${exercise.name}</h4>
-      ${showDescription && exercise.description ? `<p class="exercise-info">${exercise.description}</p>` : ""}
+      ${showActions
+      ? `
+          <div class="exercise-card-actions" onclick="event.stopPropagation()">
+            <button
+              class="icon-btn icon-btn--edit"
+              title="Editar"
+              onclick="event.stopPropagation(); editTemplate(${exercise.id})"
+              type="button"
+            >
+              <span class="material-symbols-outlined">edit</span>
+            </button>
+            <button
+              class="icon-btn icon-btn--delete"
+              title="Excluir"
+              onclick="event.stopPropagation(); deleteTemplate(${exercise.id})"
+              type="button"
+            >
+              <span class="material-symbols-outlined">delete</span>
+            </button>
+          </div>
+        `
+      : ""
+    }
+
+      <h3 class="exercise-card-title">${exercise.name}</h3>
+
+      ${showDescription && exercise.description
+      ? `<p class="exercise-card-description">${exercise.description}</p>`
+      : ""
+    }
+
       ${showStats
       ? `
-        <div class="exercise-stats">
-          <span>📊 ${exercise.series || 0} séries x ${exercise.repetitions || 0} repetições</span>
-          <span>⚖️ ${exercise.weight || 0} kg</span>
-        </div>
-      `
+          <div class="exercise-card-metrics">
+            <div class="exercise-metric">
+              <span class="material-symbols-outlined exercise-metric-icon">reorder</span>
+              <div>
+                <span class="exercise-metric-value">${series} séries x ${repetitions} reps</span>
+                <span class="exercise-metric-label">Séries / Reps</span>
+              </div>
+            </div>
+            <div class="exercise-metric">
+              <span class="material-symbols-outlined exercise-metric-icon">weight</span>
+              <div>
+                <span class="exercise-metric-value">${weight} kg</span>
+                <span class="exercise-metric-label">Carga sugerida</span>
+              </div>
+            </div>
+          </div>
+        `
       : ""
     }
-      ${showHint ? `<p class="exercise-hint">Clique para selecionar e personalizar</p>` : ""}
-      ${showActions || allowDetailView
-      ? `
-        <div class="template-actions" onclick="event.stopPropagation()">
-          ${infoIcon}
-          ${showActions
-        ? `
-            <button class="template-action-btn" title="Editar" onclick="event.stopPropagation(); editTemplate(${exercise.id})">✏️</button>
-            <button class="template-action-btn" title="Excluir" onclick="event.stopPropagation(); deleteTemplate(${exercise.id})">🗑️</button>
-          `
-        : ""
-      }
-        </div>
-      `
-      : ""
-    }
+
+      ${showHint ? `<p class="exercise-card-hint">Clique para selecionar e personalizar</p>` : ""}
     </div>
   `;
 }
@@ -502,7 +529,7 @@ function updatePageSize() {
   const availableWidth =
     window.innerWidth - sidebarWidth - containerPadding - 20;
 
-  const cardMinWidth = 200; // from CSS minmax(200px, 1fr)
+  const cardMinWidth = 240; // from CSS minmax(240px, 1fr)
   const gap = 16; // 1rem
 
   // Calculate max columns: width = (n * card) + ((n-1) * gap)
@@ -631,8 +658,16 @@ function renderStudents() {
       const email = s.email || "";
       return `
         <div class="student-card" onclick="openStudent(${s.id})">
+          <div class="student-status-badge">Ativo</div>
+          <div class="student-card-icon">
+            <span class="material-symbols-outlined">person</span>
+          </div>
           <h4>${name}</h4>
           <p>${email}</p>
+          <div class="student-card-footer">
+            <span class="material-symbols-outlined">visibility</span>
+            Ver detalhes e treinos
+          </div>
         </div>
       `;
     })
@@ -694,12 +729,13 @@ async function loadStudentData(studentId) {
     const student = await res.json();
     document.getElementById("studentName").textContent =
       student.name || student.nome || "Aluno";
+    // Sem emojis (usar texto simples)
     document.getElementById("studentEmail").textContent = student.email
-      ? `📧 ${student.email}`
+      ? `Email: ${student.email}`
       : "";
     const phoneElement = document.getElementById("studentPhone");
     if (phoneElement) {
-      phoneElement.textContent = student.phone ? `📞 ${student.phone}` : "";
+      phoneElement.textContent = student.phone ? `Telefone: ${student.phone}` : "";
     }
   } catch (e) {
     console.error(e);
@@ -756,7 +792,7 @@ function renderStudentTrainings() {
       return `
         <div class="training-card" onclick="openEditTrainingModal(${t.id})">
           <h3>${t.name || "Treino"}</h3>
-          <p>📋 ${exerciseCount} exercício${exerciseCount !== 1 ? "s" : ""}</p>
+          <p><span class="material-symbols-outlined inline-icon">list_alt</span>${exerciseCount} exercício${exerciseCount !== 1 ? "s" : ""}</p>
           <p style="color: #999; font-size: 0.85rem;">Clique para editar</p>
         </div>
       `;
@@ -1144,9 +1180,16 @@ async function renderClasses() {
               <div class="flex-between-start">
                   <div class="flex-1">
                       <h3 class="class-card-title">${c.name || c.nome_aula}</h3>
-                      <p class="class-card-info">📅 ${formatDateBR(c.date || c.data)} &nbsp; ⏰ ${c.time || c.hora} </p>
+                      <p class="class-card-info">
+                        <span class="material-symbols-outlined inline-icon">calendar_month</span>
+                        ${formatDateBR(c.date || c.data)}
+                        <span class="class-card-sep">•</span>
+                        <span class="material-symbols-outlined inline-icon">schedule</span>
+                        ${c.time || c.hora}
+                      </p>
                       <p class="class-card-enrollment">
-                          👥 ${c.enrolledCount}/${c.slots_limit || c.limite_vagas} alunos inscritos
+                        <span class="material-symbols-outlined inline-icon">group</span>
+                        ${c.enrolledCount}/${c.slots_limit || c.limite_vagas} alunos inscritos
                       </p>
                   </div>
               </div>
@@ -1526,15 +1569,16 @@ function renderAvailableExercises() {
         <h4>${ex.name}</h4>
         ${ex.description ? `<p class="exercise-info">${ex.description}</p>` : ""}
         <div class="exercise-stats">
-          <span>📊 ${ex.series || 0} séries x ${ex.repetitions || 0} repetições</span>
-          <span>⚖️ ${ex.weight || 0} kg</span>
+          <span><span class="material-symbols-outlined inline-icon">reorder</span>${ex.series || 0} séries x ${ex.repetitions || 0} repetições</span>
+          <span><span class="material-symbols-outlined inline-icon">weight</span>${ex.weight || 0} kg</span>
         </div>
         <p class="exercise-hint">Clique para selecionar e personalizar</p>
         <div class="template-actions" onclick="event.stopPropagation()">
           <button class="template-action-btn" 
                   title="Ver detalhes do exercício"
-                  onclick="event.stopPropagation(); event.preventDefault(); openExerciseDetailModal(${ex.id}, event); return false;">
-            ℹ️
+                  onclick="event.stopPropagation(); event.preventDefault(); openExerciseDetailModal(${ex.id}, event); return false;"
+                  type="button">
+            <span class="material-symbols-outlined">info</span>
           </button>
         </div>
       </div>
