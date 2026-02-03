@@ -779,3 +779,32 @@ td {
   color: #666;
 }
 
+
+/* Custom Responsive Calendar Buttons */
+.day-classes {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  width: 100% !important;
+  flex: 1 !important;
+  margin-top: 4px !important;
+  overflow: hidden !important;
+}
+
+.class-indicator {
+  /* Layout responsivo */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-grow: 1 !important;
+  min-height: 28px !important;
+  padding: 0 6px !important;
+  font-size: 0.75rem !important;
+}
+
+
+/* Fix Z-Index for Confirmation Modal */
+#confirmModal {
+  z-index: 9999 !important;
+}
+

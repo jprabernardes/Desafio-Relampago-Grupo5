@@ -1194,22 +1194,29 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-top: auto;
   width: 100%;
-  align-items: center;
+  flex: 1;
+  margin-top: 4px;
+  overflow: hidden;
 }
 
 .class-indicator {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 4px 6px;
+  padding: 0 6px;
   border-radius: 4px;
   width: 100%;
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-bottom: 2px;
+  
+  /* Layout responsivo */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+  min-height: 28px; /* Altura mínima maior */
 }
 
 .class-indicator.own-class {

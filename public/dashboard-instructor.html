@@ -68,7 +68,7 @@
       <!-- Calendar Section -->
       <section class="section" id="create-class">
         <h2>Calendário de Aulas</h2>
-        
+
         <div class="calendar-legend">
           <span class="legend-item">
             <span class="legend-color own-class"></span>
@@ -79,7 +79,12 @@
             Outros instrutores
           </span>
         </div>
-        
+
+        <div class="calendar-search" style="margin-bottom: 1rem; display: flex; gap: 10px;">
+          <input type="text" id="calendarSearchInput" placeholder="Buscar por aula ou instrutor..." class="search-input"
+            style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+
         <div class="calendar-controls">
           <button class="btn btn-secondary" onclick="changeCalendarMonth(-1)">
             ❮ Anterior
@@ -336,7 +341,7 @@
           <label for="recurringClassName">Nome da Aula</label>
           <input type="text" id="recurringClassName" placeholder="Ex: Yoga Matinal" required />
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="recurringClassTime">Hora</label>
@@ -347,7 +352,7 @@
             <input type="number" id="recurringClassLimit" placeholder="Ex: 20" required min="1" />
           </div>
         </div>
-        
+
         <div class="form-group">
           <label>Dias da Semana</label>
           <div class="weekdays-selectors">
@@ -374,7 +379,7 @@
             </button>
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="recurringStartDate">Data Início</label>
@@ -385,7 +390,7 @@
             <input type="date" id="recurringEndDate" required />
           </div>
         </div>
-        
+
         <div id="recurringPreview" class="recurring-preview"></div>
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" onclick="closeCreateRecurringClassModal()">
@@ -469,6 +474,7 @@
   <script src="./js/app-config.js"></script>
   <script src="./js/api.js"></script>
   <script src="./js/pagination.js"></script>
+  <script src="./js/calendar-module.js"></script>
   <script src="./js/dashboard-instructor.js"></script>
 </body>
 

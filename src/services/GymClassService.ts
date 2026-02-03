@@ -147,6 +147,7 @@ export class GymClassService {
     const classes = await this.gymClassRepository.findAll();
     return await Promise.all(classes.map(async (cls: GymClass) => {
       const enrollmentCount = await this.enrollmentRepository.countByClassId(cls.id!);
+      const instructor = await this.userRepository.findById(cls.instructor_id);
 
       return {
         id: cls.id,
@@ -156,7 +157,8 @@ export class GymClassService {
         location: 'Sala 1',
         max_participants: cls.slots_limit,
         current_participants: enrollmentCount,
-        instructor_id: cls.instructor_id
+        instructor_id: cls.instructor_id,
+        instructor_name: instructor ? (instructor.name || instructor.nome) : "Desconhecido"
       };
     }));
   }

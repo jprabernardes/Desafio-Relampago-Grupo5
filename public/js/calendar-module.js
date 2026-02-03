@@ -11,7 +11,9 @@ window.CalendarModule = (function () {
     const MAX_CALENDAR_ATTEMPTS = 5;
     let selectedDayForCreation = null;
     let currentUserId = null;
+
     let currentUserRole = null;
+    let currentSearchTerm = "";
 
     // Helpers de Data
     function parseDateBR(dateStr) {
@@ -81,6 +83,22 @@ window.CalendarModule = (function () {
         window.toggleWeekdaySelector = toggleWeekdaySelector;
 
         setupFormListeners();
+        setupSearchListener();
+    }
+
+    function setupSearchListener() {
+        const searchInput = document.getElementById("calendarSearchInput");
+        if (searchInput) {
+            // Remove old listener if exists (clone)
+            const newInput = searchInput.cloneNode(true);
+            searchInput.parentNode.replaceChild(newInput, searchInput);
+
+            newInput.addEventListener("input", (e) => {
+                currentSearchTerm = e.target.value.toLowerCase();
+                renderCalendar(calendarCurrentDate);
+            });
+            // Restore focus if needed? No, rebuilding grid only. Input remains.
+        }
     }
 
     function setupFormListeners() {
@@ -170,7 +188,8 @@ window.CalendarModule = (function () {
                     hora: timeStr,
                     slots_limit: cls.max_participants || cls.slots_limit,
                     limite_vagas: cls.max_participants || cls.slots_limit,
-                    instructor_id: cls.instructor_id
+                    instructor_id: cls.instructor_id,
+                    instructor_name: cls.instructor_name || ""
                 };
             });
 
@@ -233,7 +252,17 @@ window.CalendarModule = (function () {
             const dayClasses = (calendarClasses || []).filter((c) => {
                 try {
                     const classDate = parseDateBR(c.date || c.data);
-                    return classDate.toDateString() === dayDate.toDateString();
+                    const isSameDate = classDate.toDateString() === dayDate.toDateString();
+
+                    if (!isSameDate) return false;
+
+                    if (currentSearchTerm) {
+                        const nameMatch = (c.name || c.nome_aula || "").toLowerCase().includes(currentSearchTerm);
+                        const instrMatch = (c.instructor_name || "").toLowerCase().includes(currentSearchTerm);
+                        return nameMatch || instrMatch;
+                    }
+
+                    return true;
                 } catch (e) { return false; }
             });
 
@@ -308,6 +337,12 @@ window.CalendarModule = (function () {
         for (let i = 0; i < 7; i++) {
             const selector = document.getElementById(`day${i}`);
             if (selector) selector.classList.remove("selected");
+        }
+
+        if (selectedDayForCreation) {
+            const dayIndex = selectedDayForCreation.getDay();
+            const selector = document.getElementById(`day${dayIndex}`);
+            if (selector) selector.classList.add("selected");
         }
 
         modal.classList.add("active");
