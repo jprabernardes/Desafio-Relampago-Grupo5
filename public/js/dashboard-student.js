@@ -59,7 +59,7 @@ let allWorkouts = []; // Cache para os treinos do aluno
 let currentUserData = null; // Armazena dados completos do usuário
 
 const GYM_INFO = {
-  name: "💪 FITMANAGER ACADEMIA",
+  name: "FITMANAGER ACADEMIA",
   address: "Rua Exemplo, 123",
   phone: "(11) 99999-9999",
 };
@@ -158,30 +158,36 @@ async function loadWorkouts() {
       .map(
         (workout, index) => `
             <div class="workout-card fade-up" style="animation-delay: ${index * 0.1}s">
-              <div>
-                <h3 class="card-title">${workout.name}</h3>
-                <p class="card-subtitle">
-                  👤 <strong>Instrutor:</strong> ${workout.instructor_name || workout.instructor_id}
-                </p>
-                <div class="exercises-list">
-                  ${Array.isArray(workout.exercises)
+              <div class="workout-header">
+                <h3 class="workout-name">${workout.name}</h3>
+                <div class="workout-instructor">
+                  <span class="material-symbols-outlined">person</span>
+                  <span class="instructor-label">Instrutor:</span>
+                  <span class="instructor-name">${workout.instructor_name || workout.instructor_id}</span>
+                </div>
+              </div>
+              <div class="exercise-rows">
+                ${Array.isArray(workout.exercises)
             ? workout.exercises
               .map(
                 (ex) => `
-                      <div class="workout-exercise-item">
-                        <strong>${ex.name}</strong><br>
-                        ${ex.series}x${ex.repetitions} ${ex.weight ? `• ${ex.weight}KG` : ""}
+                      <div class="exercise-row">
+                        <span class="exercise-name">${ex.name}</span>
+                        <div class="exercise-badge">
+                          <span class="badge-series">${ex.series} x ${ex.repetitions}</span>
+                          ${ex.weight ? `<span class="badge-weight">${ex.weight}kg</span>` : ""}
+                        </div>
                       </div>
                     `,
               )
               .join("")
-            : `<pre>${workout.exercises}</pre>`
+            : `<div class="p-4 text-center text-gray">Sem exercícios cadastrados</div>`
           }
-                </div>
               </div>
-              <div class="workout-actions">
-                <button class="btn btn-primary btn-full" onclick="printWorkout(${workout.id})">
-                  🖨️ Imprimir Treino
+              <div class="workout-footer">
+                <button class="btn-print" onclick="printWorkout(${workout.id})">
+                  <span class="material-symbols-outlined">print</span>
+                  Imprimir Treino
                 </button>
               </div>
             </div>
@@ -492,9 +498,18 @@ function renderClassSessions(classesList) {
             <div class="class-card class-card-clickable" onclick="openClassModal(${cls.id})">
               <div>
                 <h3 class="card-title">${cls.title}</h3>
-                <p class="card-location">📍 ${cls.location || "Sala Principal"}</p>
-                <p class="card-date">📅 ${dateStr} • ⏰ ${timeStr}</p>
-                <p class="card-subtitle" style="margin-top:0.5rem; font-size:0.8rem;">👤 ${cls.instructor_name || "Instrutor"}</p>
+                <p class="card-location">
+                  <span class="material-symbols-outlined">location_on</span>
+                  ${cls.location || "Sala Principal"}
+                </p>
+                <p class="card-date">
+                  <span class="material-symbols-outlined">calendar_today</span> ${dateStr} 
+                  <span class="material-symbols-outlined">schedule</span> ${timeStr}
+                </p>
+                <p class="card-subtitle" style="margin-top:0.5rem;">
+                   <span class="material-symbols-outlined" style="font-size: 1rem;">person</span>
+                   ${cls.instructor_name || "Instrutor"}
+                </p>
               </div>
               <span class="class-status ${statusClass}">${statusText}</span>
             </div>
@@ -640,15 +655,21 @@ async function loadMyClasses() {
           : '<span class="class-status status-enrolled">Confirmada</span>';
 
         let actionBtn = !isPast
-          ? `<button class="btn btn-danger btn-sm btn-full mt-6" onclick="cancelEnrollment(${cls.id})">Cancelar Inscrição</button>`
+          ? `<button class="btn btn-danger btn-compact" onclick="cancelEnrollment(${cls.id})">Cancelar Inscrição</button>`
           : "";
 
         return `
             <div class="class-card flex-col-full ${isPast ? "class-card-past" : "class-card-future"}">
               <div>
                 <h3 class="card-title">${cls.title}</h3>
-                <p class="card-subtitle">📍 ${cls.location || "Sala Principal"}</p>
-                <p class="card-date">📅 ${dateStr} • ⏰ ${timeStr}</p>
+                <p class="card-location">
+                  <span class="material-symbols-outlined">location_on</span>
+                  ${cls.location || "Sala Principal"}
+                </p>
+                <p class="card-date">
+                  <span class="material-symbols-outlined">calendar_today</span> ${dateStr} 
+                  <span class="material-symbols-outlined">schedule</span> ${timeStr}
+                </p>
               </div>
               <div class="mt-auto-pt-4">
                 ${statusLabel}
@@ -837,10 +858,10 @@ function renderCalendar(date) {
       markers.className = "day-markers";
 
       if (dayCheckins.length > 0) {
-        markers.innerHTML += `<span class="check-mark">✔</span>`; // Green checkmark
+        markers.innerHTML += `<span class="material-symbols-outlined check-mark" title="Check-in">check_circle</span>`;
       }
       if (dayClasses.length > 0) {
-        markers.innerHTML += `<span class="class-mark">●</span>`; // Dot for class
+        markers.innerHTML += `<span class="material-symbols-outlined class-mark" title="Aula">event</span>`;
       }
       div.appendChild(markers);
 
@@ -879,11 +900,8 @@ function openCalendarModal(date, workouts, classes) {
     workouts.forEach((w) => {
       const div = document.createElement("div");
       div.className = "modal-list-item workout";
-      const exercisesList = Array.isArray(w.exercises)
-        ? w.exercises.join(", ")
-        : w.exercises;
       div.innerHTML = `
-                <h4>💪 Check-in: ${w.name || "Treino"}</h4>
+                <h4><span class="material-symbols-outlined">check_circle</span> Check-in: ${w.name || "Treino"}</h4>
             `;
       body.appendChild(div);
     });
@@ -893,8 +911,8 @@ function openCalendarModal(date, workouts, classes) {
       const div = document.createElement("div");
       div.className = "modal-list-item class";
       div.innerHTML = `
-                <h4>🏋️ Aula: ${c.title}</h4>
-                <p>Horário: ${c.time}</p>
+                <h4><span class="material-symbols-outlined">event</span> Aula: ${c.title}</h4>
+                <p><span class="material-symbols-outlined" style="font-size: 1rem !important;">schedule</span> Horário: ${c.time}</p>
             `;
       body.appendChild(div);
     });

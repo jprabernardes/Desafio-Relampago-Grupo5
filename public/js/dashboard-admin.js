@@ -4,6 +4,7 @@ let paginator = null;
 let currentTab = "alunos";
 let allUsers = [];
 let filteredUsers = [];
+let currentUser = null;
 
 const { resolveAppPath } = window.AppConfig;
 
@@ -31,6 +32,7 @@ function confirmAction() {
 async function loadUserInfo() {
   const res = await apiFetch("/auth/me");
   const data = await res.json();
+  currentUser = data; // Store globally
   return data;
 }
 
@@ -93,14 +95,22 @@ async function loadData() {
   }
 }
 
+
+
 function renderTablePage(pageItems) {
   const tbody = document.getElementById("usersTable");
 
   if (pageItems.length === 0) {
+    const colspan = currentTab === "financeiro" ? 9 : 5;
     tbody.innerHTML =
-      '<tr><td colspan="5" class="text-center-padded-gray">Nenhum registro encontrado.</td></tr>';
+      `<tr><td colspan="${colspan}" class="text-center-padded-gray">Nenhum registro encontrado.</td></tr>`;
     return;
   }
+
+  const nameCell = (u) => `
+    <span class="clickable-name" onclick="openEditModal(${u.id})" style="cursor: pointer; color: var(--primary); font-weight: 500;">
+      ${u.nome}
+    </span>`;
 
   if (currentTab === "alunos") {
     // Mostrar: Nome, Email, Tipo de Plano, Ações
@@ -108,11 +118,13 @@ function renderTablePage(pageItems) {
       .map(
         (u) => `
       <tr>
-        <td>${u.nome}</td>
+        <td>${nameCell(u)}</td>
         <td>${u.email}</td>
         <td><span class="plan-badge plan-${u.tipo_plano || "mensal"}">${u.tipo_plano || "Mensal"}</span></td>
         <td>
-           <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
+           <button class="btn btn-primary" onclick="openEditModal(${u.id})">
+             <span class="material-symbols-outlined">edit</span> Editar
+           </button>
         </td>
       </tr>
     `,
@@ -124,14 +136,36 @@ function renderTablePage(pageItems) {
       .map(
         (u) => `
       <tr>
-        <td>${u.nome}</td>
+        <td>${nameCell(u)}</td>
         <td>${u.email}</td>
         <td><span class="role-badge role-${u.role}">${u.role === "instrutor" ? "Instrutor" : "Recepcionista"}</span></td>
         <td>
-           <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
+           <button class="btn btn-primary" onclick="openEditModal(${u.id})">
+             <span class="material-symbols-outlined">edit</span> Editar
+           </button>
         </td>
       </tr>
     `,
+      )
+      .join("");
+  } else if (currentTab === "financeiro") {
+    tbody.innerHTML = pageItems
+      .map(
+        (u) => `
+            <tr>
+                <td>${nameCell(u)}</td>
+                <td>${u.email}</td>
+                <td>${u.phone || "-"}</td>
+                <td>${u.cpf || "-"}</td>
+                <td>${u.paymentDay || 10}</td>
+                <td>${formatDateBR(u.paidUntil)}</td>
+                <td>${formatDateBR(u.nextDueDate)}</td>
+                <td>${renderPaymentBadge(u.situation)}</td>
+                <td>
+                  <button class="btn btn-secondary" onclick="registerPayment(${u.id})">Registrar pagamento</button>
+                </td>
+            </tr>
+        `,
       )
       .join("");
   } else {
@@ -140,12 +174,14 @@ function renderTablePage(pageItems) {
       .map(
         (u) => `
       <tr>
-        <td>${u.nome}</td>
+        <td>${nameCell(u)}</td>
         <td>${u.email}</td>
         <td>${u.cpf}</td>
         <td><span class="role-badge role-${u.role}">${u.role}</span></td>
         <td>
-          <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
+          <button class="btn btn-primary" onclick="openEditModal(${u.id})">
+            <span class="material-symbols-outlined">edit</span> Editar
+          </button>
         </td>
       </tr>
     `,
@@ -166,6 +202,20 @@ function updateTableHeaders(tipo) {
         <th>Ações</th>
       </tr>
     `;
+  } else if (tipo === "financeiro") {
+    tableHead.innerHTML = `
+            <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Telefone</th>
+                <th>CPF</th>
+                <th>Dia Pgto</th>
+                <th>Pago até</th>
+                <th>Próximo</th>
+                <th>Situação</th>
+                <th>Ações</th>
+            </tr>
+        `;
   } else {
     // funcionarios
     tableHead.innerHTML = `
@@ -179,7 +229,7 @@ function updateTableHeaders(tipo) {
   }
 }
 
-async function loadTab(tipo = "alunos") {
+async function loadTab(tipo = "home") {
   currentTab = tipo;
 
   let userData = null;
@@ -216,21 +266,43 @@ async function loadTab(tipo = "alunos") {
     item.classList.remove("active");
   });
 
-  if (tipo === "alunos") {
-    document.getElementById("navAlunos").classList.add("active");
-  } else if (tipo === "funcionarios") {
-    document.getElementById("navFuncionarios").classList.add("active");
-  } else if (tipo === "classes") {
-    document.getElementById("navAulas").classList.add("active");
+  const navMap = {
+    home: "navHome",
+    alunos: "navAlunos",
+    funcionarios: "navFuncionarios",
+    classes: "navAulas",
+    financeiro: "navFinance"
+  };
+
+  if (navMap[tipo]) {
+    const navEl = document.getElementById(navMap[tipo]);
+    if (navEl) navEl.classList.add("active");
   }
 
-  // Toggle Views
+  // Get Views
+  const homeView = document.getElementById("homeView");
   const classesView = document.getElementById("classesView");
+  const financeView = document.getElementById("financeView");
   const tableContainer = document.querySelector(".table-container");
 
-  if (tipo === "classes") {
+  // Reset Views
+  if (homeView) homeView.classList.add("hidden");
+  if (classesView) classesView.classList.add("hidden");
+  if (financeView) financeView.classList.add("hidden");
+  if (tableContainer) tableContainer.style.display = "none";
+
+  // Reset Search visibility if needed (Admin dashboard always shows search in table container, but home view shouldn't)
+  // But search bar is INSIDE table-container in admin HTML structure? 
+  // Let's assume table-container contains the header and search.
+
+  if (tipo === "home") {
+    if (homeView) homeView.classList.remove("hidden");
+    // Load Home Data
+    await loadHomeMetrics();
+    await loadWeekdayChart("weekdayChartHome", 30);
+    return;
+  } else if (tipo === "classes") {
     if (classesView) classesView.classList.remove("hidden");
-    if (tableContainer) tableContainer.style.display = "none";
 
     // Init Calendar
     console.log("Admin Dashboard: Switching to Classes Tab. Checking CalendarModule:", !!window.CalendarModule);
@@ -241,9 +313,19 @@ async function loadTab(tipo = "alunos") {
     } else {
       console.error("Admin Dashboard: window.CalendarModule is missing!");
     }
-    return; // Stop here, don't load user table
+    return;
+  } else if (tipo === "financeiro") {
+    if (financeView) financeView.classList.remove("hidden");
+    if (tableContainer) tableContainer.style.display = "block";
+    document.getElementById("tableTitle").textContent = "Financeiro";
+
+    document.getElementById("usersTable").innerHTML =
+      '<tr><td colspan="9" class="text-center-padded">Carregando...</td></tr>';
+    updateTableHeaders("financeiro");
+    await loadFinance();
+    return;
   } else {
-    if (classesView) classesView.classList.add("hidden");
+    // Alunos or Funcionarios
     if (tableContainer) tableContainer.style.display = "block";
   }
 
@@ -270,8 +352,11 @@ async function loadTab(tipo = "alunos") {
       break;
   }
 
-  document.getElementById("tableTitle").textContent = title;
-  document.getElementById("searchInput").value = "";
+  const titleEl = document.getElementById("tableTitle");
+  if (titleEl) titleEl.textContent = title;
+
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) searchInput.value = "";
 
   // Mostrar loading
   document.getElementById("usersTable").innerHTML =
@@ -312,7 +397,7 @@ async function loadTab(tipo = "alunos") {
   } catch (error) {
     console.error(error);
     document.getElementById("usersTable").innerHTML =
-      `<tr><td colspan="5" class="text-error-center">Erro: ${error.message}</td></tr>`;
+      `< tr > <td colspan="5" class="text-error-center">Erro: ${error.message}</td></tr > `;
   }
 }
 
@@ -396,7 +481,7 @@ function closeAddModal() {
 
 function showAddAlert(message, type = "error") {
   const alert = document.getElementById("addAlertContainer");
-  alert.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+  alert.innerHTML = `< div class="alert alert-${type}" > ${message}</div > `;
   setTimeout(() => (alert.innerHTML = ""), 5000);
 }
 
@@ -411,9 +496,37 @@ async function openEditModal(userId) {
   document.getElementById("editCpf").value = userToEdit.cpf;
   document.getElementById("editTelefone").value = userToEdit.phone || "";
 
-  if (currentTab === "alunos") {
+  // Sempre permitir editar senha (deixar em branco se não quiser alterar)
+  document.getElementById("editNovaSenhaGroup").classList.remove("hidden");
+  document.getElementById("editNovaSenha").value = "";
+
+  // Logic override for Admin Role
+  if (userToEdit.role === 'administrador') {
+    document.getElementById("editModalTitle").textContent = "Editar Administrador";
+
+    // Admins don't have plans
+    document.getElementById("editTipoPlanoGroup").classList.add("hidden");
+    document.getElementById("editTipoPlano").required = false;
+
+    // Show Role/CPF?
+    document.getElementById("editCpfGroup").classList.remove("hidden");
+
+    // Allow changing role? Maybe not for self if it removes admin access. 
+    // But let's show it as per "General" layout but maybe disabled?
+    // User request: "ver as informações e alterar a senha igual de aluno e instrutor"
+    // Taking it literally: show info + allow password change.
+
+    document.getElementById("editRoleGroup").classList.remove("hidden");
+    document.getElementById("editRole").value = userToEdit.role;
+
+    // Show all roles in select
+    const roleSelect = document.getElementById("editRole");
+    for (let i = 0; i < roleSelect.options.length; i++) {
+      roleSelect.options[i].hidden = false;
+    }
+
+  } else if (currentTab === "alunos") {
     document.getElementById("editModalTitle").textContent = "Editar Aluno";
-    document.getElementById("editNovaSenhaGroup").classList.add("hidden");
     document.getElementById("editTipoPlanoGroup").classList.remove("hidden");
     document.getElementById("editTipoPlano").value =
       userToEdit.tipo_plano || "mensal";
@@ -424,8 +537,6 @@ async function openEditModal(userId) {
   } else if (currentTab === "funcionarios") {
     document.getElementById("editModalTitle").textContent =
       "Editar Funcionário";
-    document.getElementById("editNovaSenhaGroup").classList.remove("hidden");
-    document.getElementById("editNovaSenha").value = "";
     document.getElementById("editTipoPlanoGroup").classList.add("hidden");
     document.getElementById("editTipoPlano").required = false;
 
@@ -444,8 +555,6 @@ async function openEditModal(userId) {
     }
   } else {
     document.getElementById("editModalTitle").textContent = "Editar Usuário";
-    document.getElementById("editNovaSenhaGroup").classList.remove("hidden");
-    document.getElementById("editNovaSenha").value = "";
     document.getElementById("editTipoPlanoGroup").classList.add("hidden");
     document.getElementById("editTipoPlano").required = false;
 
@@ -470,7 +579,7 @@ function closeEditModal() {
 
 function showEditAlert(message, type = "error") {
   const alert = document.getElementById("editAlertContainer");
-  alert.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+  alert.innerHTML = `< div class="alert alert-${type}" > ${message}</div > `;
   setTimeout(() => (alert.innerHTML = ""), 5000);
 }
 
@@ -485,7 +594,7 @@ function confirmDeleteUser() {
 // Deletar usuário
 async function deleteUser(id) {
   try {
-    const res = await apiFetch(`/users/${id}`, {
+    const res = await apiFetch(`/ users / ${id} `, {
       method: "DELETE",
     });
 
@@ -585,18 +694,14 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
     document: document.getElementById("editCpf").value,
   };
 
-  // Só adicionar senha se o campo de nova senha estiver preenchido
-  if (currentTab === "funcionarios") {
-    const newPassword = document.getElementById("editNovaSenha").value;
-    if (newPassword) {
-      data.password = newPassword;
-    }
-    data.role = document.getElementById("editRole").value;
-  } else if (currentTab !== "alunos") {
-    const newPassword = document.getElementById("editNovaSenha").value;
-    if (newPassword) {
-      data.password = newPassword;
-    }
+  // Check for password update
+  const newPassword = document.getElementById("editNovaSenha").value;
+  if (newPassword) {
+    data.password = newPassword;
+  }
+
+  // Só adicionar role se não for aluno
+  if (currentTab === "funcionarios" || currentTab !== "alunos") {
     data.role = document.getElementById("editRole").value;
   }
 
@@ -604,6 +709,7 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
   if (currentTab === "alunos") {
     data.planType = document.getElementById("editTipoPlano").value;
   }
+
 
   try {
     const res = await apiFetch(`/users/${userId}`, {
@@ -630,6 +736,7 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
   }
 });
 
+
 async function logout() {
   await apiFetch("/auth/logout", { method: "DELETE" });
   window.location.href = resolveAppPath("/");
@@ -644,10 +751,10 @@ function formatPhoneNumber(value) {
   if (value.length > 2) {
     if (value.length <= 10) {
       // (XX)XXXXXXXX
-      return `(${value.slice(0, 2)})${value.slice(2)}`;
+      return `(${value.slice(0, 2)})${value.slice(2)} `;
     } else {
       // (XX)9XXXXXXXX
-      return `(${value.slice(0, 2)})${value.slice(2)}`;
+      return `(${value.slice(0, 2)})${value.slice(2)} `;
     }
   } else if (value.length > 0) {
     return `(${value}`;
@@ -666,4 +773,190 @@ phoneInputs.forEach((id) => {
   }
 });
 
-loadTab("alunos");
+
+
+// --- Finance Helper Functions ---
+
+
+function formatDateBR(dateStr) {
+  if (!dateStr) return "-";
+  // YYYY-MM-DD -> DD/MM/YYYY
+  const parts = String(dateStr).split("-");
+  if (parts.length !== 3) return dateStr;
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
+function renderPaymentBadge(situation) {
+  const isPaid = situation === "adimplente";
+  const cls = isPaid ? "status-active" : "status-inactive";
+  const label = isPaid ? "Adimplente" : "Inadimplente";
+  return `<span class="status-badge ${cls}"><span class="dot"></span>${label}</span>`;
+}
+
+function showMainAlert(message, type) {
+  const el = document.getElementById("alert");
+  if (!el) return;
+  el.classList.remove("hidden");
+  el.classList.remove("success", "error", "alert-success", "alert-error");
+  el.classList.add(type === 'success' ? 'alert-success' : 'alert-error'); // Map to CSS classes
+  el.textContent = message;
+
+  setTimeout(() => {
+    el.classList.add("hidden");
+  }, 3000);
+}
+
+async function loadFinance() {
+  try {
+    const [summaryRes, studentsRes] = await Promise.all([
+      apiFetch("/receptionist/finance/summary"),
+      apiFetch("/receptionist/finance/students"),
+    ]);
+
+    if (summaryRes.ok) {
+      const summary = await summaryRes.json();
+      document.getElementById("financeAdimplentes").textContent = summary.adimplentes || 0;
+      document.getElementById("financeInadimplentes").textContent = summary.inadimplentes || 0;
+      document.getElementById("financeTotal").textContent = summary.total || 0;
+    }
+
+    if (!studentsRes.ok) throw new Error("Erro ao buscar alunos do financeiro");
+    const data = await studentsRes.json();
+
+    allUsers = data.map((s) => ({
+      id: s.id,
+      nome: s.name,
+      email: s.email,
+      phone: s.phone,
+      cpf: s.document,
+      paymentDay: s.payment_day,
+      paidUntil: s.paid_until,
+      nextDueDate: s.next_due_date,
+      dueDate: s.due_date,
+      situation: s.situation,
+    }));
+
+    filteredUsers = [...allUsers];
+
+    if (!paginator) {
+      paginator = new Paginator(filteredUsers, 10, renderTablePage);
+    } else {
+      paginator.updateItems(filteredUsers);
+    }
+
+    paginator.goToPage(1);
+    paginator.render("paginationContainer");
+  } catch (err) {
+    console.error(err);
+    document.getElementById("usersTable").innerHTML =
+      `< tr > <td colspan="9" class="text-error-center">Erro: ${err.message}</td></tr > `;
+  }
+}
+
+
+async function registerPayment(studentId) {
+  try {
+    const res = await apiFetch(`/receptionist/finance/students/${studentId}/pay`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ months: 1 }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || "Erro ao registrar pagamento");
+
+    showMainAlert("Pagamento registrado com sucesso!", "success");
+    await loadFinance();
+  } catch (err) {
+    showMainAlert(err.message || "Erro ao registrar pagamento", "error");
+  }
+}
+
+let weekdayChartMode = 'vertical';
+const weekdayChartCache = {};
+
+async function loadHomeMetrics() {
+  try {
+    const res = await apiFetch("/users/dashboard");
+    if (!res.ok) throw new Error("Erro ao buscar métricas");
+
+    const data = await res.json();
+
+    document.getElementById("metricTotalStudents").textContent = data.totalStudents || 0;
+
+    const totalStaff = (data.totalInstructors || 0) + (data.totalReceptionists || 0) + (data.totalAdmins || 0);
+    document.getElementById("metricTotalStaff").textContent = totalStaff;
+
+    document.getElementById("metricCheckinsToday").textContent = data.checkinsToday || 0;
+
+    try {
+      const finRes = await apiFetch("/receptionist/finance/summary");
+      if (finRes.ok) {
+        const fin = await finRes.json();
+        document.getElementById("metricPaidPercent").textContent = `${fin.adimplentesPercent || 0}%`;
+        document.getElementById("metricUnpaidPercent").textContent = `${fin.inadimplentesPercent || 0}%`;
+      } else {
+        document.getElementById("metricPaidPercent").textContent = "--%";
+        document.getElementById("metricUnpaidPercent").textContent = "--%";
+      }
+    } catch {
+      document.getElementById("metricPaidPercent").textContent = "--%";
+      document.getElementById("metricUnpaidPercent").textContent = "--%";
+    }
+
+  } catch (err) {
+    console.error("Erro ao carregar métricas:", err);
+  }
+}
+
+async function loadWeekdayChart(containerId, days) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  el.innerHTML = '<div class="weekday-empty">Carregando gráfico...</div>';
+
+  try {
+    const res = await apiFetch(`/receptionist/checkins/weekday?days=${Number(days || 30)}`);
+    if (!res.ok) throw new Error('Erro ao buscar estatísticas de check-in');
+    const json = await res.json();
+
+    const data = json.data || [];
+    weekdayChartCache[containerId] = data;
+    renderWeekdayChart(el, data, weekdayChartMode);
+  } catch (err) {
+    el.innerHTML = `<div class="weekday-empty">Não foi possível carregar o gráfico.</div>`;
+  }
+}
+
+function renderWeekdayChart(containerEl, data, mode = 'vertical') {
+  if (!Array.isArray(data) || data.length === 0) {
+    containerEl.classList.remove('weekday-chart--thick', 'weekday-chart--vertical');
+    containerEl.innerHTML = '<div class="weekday-empty">Sem dados de check-ins.</div>';
+    return;
+  }
+
+  const max = Math.max(...data.map((d) => Number(d.checkinCount || 0)), 1);
+
+  containerEl.classList.remove('weekday-chart--thick', 'weekday-chart--vertical');
+  containerEl.classList.add('weekday-chart--vertical'); // Force vertical for home view
+
+  containerEl.innerHTML = data
+    .map((d) => {
+      const checkins = Number(d.checkinCount || 0);
+      const students = Number(d.studentCount || 0);
+      const pct = Math.round((checkins / max) * 100);
+
+      return `
+          <div class="weekday-col" title="${students} alunos únicos / ${checkins} check-ins">
+            <div class="weekday-col-count">${checkins}</div>
+            <div class="weekday-col-bar">
+              <div class="weekday-col-fill" style="height: ${pct}%;"></div>
+            </div>
+            <div class="weekday-col-label">${d.label}</div>
+          </div>
+        `;
+    })
+    .join('');
+}
+
+loadTab("home");
