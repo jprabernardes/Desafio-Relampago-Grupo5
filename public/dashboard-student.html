@@ -19,18 +19,18 @@
     <aside class="sidebar">
       <div class="logo">💪 FitManager</div>
       <nav>
-        <div class="nav-item active" data-section="workouts">
+        <div class="nav-item active fade-right" data-section="workouts">
           💪 Meus Treinos
         </div>
-        <div class="nav-item" data-section="classes">
+        <div class="nav-item fade-right" style="animation-delay: 0.1s;" data-section="classes">
           🏋️ Aulas Disponíveis
         </div>
-        <div class="nav-item" data-section="my-classes">
+        <div class="nav-item fade-right" style="animation-delay: 0.2s;" data-section="my-classes">
           📅 Minhas Inscrições
         </div>
-        <div class="nav-item" data-section="calendar">🗓️ Calendário</div>
+        <div class="nav-item fade-right" style="animation-delay: 0.3s;" data-section="calendar">🗓️ Calendário</div>
       </nav>
-      <button class="logout-btn" onclick="logout()">🚪 Sair</button>
+      <button class="logout-btn fade-right" style="animation-delay: 0.4s;" onclick="logout()">🚪 Sair</button>
     </aside>
 
     <!-- Main Content -->
@@ -77,7 +77,7 @@
       </section>
 
       <!-- My Classes Section -->
-      <section class="section" id="my-classes">
+      <section class="section pop-up" id="my-classes">
         <h2>Minhas Inscrições</h2>
         <div id="myClassesList">
           <p>Carregando...</p>
@@ -85,7 +85,7 @@
       </section>
 
       <!-- Calendar Section -->
-      <section class="section" id="calendar">
+      <section class="section pop-up" id="calendar">
         <h2>Calendário de Atividades</h2>
 
         <div class="calendar-stats">

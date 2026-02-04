@@ -17,6 +17,7 @@
     
     <!-- CSS -->
     <link rel="stylesheet" href="./css/login.css" />
+    <link rel="stylesheet" href="./css/common.css" />
   </head>
 
   <body>
@@ -25,7 +26,7 @@
       <div class="login-panel">
         <div class="login-content">
           <!-- Logo -->
-          <div class="logo">
+          <div class="logo pop-in" style="animation-delay: 0.5s;">
             <div class="logo-icon">
               <span class="material-symbols-outlined">fitness_center</span>
             </div>
@@ -39,7 +40,7 @@
 
           <!-- Login Form -->
           <form id="loginForm" class="login-form">
-            <div class="form-group">
+            <div class="form-group fade-right">
               <label>E-mail <span class="required">*</span></label>
               <div class="input-wrapper">
                 <input type="email" id="email" required placeholder="nome@empresa.com" />
@@ -47,7 +48,7 @@
               </div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group fade-right" style="animation-delay: 0.1s;">
               <label>Senha <span class="required">*</span></label>
               <div class="input-wrapper">
                 <input type="password" id="senha" required placeholder="••••••••" />
@@ -58,13 +59,13 @@
               </div>
             </div>
 
-            <div class="links-section">
+            <div class="links-section fade-right" style="animation-delay: 0.2s;">
               <a href="#" onclick="forgotPassword(); return false;" class="link">Esqueci minha senha</a>
             </div>
 
-            <button type="submit" class="btn-submit">Entrar</button>
+            <button type="submit" class="btn-submit fade-right" style="animation-delay: 0.3s;">Entrar</button>
 
-            <div class="signup-section">
+            <div class="signup-section fade-right" style="animation-delay: 0.4s;">
               <p>Não tem uma conta? <a href="#" class="link-bold">Experimente grátis!</a></p>
             </div>
           </form>
@@ -80,7 +81,8 @@
       <div class="marketing-panel">
         <div class="blur-circle blur-blue"></div>
         <div class="blur-circle blur-green"></div>
-        
+        <div class="blur-circle blur-white"></div>
+
         <div class="marketing-content">
           <h2 class="marketing-title">
             Juntos, a gente dá conta de <span class="highlight-italic">automatizar</span> o que é repetitivo com o <span class="highlight">FitManager</span>

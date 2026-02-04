@@ -71,6 +71,7 @@ body {
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 3rem;
+  width: fit-content;
 }
 
 .logo-icon {
@@ -318,6 +319,14 @@ body {
   background: rgba(37, 99, 235, 0.1);
 }
 
+.blur-white {
+  top: -40%;
+  right: 35%;
+  width: 250px;
+  height: 250px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
 .blur-green {
   bottom: -5%;
   left: 10%;
@@ -424,9 +433,17 @@ body {
   border-radius: 50%;
 }
 
-.dot.red { background: #ef4444; }
-.dot.yellow { background: #eab308; }
-.dot.green { background: #22c55e; }
+.dot.red {
+  background: #ef4444;
+}
+
+.dot.yellow {
+  background: #eab308;
+}
+
+.dot.green {
+  background: #22c55e;
+}
 
 .url-bar {
   width: 128px;
@@ -509,9 +526,19 @@ body {
   border-radius: 4px;
 }
 
-.bar.full { width: 100%; }
-.bar.partial { width: 66%; opacity: 0.5; }
-.bar.half { width: 50%; opacity: 0.5; }
+.bar.full {
+  width: 100%;
+}
+
+.bar.partial {
+  width: 66%;
+  opacity: 0.5;
+}
+
+.bar.half {
+  width: 50%;
+  opacity: 0.5;
+}
 
 .preview-text {
   flex: 1;
@@ -594,10 +621,13 @@ body {
 }
 
 @keyframes bounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(-25%);
     animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
   }
+
   50% {
     transform: translateY(0);
     animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
@@ -612,7 +642,7 @@ body {
   .login-panel {
     width: 450px;
   }
-  
+
   .marketing-panel {
     display: flex;
   }
@@ -629,11 +659,11 @@ body {
   .login-panel {
     padding: 1.5rem;
   }
-  
+
   .logo {
     margin-bottom: 2rem;
   }
-  
+
   .login-title {
     font-size: 1.25rem;
   }
