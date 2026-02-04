@@ -35,6 +35,10 @@
     </div>
 
     <nav class="sidebar-nav">
+      <a class="nav-item" id="navHome" onclick="loadTab('home')">
+        <span class="material-symbols-outlined">home</span>
+        <span>Início</span>
+      </a>
       <a class="nav-item active" id="navAlunos" onclick="loadTab('alunos')">
         <span class="material-symbols-outlined">group</span>
         <span>Alunos</span>
@@ -46,6 +50,10 @@
       <a class="nav-item" id="navAulas" onclick="loadTab('classes')">
         <span class="material-symbols-outlined">calendar_month</span>
         <span>Aulas</span>
+      </a>
+      <a class="nav-item" id="navFinance" onclick="loadTab('financeiro')">
+        <span class="material-symbols-outlined">payments</span>
+        <span>Financeiro</span>
       </a>
     </nav>
 
@@ -61,7 +69,7 @@
   <main class="main-content">
     <header class="header">
       <h1 class="page-title">Painel do Administrador</h1>
-      <div class="user-info">
+      <div class="user-info" onclick="openProfileModal()" style="cursor: pointer;">
         <div class="user-details">
           <span class="user-name" id="userName">Carregando...</span>
           <span class="user-role">Administrador</span>
@@ -73,6 +81,94 @@
     </header>
 
     <div class="content-area">
+      <!-- Alert -->
+      <div class="alert hidden" id="alert"></div>
+
+      <!-- Home View (from Receptionist) -->
+      <div id="homeView" class="hidden">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="material-symbols-outlined metric-icon students-icon">group</span>
+              <span class="metric-label">Total de Alunos</span>
+            </div>
+            <div class="metric-body">
+              <h3 class="metric-value" id="metricTotalStudents">0</h3>
+              <span class="metric-trend positive">Ativos no sistema</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="material-symbols-outlined metric-icon staff-icon">badge</span>
+              <span class="metric-label">Total de Funcionários</span>
+            </div>
+            <div class="metric-body">
+              <h3 class="metric-value" id="metricTotalStaff">0</h3>
+              <span class="metric-trend">Equipe completa</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="material-symbols-outlined metric-icon checkin-icon">how_to_reg</span>
+              <span class="metric-label">Check-ins Hoje</span>
+            </div>
+            <div class="metric-body">
+              <h3 class="metric-value" id="metricCheckinsToday">0</h3>
+              <span class="metric-trend positive" id="metricCheckinsTrend">Frequência diária</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="material-symbols-outlined metric-icon finance-icon">trending_up</span>
+              <span class="metric-label">Financeiro (Simplificado)</span>
+            </div>
+            <div class="metric-body">
+              <div class="financial-metrics">
+                <div class="fin-item">
+                  <span class="fin-label">Adimplentes</span>
+                  <span class="fin-value positive" id="metricPaidPercent">--%</span>
+                </div>
+                <div class="fin-item">
+                  <span class="fin-label">Inadimplentes</span>
+                  <span class="fin-value negative" id="metricUnpaidPercent">--%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="metric-card metric-card-full">
+            <div class="metric-header">
+              <span class="material-symbols-outlined metric-icon"
+                style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9;">bar_chart</span>
+              <span class="metric-label">Dias mais movimentados (últimos 30 dias)</span>
+            </div>
+            <div class="metric-body">
+              <div id="weekdayChartHome" class="weekday-chart weekday-chart--vertical"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Finance View -->
+      <div id="financeView" class="hidden">
+        <div class="finance-summary-grid">
+          <div class="finance-summary-card">
+            <div class="finance-summary-label">Adimplentes</div>
+            <div class="finance-summary-value positive" id="financeAdimplentes">0</div>
+          </div>
+          <div class="finance-summary-card">
+            <div class="finance-summary-label">Inadimplentes</div>
+            <div class="finance-summary-value negative" id="financeInadimplentes">0</div>
+          </div>
+          <div class="finance-summary-card">
+            <div class="finance-summary-label">Total de alunos</div>
+            <div class="finance-summary-value" id="financeTotal">0</div>
+          </div>
+        </div>
+      </div>
 
       <div id="classesView" class="hidden" style="margin-top: 2rem;">
         <div class="calendar-legend">

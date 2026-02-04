@@ -4,6 +4,7 @@ let currentTab = "students";
 let allUsers = [];
 let filteredUsers = [];
 let paginator = null;
+let currentUser = null;
 
 // Weekday chart UI state
 // Mantemos apenas a versão em colunas (vertical)
@@ -15,7 +16,31 @@ const { resolveAppPath } = window.AppConfig;
 async function loadUserInfo() {
   const res = await apiFetch("/auth/me");
   const data = await res.json();
+  currentUser = data; // Store globally
   return data;
+}
+
+// Open Profile Modal (Self-Edit)
+function openProfileModal() {
+  if (!currentUser) return;
+
+  const userInList = allUsers.find(u => u.id === currentUser.id);
+  if (userInList) {
+    openEditModal(userInList.id);
+  } else {
+    // If not in list, construct it
+    const tempUser = {
+      id: currentUser.id,
+      nome: currentUser.name || currentUser.nome,
+      email: currentUser.email,
+      role: currentUser.role,
+      phone: currentUser.phone,
+      cpf: currentUser.document || currentUser.cpf,
+      plan: currentUser.planType || "mensal"
+    };
+    allUsers.push(tempUser);
+    openEditModal(currentUser.id);
+  }
 }
 
 // --- Modal Logic ---
@@ -475,16 +500,23 @@ function renderTablePage(pageItems) {
     return;
   }
 
+  const nameCell = (u) => `
+    <span class="clickable-name" onclick="openEditModal(${u.id})" style="cursor: pointer; color: var(--primary); font-weight: 500;">
+      ${u.nome}
+    </span>`;
+
   if (currentTab === "students") {
     tbody.innerHTML = pageItems
       .map(
         (u) => `
             <tr>
-                <td>${u.nome}</td>
+                <td>${nameCell(u)}</td>
                 <td>${u.email}</td>
                 <td><span class="plan-badge plan-${u.plan}">${u.plan}</span></td>
                 <td>
-                    <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
+                    <button class="btn btn-primary" onclick="openEditModal(${u.id})">
+                      <span class="material-symbols-outlined">edit</span> Editar
+                    </button>
                 </td>
             </tr>
         `,
@@ -495,10 +527,12 @@ function renderTablePage(pageItems) {
       .map(
         (u) => `
             <tr>
-                <td>${u.nome}</td>
+                <td>${nameCell(u)}</td>
                 <td>${u.email}</td>
                 <td>
-                    <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
+                    <button class="btn btn-primary" onclick="openEditModal(${u.id})">
+                      <span class="material-symbols-outlined">edit</span> Editar
+                    </button>
                 </td>
             </tr>
         `,
@@ -509,7 +543,7 @@ function renderTablePage(pageItems) {
       .map(
         (u) => `
             <tr>
-                <td>${u.nome}</td>
+                <td>${nameCell(u)}</td>
                 <td>${u.email}</td>
                 <td>${u.phone || "-"}</td>
                 <td>${u.cpf || "-"}</td>
@@ -637,19 +671,27 @@ function openEditModal(id) {
   document.getElementById("editTelefone").value = userToEdit.phone || "";
   document.getElementById("editAlertContainer").innerHTML = "";
 
-  const isStudent = currentTab === "students";
-  if (isStudent) {
-    document.getElementById("editTipoPlanoGroup").classList.remove("hidden");
-    document.getElementById("editPaymentDayGroup").classList.remove("hidden");
+  // Password reset field
+  document.getElementById("editNovaSenha").value = "";
+
+  const isStudent = currentTab === "students" || (userToEdit.role === 'aluno');
+  const isInstructor = currentTab === "instructors" || (userToEdit.role === 'instrutor');
+  const isSelf = currentUser && id === currentUser.id;
+
+  if (isSelf) {
+    document.getElementById("editModalTitle").textContent = "Meus Dados";
   } else {
-    document.getElementById("editTipoPlanoGroup").classList.add("hidden");
-    document.getElementById("editPaymentDayGroup").classList.add("hidden");
+    document.getElementById("editModalTitle").textContent = "Editar " + (isStudent ? "Aluno" : isInstructor ? "Instrutor" : "Usuário");
   }
 
   if (isStudent) {
-    document.getElementById("editTipoPlano").value =
-      userToEdit.plan.toLowerCase();
+    document.getElementById("editTipoPlanoGroup").classList.remove("hidden");
+    document.getElementById("editPaymentDayGroup").classList.remove("hidden");
+    document.getElementById("editTipoPlano").value = (userToEdit.plan || "mensal").toLowerCase();
     document.getElementById("editPaymentDay").value = String(userToEdit.paymentDay || 10);
+  } else {
+    document.getElementById("editTipoPlanoGroup").classList.add("hidden");
+    document.getElementById("editPaymentDayGroup").classList.add("hidden");
   }
 
   document.getElementById("editModal").classList.add("active");
@@ -667,10 +709,14 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
   const email = document.getElementById("editEmail").value;
   const phone = document.getElementById("editTelefone").value;
   const documentStr = document.getElementById("editCpf").value;
+  const password = document.getElementById("editNovaSenha").value;
 
   let body = { name, email, phone, document: documentStr };
+  if (password) body.password = password;
 
-  if (currentTab === "students") {
+  const userToEdit = allUsers.find(u => u.id === Number(id));
+
+  if (currentTab === "students" || (userToEdit && userToEdit.role === 'aluno')) {
     body.planType = document.getElementById("editTipoPlano").value;
     body.paymentDay = Number(document.getElementById("editPaymentDay").value || 10);
   }

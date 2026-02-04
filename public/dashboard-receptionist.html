@@ -69,7 +69,7 @@
   <main class="main-content">
     <header class="header">
       <h1 class="page-title">Painel da Recepção</h1>
-      <div class="user-info">
+      <div class="user-info" onclick="openProfileModal()" style="cursor: pointer;">
         <div class="user-details">
           <span class="user-name" id="userName">Carregando...</span>
           <span class="user-role">Recepcionista</span>
@@ -141,7 +141,8 @@
 
           <div class="metric-card metric-card-full">
             <div class="metric-header">
-              <span class="material-symbols-outlined metric-icon" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9;">bar_chart</span>
+              <span class="material-symbols-outlined metric-icon"
+                style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9;">bar_chart</span>
               <span class="metric-label">Dias mais movimentados (últimos 30 dias)</span>
             </div>
             <div class="metric-body">
@@ -308,6 +309,10 @@
         <div class="form-group">
           <label>CPF</label>
           <input type="text" id="editCpf" maxlength="11" />
+        </div>
+        <div class="form-group" id="editNovaSenhaGroup">
+          <label>Alterar Senha (deixe em branco para manter)</label>
+          <input type="password" id="editNovaSenha" minlength="6" />
         </div>
         <div class="form-group hidden" id="editTipoPlanoGroup">
           <label>Tipo de Plano <span class="required">*</span></label>
