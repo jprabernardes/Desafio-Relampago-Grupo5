@@ -162,7 +162,8 @@ async function loadWorkouts() {
                 <h3 class="workout-name">${workout.name}</h3>
                 <div class="workout-instructor">
                   <span class="material-symbols-outlined">person</span>
-                  <span>Instrutor: ${workout.instructor_name || workout.instructor_id}</span>
+                  <span class="instructor-label">Instrutor:</span>
+                  <span class="instructor-name">${workout.instructor_name || workout.instructor_id}</span>
                 </div>
               </div>
               <div class="exercise-rows">
@@ -179,11 +180,11 @@ async function loadWorkouts() {
                     `,
               )
               .join("")
-            : `<pre>${workout.exercises}</pre>`
+            : `<div class="p-4 text-center text-gray">Sem exercícios cadastrados</div>`
           }
               </div>
               <div class="workout-footer">
-                <button class="btn btn-primary btn-print" onclick="printWorkout(${workout.id})">
+                <button class="btn-print" onclick="printWorkout(${workout.id})">
                   <span class="material-symbols-outlined">print</span>
                   Imprimir Treino
                 </button>
