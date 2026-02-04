@@ -158,30 +158,32 @@ async function loadWorkouts() {
       .map(
         (workout) => `
             <div class="workout-card">
-              <div>
-                <h3 class="card-title">${workout.name}</h3>
-                <p class="card-subtitle">
+              <div class="workout-header">
+                <h3 class="workout-name">${workout.name}</h3>
+                <div class="workout-instructor">
                   <span class="material-symbols-outlined">person</span>
-                  <strong>Instrutor:</strong> ${workout.instructor_name || workout.instructor_id}
-                </p>
-                <div class="exercises-list">
-                  ${Array.isArray(workout.exercises)
+                  <span>Instrutor: ${workout.instructor_name || workout.instructor_id}</span>
+                </div>
+              </div>
+              <div class="exercise-rows">
+                ${Array.isArray(workout.exercises)
             ? workout.exercises
               .map(
                 (ex) => `
-                      <div class="workout-exercise-item">
-                        <strong>${ex.name}</strong><br>
-                        ${ex.series}x${ex.repetitions} ${ex.weight ? `• ${ex.weight}KG` : ""}
+                      <div class="exercise-row">
+                        <span class="exercise-name">${ex.name}</span>
+                        <div class="exercise-badge">
+                          ${ex.series}×${ex.repetitions}${ex.weight ? ` • ${ex.weight}KG` : ""}
+                        </div>
                       </div>
                     `,
               )
               .join("")
             : `<pre>${workout.exercises}</pre>`
           }
-                </div>
               </div>
-              <div class="workout-actions">
-                <button class="btn btn-primary btn-full" onclick="printWorkout(${workout.id})">
+              <div class="workout-footer">
+                <button class="btn btn-primary btn-print" onclick="printWorkout(${workout.id})">
                   <span class="material-symbols-outlined">print</span>
                   Imprimir Treino
                 </button>
