@@ -44,9 +44,23 @@ export const createApp = (): Application => {
 
   if (config.appBasePath) {
     app.use((req, res, next) => {
-      if (req.path === config.appBasePath && !req.path.endsWith('/')) {
-        return res.redirect(301, `${config.appBasePath}/`);
+
+      const basePath = config.appBasePath.startsWith('/') 
+        ? config.appBasePath.replace(/\/$/, '')
+        : `/${config.appBasePath.replace(/\/$/, '')}`;
+      
+      const originalPath = (req.originalUrl || req.url || req.path).split('?')[0];
+      const requestPath = originalPath.replace(/\/$/, ''); 
+      
+      const basePathNoSlash = basePath.replace(/^\//, '');
+      const matchesBasePath = requestPath === basePath || 
+                              requestPath === basePathNoSlash ||
+                              requestPath === `/${basePathNoSlash}`;
+      
+      if (matchesBasePath && !originalPath.endsWith('/')) {
+        return res.redirect(301, `${basePath}/`);
       }
+      
       next();
     });
   }
