@@ -617,10 +617,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+    background: #f1f5f9;
+    /* Slate 100 for better contrast */
     border-radius: 12px;
-    color: #667eea;
-    font-size: 32px;
+    color: #475569;
+    /* Slate 600 to match text better */
+    font-size: 40px !important;
   }
 
   .stat-content h3 {
