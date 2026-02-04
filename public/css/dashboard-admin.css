@@ -27,12 +27,23 @@
     background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
   }
 
   .logo {
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 3rem;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
   }
 
   .nav-item {
@@ -51,20 +62,45 @@
     background: rgba(255, 255, 255, 0.2);
   }
 
-  .logout-btn {
+  .sidebar-footer {
     margin-top: auto;
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: white;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    cursor: pointer;
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     width: 100%;
-    margin-top: 2rem;
+    box-sizing: border-box;
+  }
+
+  .logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    margin-top: 0;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-sizing: border-box;
+  }
+
+  .logout-btn .material-symbols-outlined {
+    font-size: 20px;
   }
 
   .logout-btn:hover {
     background: rgba(255, 255, 255, 0.2);
+    color: #ef4444;
+    transform: translateX(2px);
+  }
+
+  .logout-btn:active {
+    transform: translateX(0);
+    background: rgba(255, 255, 255, 0.15);
   }
 
   /* Main Content */
@@ -977,4 +1013,40 @@
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Garantir que o botão de logout funcione corretamente em todos os contextos */
+.sidebar-footer .logout-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  width: 100% !important;
+  padding: 0.75rem 1rem !important;
+  margin-top: 0 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  color: white !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  box-sizing: border-box !important;
+}
+
+.sidebar-footer .logout-btn .material-symbols-outlined {
+  font-size: 20px !important;
+  line-height: 1 !important;
+}
+
+.sidebar-footer .logout-btn:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ef4444 !important;
+  transform: translateX(2px) !important;
+}
+
+.sidebar-footer .logout-btn:active {
+  transform: translateX(0) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
 }
