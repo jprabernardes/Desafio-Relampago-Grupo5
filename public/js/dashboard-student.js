@@ -174,7 +174,8 @@ async function loadWorkouts() {
                       <div class="exercise-row">
                         <span class="exercise-name">${ex.name}</span>
                         <div class="exercise-badge">
-                          <span>${ex.series}×${ex.repetitions}${ex.weight ? ` • ${ex.weight}KG` : ""}</span>
+                          <span class="badge-series">${ex.series} x ${ex.repetitions}</span>
+                          ${ex.weight ? `<span class="badge-weight">${ex.weight}kg</span>` : ""}
                         </div>
                       </div>
                     `,
