@@ -304,10 +304,15 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     if (sectionId === "create-exercise") loadTemplates();
     if (sectionId === "students") loadStudents();
     if (sectionId === "classes") loadClasses();
+    if (sectionId === "create-class") {
+      loadCalendarAttempts = 0;
+      setTimeout(() => {
+        loadCalendar();
+      }, 100);
+    }
 
     // Reset edits when switching tabs
     if (sectionId !== "create-exercise") cancelEdit();
-    if (sectionId !== "create-class") cancelClassEdit();
   });
 });
 
@@ -323,11 +328,16 @@ async function logout() {
   window.location.href = resolveAppPath("/");
 }
 
+let currentInstructorId = null;
+
 async function loadUserInfo() {
   const res = await apiFetch("/auth/me");
   const data = await res.json();
   document.getElementById("userName").textContent =
     data.name || data.nome || "Instrutor";
+
+  // Armazenar ID do instrutor atual
+  currentInstructorId = data.id;
 
   if (data.error) {
     document.cookie = "";
@@ -363,12 +373,15 @@ function renderExerciseCard(exercise, options = {}) {
     showStats = true,
     showHint = false,
     onClick = null,
-    cardClass = "template-card",
+    cardClass = "exercise-card",
     cardId = null,
-    allowDetailView = true,
   } = options;
 
-  // Determinar evento de clique apenas para seleção (não abre modal)
+  const series = Number(exercise.series || 0);
+  const repetitions = Number(exercise.repetitions || 0);
+  const weight = Number(exercise.weight || 0);
+
+  // Clique no card
   let clickHandler = "";
   if (onClick) {
     clickHandler = `onclick="${onClick}" style="cursor: pointer;"`;
@@ -376,38 +389,62 @@ function renderExerciseCard(exercise, options = {}) {
 
   const idAttr = cardId ? `id="${cardId}"` : "";
 
-  // Ícone de info removido conforme solicitação
-  const infoIcon = "";
-
   return `
     <div class="${cardClass}" ${clickHandler} ${idAttr}>
-      <h4>${exercise.name}</h4>
-      ${showDescription && exercise.description ? `<p class="exercise-info">${exercise.description}</p>` : ""}
+      ${showActions
+      ? `
+          <div class="exercise-card-actions" onclick="event.stopPropagation()">
+            <button
+              class="icon-btn icon-btn--edit"
+              title="Editar"
+              onclick="event.stopPropagation(); editTemplate(${exercise.id})"
+              type="button"
+            >
+              <span class="material-symbols-outlined">edit</span>
+            </button>
+            <button
+              class="icon-btn icon-btn--delete"
+              title="Excluir"
+              onclick="event.stopPropagation(); deleteTemplate(${exercise.id})"
+              type="button"
+            >
+              <span class="material-symbols-outlined">delete</span>
+            </button>
+          </div>
+        `
+      : ""
+    }
+
+      <h3 class="exercise-card-title">${exercise.name}</h3>
+
+      ${showDescription && exercise.description
+      ? `<p class="exercise-card-description">${exercise.description}</p>`
+      : ""
+    }
+
       ${showStats
       ? `
-        <div class="exercise-stats">
-          <span>📊 ${exercise.series || 0} séries x ${exercise.repetitions || 0} repetições</span>
-          <span>⚖️ ${exercise.weight || 0} kg</span>
-        </div>
-      `
+          <div class="exercise-card-metrics">
+            <div class="exercise-metric">
+              <span class="material-symbols-outlined exercise-metric-icon">reorder</span>
+              <div>
+                <span class="exercise-metric-value">${series} séries x ${repetitions} reps</span>
+                <span class="exercise-metric-label">Séries / Reps</span>
+              </div>
+            </div>
+            <div class="exercise-metric">
+              <span class="material-symbols-outlined exercise-metric-icon">weight</span>
+              <div>
+                <span class="exercise-metric-value">${weight} kg</span>
+                <span class="exercise-metric-label">Carga sugerida</span>
+              </div>
+            </div>
+          </div>
+        `
       : ""
     }
-      ${showHint ? `<p class="exercise-hint">Clique para selecionar e personalizar</p>` : ""}
-      ${showActions || allowDetailView
-      ? `
-        <div class="template-actions" onclick="event.stopPropagation()">
-          ${infoIcon}
-          ${showActions
-        ? `
-            <button class="template-action-btn" title="Editar" onclick="event.stopPropagation(); editTemplate(${exercise.id})">✏️</button>
-            <button class="template-action-btn" title="Excluir" onclick="event.stopPropagation(); deleteTemplate(${exercise.id})">🗑️</button>
-          `
-        : ""
-      }
-        </div>
-      `
-      : ""
-    }
+
+      ${showHint ? `<p class="exercise-card-hint">Clique para selecionar e personalizar</p>` : ""}
     </div>
   `;
 }
@@ -436,29 +473,49 @@ window.openExerciseDetailModal = (exerciseId, event) => {
   if (!content) return;
 
   content.innerHTML = `
-      <div class="modal-exercise-detail-container">
-        <h3 class="modal-exercise-title">${exercise.name}</h3>
+      <div class="exercise-detail-modern">
+        <div class="exercise-modern-header">
+          <h3 class="exercise-modern-title">${exercise.name}</h3>
+        </div>
         
-        <div class="modal-exercise-stats-grid mb-6">
-          <div class="modal-stat-box">
-            <p class="modal-stat-label">Séries</p>
-            <p class="modal-stat-value">${exercise.series || 0}</p>
+        <div class="exercise-info-cards">
+          <!-- Séries e Repetições -->
+          <div class="info-card-modern">
+            <div class="info-card-icon">
+              <span class="material-symbols-outlined">repeat</span>
+            </div>
+            <div class="info-card-content">
+              <span class="info-card-label">Séries e Repetições</span>
+              <span class="info-card-value">${exercise.series || 0} séries x ${exercise.repetitions || 0} reps</span>
+            </div>
           </div>
-          <div class="modal-stat-box">
-            <p class="modal-stat-label">Repetições</p>
-            <p class="modal-stat-value">${exercise.repetitions || 0}</p>
-          </div>
-          <div class="modal-stat-box highlight">
-            <p class="modal-stat-label">Peso</p>
-            <p class="modal-stat-value">${exercise.weight || 0} kg</p>
+
+          <!-- Carga Sugerida -->
+          <div class="info-card-modern">
+            <div class="info-card-icon">
+              <span class="material-symbols-outlined">fitness_center</span>
+            </div>
+            <div class="info-card-content">
+              <span class="info-card-label">Carga Sugerida</span>
+              <span class="info-card-value">${exercise.weight || 0} kg</span>
+            </div>
           </div>
         </div>
 
-        <div class="modal-exercise-section description-section">
-          <p class="modal-exercise-label">Descrição Completa</p>
-          <div class="modal-exercise-desc-box">
-            <p class="modal-exercise-desc">${exercise.description || "Sem descrição."}</p>
+        <div class="exercise-modern-description">
+          <span class="description-label">Descrição</span>
+          <div class="description-box-modern">
+            ${exercise.description || "Sem descrição disponível."}
           </div>
+        </div>
+
+        <div class="modern-modal-actions">
+          <button class="btn-modern btn-modern-primary" onclick="closeExerciseDetailModal(); editTemplate(${exercise.id})">
+            Editar Exercício
+          </button>
+          <button class="btn-modern btn-modern-secondary" onclick="closeExerciseDetailModal()">
+            Fechar
+          </button>
         </div>
       </div>
     `;
@@ -492,7 +549,7 @@ function updatePageSize() {
   const availableWidth =
     window.innerWidth - sidebarWidth - containerPadding - 20;
 
-  const cardMinWidth = 200; // from CSS minmax(200px, 1fr)
+  const cardMinWidth = 240; // from CSS minmax(240px, 1fr)
   const gap = 16; // 1rem
 
   // Calculate max columns: width = (n * card) + ((n-1) * gap)
@@ -621,8 +678,16 @@ function renderStudents() {
       const email = s.email || "";
       return `
         <div class="student-card" onclick="openStudent(${s.id})">
+          <div class="student-status-badge">Ativo</div>
+          <div class="student-card-icon">
+            <span class="material-symbols-outlined">person</span>
+          </div>
           <h4>${name}</h4>
           <p>${email}</p>
+          <div class="student-card-footer">
+            <span class="material-symbols-outlined">visibility</span>
+            Ver detalhes e treinos
+          </div>
         </div>
       `;
     })
@@ -643,6 +708,9 @@ function renderStudents() {
 let currentStudentId = null;
 let studentTrainings = [];
 let allExercisesForTraining = [];
+let trainingTemplates = []; // Armazenar modelos de treino do instrutor
+let exerciseSearchFilter = "";
+let modelSearchFilter = ""; // Filtro para busca de modelos
 let selectedExercises = []; // Array de { exerciseId, series, repetitions, weight }
 window.selectedExercises = selectedExercises; // Tornar acessível globalmente
 let isEditingTraining = false;
@@ -662,10 +730,79 @@ async function openStudentDetailModal(studentId) {
   }
   modal.classList.add("active");
   await Promise.all([
-    loadStudentData(studentId),
+
     loadStudentTrainings(studentId),
     loadExercisesForTraining(),
   ]);
+
+  // Renderizar estrutura moderna do modal
+  /*
+  Estrutura esperada:
+  <div class="student-modal-structure">
+    <div class="student-modal-header-modern">
+      <div class="student-info-modern">
+        <h1 class="student-name-modern">
+          <span id="studentName">Nome do Aluno</span>
+          <span class="student-status-chip">Ativo</span>
+        </h1>
+        <p class="student-email-modern" id="studentEmail">email@exemplo.com</p>
+      </div>
+      <button class="close-btn" onclick="closeStudentDetailModal()">&times;</button>
+    </div>
+
+    <div class="trainings-section">
+      <div class="trainings-modern-header">
+        <h2 class="trainings-title-modern">Treinos</h2>
+        <button class="btn-create-training" onclick="openCreateTrainingModal()">
+          <span class="material-symbols-outlined">add</span>
+          Criar Treino
+        </button>
+      </div>
+      <div id="trainingsGrid" class="trainings-grid">
+        <!-- Cards serão inseridos aqui -->
+      </div>
+    </div>
+    
+    <div class="footer-brand">FITMANAGER PREMIUM DASHBOARD</div>
+  </div>
+  */
+
+  const modalContent = modal.querySelector('.modal-content');
+  if (modalContent) {
+    modalContent.innerHTML = `
+        <div class="student-modal-structure">
+            <div class="student-modal-header-modern">
+              <div class="student-info-modern">
+                <h1 class="student-name-modern">
+                  <span id="studentName">Carregando...</span>
+                  <span class="student-status-chip">Ativo</span>
+                </h1>
+                <p class="student-email-modern" id="studentEmail">Carregando...</p>
+              </div>
+              <button class="close-btn" onclick="closeStudentDetailModal()">&times;</button>
+            </div>
+
+            <div class="trainings-section">
+              <div class="trainings-modern-header">
+                <h2 class="trainings-title-modern">Treinos</h2>
+                <button class="btn-create-training" onclick="openCreateTrainingModal()">
+                  <span class="material-symbols-outlined">add</span>
+                  Criar Treino
+                </button>
+              </div>
+              <div id="trainingsGrid" class="trainings-grid">
+                <p>Carregando treinos...</p>
+              </div>
+            </div>
+            
+            <div class="footer-brand">FITMANAGER PREMIUM DASHBOARD</div>
+        </div>
+     `;
+
+    // Recarregar dados para preencher a nova estrutura
+    loadStudentData(studentId);
+    loadStudentTrainings(studentId); // Isso já vai renderizar os cards no #trainingsGrid novo
+  }
 }
 
 window.closeStudentDetailModal = function () {
@@ -684,12 +821,13 @@ async function loadStudentData(studentId) {
     const student = await res.json();
     document.getElementById("studentName").textContent =
       student.name || student.nome || "Aluno";
+    // Sem emojis (usar texto simples)
     document.getElementById("studentEmail").textContent = student.email
-      ? `📧 ${student.email}`
+      ? `Email: ${student.email}`
       : "";
     const phoneElement = document.getElementById("studentPhone");
     if (phoneElement) {
-      phoneElement.textContent = student.phone ? `📞 ${student.phone}` : "";
+      phoneElement.textContent = student.phone ? `Telefone: ${student.phone}` : "";
     }
   } catch (e) {
     console.error(e);
@@ -735,21 +873,37 @@ function renderStudentTrainings() {
   const grid = document.getElementById("trainingsGrid");
   if (!grid) return;
 
-  if (!studentTrainings || studentTrainings.length === 0) {
-    grid.innerHTML = "<p>Nenhum treino cadastrado.</p>";
+  if (studentTrainings.length === 0) {
+    grid.innerHTML = "<p>Nenhum treino encontrado para este aluno.</p>";
     return;
   }
 
   grid.innerHTML = studentTrainings
     .map((t) => {
+      // Formatação moderna para o card de treino
       const exerciseCount = t.exercises ? t.exercises.length : 0;
+
       return `
-        <div class="training-card" onclick="openEditTrainingModal(${t.id})">
-          <h3>${t.name || "Treino"}</h3>
-          <p>📋 ${exerciseCount} exercício${exerciseCount !== 1 ? "s" : ""}</p>
-          <p style="color: #999; font-size: 0.85rem;">Clique para editar</p>
+      <div class="training-card-modern" onclick="openEditTrainingModal(${t.id})">
+        <div class="training-info-modern">
+          <div class="training-icon-modern">
+            <span class="material-symbols-outlined">assignment</span>
+          </div>
+          <div class="training-details-modern">
+            <h4>${t.name}</h4>
+            <div class="training-meta-modern">
+              <span class="material-symbols-outlined" style="font-size: 14px;">format_list_bulleted</span>
+              <span>${exerciseCount} exercícios</span>
+              <span class="meta-separator">•</span>
+              <span class="click-hint">CLIQUE PARA EDITAR</span>
+            </div>
+          </div>
         </div>
-      `;
+        <div class="training-arrow">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </div>
+      </div>
+    `;
     })
     .join("");
 }
@@ -1134,9 +1288,16 @@ async function renderClasses() {
               <div class="flex-between-start">
                   <div class="flex-1">
                       <h3 class="class-card-title">${c.name || c.nome_aula}</h3>
-                      <p class="class-card-info">📅 ${formatDateBR(c.date || c.data)} &nbsp; ⏰ ${c.time || c.hora} </p>
+                      <p class="class-card-info">
+                        <span class="material-symbols-outlined inline-icon">calendar_month</span>
+                        ${formatDateBR(c.date || c.data)}
+                        <span class="class-card-sep">•</span>
+                        <span class="material-symbols-outlined inline-icon">schedule</span>
+                        ${c.time || c.hora}
+                      </p>
                       <p class="class-card-enrollment">
-                          👥 ${c.enrolledCount}/${c.slots_limit || c.limite_vagas} alunos inscritos
+                        <span class="material-symbols-outlined inline-icon">group</span>
+                        ${c.enrolledCount}/${c.slots_limit || c.limite_vagas} alunos inscritos
                       </p>
                   </div>
               </div>
@@ -1147,12 +1308,10 @@ async function renderClasses() {
 }
 
 window.openCreateClassTab = () => {
-  document.querySelector('[data-section="create-class"]').click();
-
-  // Setar data mínima como hoje
-  const today = new Date().toISOString().split("T")[0];
-  document.getElementById("classDate").setAttribute("min", today);
-  document.getElementById("classDate").value = today;
+  const navItem = document.querySelector('[data-section="create-class"]');
+  if (navItem) {
+    navItem.click();
+  }
 };
 
 // Função para validar data e mostrar mensagem customizada em português
@@ -1198,10 +1357,11 @@ document.getElementById("classDate")?.addEventListener("change", (e) => {
   }
 });
 
-// Create/Edit Class Form
-document
-  .getElementById("createClassForm")
-  .addEventListener("submit", async (e) => {
+// Create/Edit Class Form (código antigo - removido, agora usamos calendário)
+// Verificar se o formulário existe antes de adicionar listener
+const createClassForm = document.getElementById("createClassForm");
+if (createClassForm) {
+  createClassForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     // Validação
@@ -1214,8 +1374,14 @@ document
 
     clearValidationErrors();
 
-    const id = document.getElementById("classId").value;
+    const idEl = document.getElementById("classId");
     const dateInput = document.getElementById("classDate");
+    if (!idEl || !dateInput) {
+      console.error("Elementos do formulário não encontrados");
+      return;
+    }
+
+    const id = idEl.value;
     const dateValue = dateInput.value;
 
     // VALIDAÇÃO: Não permitir datas passadas
@@ -1225,11 +1391,20 @@ document
       return;
     }
 
+    const nameEl = document.getElementById("className");
+    const timeEl = document.getElementById("classTime");
+    const limitEl = document.getElementById("classLimit");
+
+    if (!nameEl || !timeEl || !limitEl) {
+      console.error("Elementos do formulário não encontrados");
+      return;
+    }
+
     const data = {
-      name: document.getElementById("className").value,
+      name: nameEl.value,
       date: convertDateForBackend(dateValue), // Converte YYYY-MM-DD para DD-MM-YYYY
-      time: document.getElementById("classTime").value,
-      slots_limit: parseInt(document.getElementById("classLimit").value),
+      time: timeEl.value,
+      slots_limit: parseInt(limitEl.value),
     };
 
     try {
@@ -1251,9 +1426,11 @@ document
         if (id) {
           cancelClassEdit();
         } else {
-          document.getElementById("createClassForm").reset();
+          const form = document.getElementById("createClassForm");
+          if (form) form.reset();
         }
         loadClasses();
+        loadCalendar(); // Atualizar calendário também
       } else {
         const err = await res.json();
         showAlert(err.error || "Erro ao salvar", "error");
@@ -1262,35 +1439,19 @@ document
       showAlert("Erro de conexão", "error");
     }
   });
+}
 
 window.editClass = (id) => {
-  const c = myClasses.find((x) => x.id === id);
-  if (!c) return;
-
-  // Populate Create Tab
-  document.getElementById("classId").value = c.id;
-  document.getElementById("className").value = c.name || c.nome_aula;
-  document.getElementById("classDate").value = convertDateFromBackend(c.date || c.data);
-  document.getElementById("classTime").value = c.time || c.hora;
-  document.getElementById("classLimit").value = c.slots_limit || c.limite_vagas;
-
-  // Switch to Create Tab
-  document.querySelector('[data-section="create-class"]').click();
-
-  // Modify UI for Edit
-  document.getElementById("classFormTitle").textContent = "Editar Aula";
-  document.getElementById("saveClassBtn").textContent = "Salvar Alterações";
-  document.getElementById("cancelClassEditBtn").style.display = "inline-block";
-
-  document.querySelector(".main-content").scrollTop = 0;
+  // Usar o modal de edição do calendário
+  openEditClassModal(id);
 };
 
 window.cancelClassEdit = () => {
-  document.getElementById("createClassForm").reset();
-  document.getElementById("classId").value = "";
-  document.getElementById("classFormTitle").textContent = "Criar Nova Aula";
-  document.getElementById("saveClassBtn").textContent = "Agendar Aula";
-  document.getElementById("cancelClassEditBtn").style.display = "none";
+  // Função mantida para compatibilidade, mas não faz nada já que usamos calendário
+  const form = document.getElementById("createClassForm");
+  if (form) {
+    form.reset();
+  }
 };
 
 window.deleteClass = async (id) => {
@@ -1302,6 +1463,7 @@ window.deleteClass = async (id) => {
       if (res.ok) {
         showAlert("Aula cancelada!");
         loadClasses();
+        await loadCalendar(); // Atualizar calendário imediatamente
       } else {
         const err = await res.json();
         showAlert(err.error || "Erro ao cancelar", "error");
@@ -1442,27 +1604,43 @@ loadTemplates();
 // Setar data mínima e adicionar validação customizada ao carregar a página
 window.addEventListener("DOMContentLoaded", () => {
   const today = new Date().toISOString().split("T")[0];
-  document.getElementById("classDate").setAttribute("min", today);
 
-  // Adicionar listeners para validação customizada nos campos de data
+  // Verificar se os elementos existem antes de usar (formulário antigo pode não existir)
   const classDateInput = document.getElementById("classDate");
-  const detailsClassDateInput = document.getElementById("detailsClassDate");
-
   if (classDateInput) {
+    classDateInput.setAttribute("min", today);
     classDateInput.addEventListener("input", function () {
       validateDate(this);
     });
   }
 
+  const detailsClassDateInput = document.getElementById("detailsClassDate");
   if (detailsClassDateInput) {
+    detailsClassDateInput.setAttribute("min", today);
     detailsClassDateInput.addEventListener("input", function () {
       validateDate(this);
     });
   }
+
+  // Configurar data mínima para campos do modal de edição
+  const editClassDateInput = document.getElementById("editClassDate");
+  if (editClassDateInput) {
+    editClassDateInput.setAttribute("min", today);
+  }
+
+  // Configurar data mínima para campos do modal de criação recorrente
+  const recurringStartDate = document.getElementById("recurringStartDate");
+  const recurringEndDate = document.getElementById("recurringEndDate");
+  if (recurringStartDate) {
+    recurringStartDate.setAttribute("min", today);
+  }
+  if (recurringEndDate) {
+    recurringEndDate.setAttribute("min", today);
+  }
 });
 
 // --- Modal Criar/Editar Treino (do aluno) ---
-let exerciseSearchFilter = "";
+// exerciseSearchFilter já declarado anteriormente
 
 function renderAvailableExercises() {
   const grid = document.getElementById("availableExercisesGrid");
@@ -1499,15 +1677,16 @@ function renderAvailableExercises() {
         <h4>${ex.name}</h4>
         ${ex.description ? `<p class="exercise-info">${ex.description}</p>` : ""}
         <div class="exercise-stats">
-          <span>📊 ${ex.series || 0} séries x ${ex.repetitions || 0} repetições</span>
-          <span>⚖️ ${ex.weight || 0} kg</span>
+          <span><span class="material-symbols-outlined inline-icon">reorder</span>${ex.series || 0} séries x ${ex.repetitions || 0} repetições</span>
+          <span><span class="material-symbols-outlined inline-icon">weight</span>${ex.weight || 0} kg</span>
         </div>
         <p class="exercise-hint">Clique para selecionar e personalizar</p>
         <div class="template-actions" onclick="event.stopPropagation()">
           <button class="template-action-btn" 
                   title="Ver detalhes do exercício"
-                  onclick="event.stopPropagation(); event.preventDefault(); openExerciseDetailModal(${ex.id}, event); return false;">
-            ℹ️
+                  onclick="event.stopPropagation(); event.preventDefault(); openExerciseDetailModal(${ex.id}, event); return false;"
+                  type="button">
+            <span class="material-symbols-outlined">info</span>
           </button>
         </div>
       </div>
@@ -1558,7 +1737,12 @@ window.toggleExerciseSelection = (exerciseId) => {
 
 function renderSelectedExercises() {
   const list = document.getElementById("selectedExercisesList");
+  const countEl = document.getElementById("selectedCount");
   if (!list) return;
+
+  if (countEl) {
+    countEl.textContent = selectedExercises.length;
+  }
 
   if (selectedExercises.length === 0) {
     list.innerHTML = "<p class='text-gray'>Nenhum exercício selecionado</p>";
@@ -1573,44 +1757,56 @@ function renderSelectedExercises() {
       if (!exercise) return "";
 
       return `
-        <div class="exercise-item">
-          <div class="exercise-item-info">
-            <h4>${exercise.name}</h4>
-          </div>
-          <div class="exercise-item-params">
-            <div class="param-group">
-              <label>Séries</label>
-              <input
-                type="number"
-                min="1"
-                max="20"
-                value="${sel.series}"
-                oninput="const val = sanitizeNumberInput(this.value, { max: 20, min: 1 }); this.value = val; updateExerciseParam(${idx}, 'series', val)"
-              />
-            </div>
-            <div class="param-group">
-              <label>Repetições</label>
-              <input
-                type="number"
-                min="1"
-                max="100"
-                value="${sel.repetitions}"
-                oninput="const val = sanitizeNumberInput(this.value, { max: 100, min: 1 }); this.value = val; updateExerciseParam(${idx}, 'repetitions', val)"
-              />
-            </div>
-            <div class="param-group">
-              <label>Carga (kg)</label>
-              <select onchange="updateExerciseParam(${idx}, 'weight', this.value)">
-                ${generateWeightOptions(sel.weight)}
-              </select>
+        <div class="exercise-selected-card">
+          <div class="selected-card-header">
+            <div class="selected-card-info">
+              <h4>${exercise.name}</h4>
+              <span class="exercise-badge">Exercício ${idx + 1}</span>
             </div>
             <button
               type="button"
-              class="remove-exercise-btn"
+              class="btn-remove-selected"
               onclick="removeExerciseFromSelection(${idx})"
+              title="Remover exercício"
             >
-              Remover
+              <span class="material-symbols-outlined">close</span>
             </button>
+          </div>
+
+          <div class="selected-card-params">
+            <div class="param-input-group">
+              <label>Séries</label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value="${sel.series}"
+                  oninput="const val = sanitizeNumberInput(this.value, { max: 20, min: 1 }); this.value = val; updateExerciseParam(${idx}, 'series', val)"
+                />
+              </div>
+            </div>
+            <div class="param-input-group">
+              <label>Reps</label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value="${sel.repetitions}"
+                  oninput="const val = sanitizeNumberInput(this.value, { max: 100, min: 1 }); this.value = val; updateExerciseParam(${idx}, 'repetitions', val)"
+                />
+              </div>
+            </div>
+            <div class="param-input-group">
+              <label>Carga (kg)</label>
+              <div class="input-wrapper">
+                <select onchange="updateExerciseParam(${idx}, 'weight', this.value)">
+                  ${generateWeightOptions(sel.weight)}
+                </select>
+                <span class="material-symbols-outlined select-arrow">expand_more</span>
+              </div>
+            </div>
           </div>
         </div>
       `;
@@ -1920,6 +2116,240 @@ document
     }
   });
 
+// ========== CALENDÁRIO DE AULAS ==========
+// Declarar variáveis do calendário ANTES de serem usadas
+let calendarCurrentDate = new Date();
+let calendarClasses = [];
+
 loadUserInfo();
 loadTemplates();
 loadStudents();
+
+// Função auxiliar para converter data DD-MM-YYYY para Date
+function parseDateBR(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return new Date();
+  if (dateStr.includes('T')) {
+    dateStr = dateStr.split('T')[0];
+  }
+  if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split("-");
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split("/");
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split("-");
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+  const parsed = new Date(dateStr);
+  return isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
+// Formatar data para YYYY-MM-DD (input date)
+function formatDateForInput(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// Converter YYYY-MM-DD para DD-MM-YYYY (backend)
+function convertDateForBackend(dateStr) {
+  if (!dateStr) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split("-");
+    return `${day}-${month}-${year}`;
+  }
+  return dateStr;
+}
+
+// Converter DD-MM-YYYY para YYYY-MM-DD (input)
+function convertDateFromBackend(dateStr) {
+  if (!dateStr) return "";
+  if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split("-");
+    return `${year}-${month}-${day}`;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return dateStr;
+  }
+  return dateStr;
+}
+
+// ===========================================
+// CALENDAR LOGIC (Delegated to CalendarModule)
+// ===========================================
+
+// Initialize Shared Calendar Module
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const res = await apiFetch("/auth/me");
+    if (res.ok) {
+      const user = await res.json();
+      if (window.CalendarModule) {
+        console.log("Initializing Shared Calendar for Instructor");
+        window.CalendarModule.init(user.id, user.role);
+        window.CalendarModule.loadCalendar();
+      } else {
+        console.error("CalendarModule not found");
+      }
+    }
+  } catch (e) {
+    console.error("Error initializing calendar:", e);
+  }
+});
+
+// Helper for other parts of dashboard if they try to call loadCalendar
+window.loadCalendar = async function () {
+  if (window.CalendarModule) {
+    await window.CalendarModule.loadCalendar();
+  }
+};
+
+
+// Initialize Profile Modal
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.ProfileModalInit) {
+    window.ProfileModalInit({
+      avatarId: "userAvatar",
+      modalId: "profileModal",
+    });
+  }
+});
+
+// --- Função para alternar abas no modal de criar treino ---
+// --- Função para alternar abas no modal de criar treino ---
+window.switchTrainingTab = function (tabName) {
+  // Atualizar botões
+  document.querySelectorAll(".tab-btn").forEach((btn) => {
+    btn.classList.remove("active");
+  });
+  const activeBtn = document.getElementById(`tab-${tabName}`);
+  if (activeBtn) activeBtn.classList.add("active");
+
+  // Atualizar conteúdo
+  document.querySelectorAll(".tab-content").forEach((content) => {
+    content.classList.remove("active");
+  });
+  const activeContent = document.getElementById(`${tabName}TabContent`);
+  if (activeContent) activeContent.classList.add("active");
+
+  // Carregar dados se necessário
+  if (tabName === "models") {
+    loadTrainingTemplates();
+  }
+};
+
+// --- Carregar Modelos (Treinos do Instrutor) ---
+async function loadTrainingTemplates() {
+  const grid = document.getElementById("trainingTemplatesGrid");
+  if (!grid) return;
+
+  // Se já carregou e temos filtro vazio, apenas renderiza
+  if (trainingTemplates.length > 0 && (!modelSearchFilter || modelSearchFilter === "")) {
+    renderTrainingTemplates();
+    return;
+  }
+
+  // Mostrar loading apenas se não tiver dados
+  if (trainingTemplates.length === 0) {
+    grid.innerHTML = "<p>Carregando modelos...</p>";
+    try {
+      const res = await apiFetch("/instructor/trainings");
+      if (!res.ok) throw new Error("Erro ao carregar modelos");
+
+      trainingTemplates = await res.json();
+      renderTrainingTemplates();
+    } catch (error) {
+      console.error(error);
+      grid.innerHTML = "<p>Erro ao carregar modelos.</p>";
+    }
+  } else {
+    renderTrainingTemplates();
+  }
+}
+
+function renderTrainingTemplates() {
+  const grid = document.getElementById("trainingTemplatesGrid");
+  if (!grid) return;
+
+  const searchTerm = modelSearchFilter ? modelSearchFilter.toLowerCase() : "";
+  const filtered = trainingTemplates.filter(t =>
+    t.name.toLowerCase().includes(searchTerm)
+  );
+
+  if (filtered.length === 0) {
+    grid.innerHTML = "<p>Nenhum modelo encontrado.</p>";
+    return;
+  }
+
+  grid.innerHTML = filtered.map(t => {
+    const exerciseCount = t.exercises ? t.exercises.length : 0;
+    return `
+        <div class="model-template-card">
+          <div class="model-card-info">
+            <div class="model-icon">
+              <span class="material-symbols-outlined">description</span>
+            </div>
+            <div class="model-text">
+              <h4>${t.name}</h4>
+              <span class="model-stats">${exerciseCount} exercícios</span>
+            </div>
+          </div>
+          <button type="button" class="btn-use-model" onclick="importTemplate(${t.id})">
+            Usar Modelo
+          </button>
+        </div>
+      `;
+  }).join('');
+}
+
+window.importTemplate = function (templateId) {
+  const template = trainingTemplates.find(t => t.id === templateId);
+  if (!template || !template.exercises) return;
+
+  // Adicionar exercícios à seleção atual
+  const newExercises = template.exercises.map(ex => {
+    // Tenta pegar dados da tabela pivô (TrainingExercise) ou fallback para defaults
+    const series = ex.TrainingExercise?.series || 3;
+    const repetitions = ex.TrainingExercise?.repetitions || 12;
+    const weight = ex.TrainingExercise?.weight || 0;
+
+    return {
+      exerciseId: ex.id, // Corrigido: deve ser exerciseId para bater com renderSelectedExercises
+      series: series,
+      repetitions: repetitions,
+      weight: weight
+    };
+  });
+
+  // Evitar adicionar se exerciseId já está na lista
+  const currentIds = new Set(selectedExercises.map(e => e.exerciseId));
+  const toAdd = newExercises.filter(e => !currentIds.has(e.exerciseId));
+
+  if (toAdd.length === 0) {
+    showAlert("Estes exercícios já estão selecionados.", "info");
+    return;
+  }
+
+  selectedExercises = [...selectedExercises, ...toAdd];
+  renderSelectedExercises();
+
+  // Voltar para aba de exercícios
+  switchTrainingTab('exercises');
+
+  showAlert(`${toAdd.length} exercícios adicionados do modelo.`, "success");
+};
+
+// Listener para filtro de modelos
+document.addEventListener("DOMContentLoaded", () => {
+  const modelInput = document.getElementById("modelSearchInput");
+  if (modelInput) {
+    modelInput.addEventListener("input", (e) => {
+      modelSearchFilter = e.target.value;
+      renderTrainingTemplates();
+    });
+  }
+});

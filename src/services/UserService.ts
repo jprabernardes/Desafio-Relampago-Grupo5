@@ -33,9 +33,21 @@ export class UserService {
   private async enrichUser(user: any): Promise<any> {
     if (user.role === 'aluno') {
       const profile: any = await this.studentProfileRepository.findByUserId(user.id);
+      const plan = profile?.plan_type || 'mensal';
+      const paymentDay = profile?.payment_day ?? 10;
+      const paidUntil = profile?.paid_until ?? null;
+      const lastPaymentAt = profile?.last_payment_at ?? null;
+
       return {
         ...user,
-        planType: profile?.plan_type || 'mensal'
+        planType: plan,
+        plan_type: plan,
+        paymentDay,
+        payment_day: paymentDay,
+        paidUntil,
+        paid_until: paidUntil,
+        lastPaymentAt,
+        last_payment_at: lastPaymentAt
       };
     }
     return user;
@@ -49,7 +61,8 @@ export class UserService {
   async create(
     user: User,
     creatorRole: string,
-    planType?: 'mensal' | 'trimestral' | 'semestral' | 'anual'
+    planType?: 'mensal' | 'trimestral' | 'semestral' | 'anual',
+    paymentDay?: number
   ) {
     if (creatorRole === 'instrutor' || creatorRole === 'aluno') {
       throw new Error('Você não tem permissão para criar usuários.');
@@ -101,9 +114,16 @@ export class UserService {
     });
 
     if (newUser.role === 'aluno') {
+      const parsedPaymentDay = paymentDay !== undefined ? Number(paymentDay) : 10;
+      if (Number.isNaN(parsedPaymentDay) || parsedPaymentDay < 1 || parsedPaymentDay > 31) {
+        throw new Error('Dia de pagamento inválido. Use um número entre 1 e 31.');
+      }
+
       await this.studentProfileRepository.create(
         newUser.id!,
-        planType ?? 'mensal'
+        planType ?? 'mensal',
+        parsedPaymentDay,
+        null
       );
     }
 
@@ -115,14 +135,14 @@ export class UserService {
   async findById(id: number) {
     const user = await this.userRepository.findById(id);
     if (!user) return undefined;
-    
+
     const enrichedUser = await this.enrichUser(user);
     return this.removePassword(enrichedUser);
   }
 
   async findAll(role?: string) {
     const users = await this.userRepository.findAll(role);
-    
+
     // Enriquecer cada usuário
     const enrichedUsers = await Promise.all(
       users.map(async (user) => {
@@ -130,7 +150,7 @@ export class UserService {
         return this.removePassword(enriched);
       })
     );
-    
+
     return enrichedUsers;
   }
 
@@ -143,7 +163,7 @@ export class UserService {
     }
 
     const users = await this.userRepository.search(query);
-    
+
     // Enriquecer cada usuário
     const enrichedUsers = await Promise.all(
       users.map(async (user) => {
@@ -151,7 +171,7 @@ export class UserService {
         return this.removePassword(enriched);
       })
     );
-    
+
     return enrichedUsers;
   }
 
@@ -160,12 +180,13 @@ export class UserService {
    * - Aceita planType para atualizar tipo de plano de alunos
    */
   async update(
-    id: number, 
-    data: Partial<User>, 
+    id: number,
+    data: Partial<User>,
     updaterRole: string,
-    planType?: 'mensal' | 'trimestral' | 'semestral' | 'anual'
+    planType?: 'mensal' | 'trimestral' | 'semestral' | 'anual',
+    paymentDay?: number
   ): Promise<void> {
-    
+
     // Verificar se usuário existe
     const existingUser = await this.userRepository.findById(id);
     if (!existingUser) {
@@ -209,10 +230,22 @@ export class UserService {
 
     await this.userRepository.update(id, data);
 
+    const userAfterUpdate = await this.userRepository.findById(id);
+
     if (planType) {
-      const user = await this.userRepository.findById(id);
-      if (user && user.role === 'aluno') {
+      if (userAfterUpdate && userAfterUpdate.role === 'aluno') {
         await this.studentProfileRepository.updatePlanType(id, planType);
+      }
+    }
+
+    if (paymentDay !== undefined) {
+      const parsedPaymentDay = Number(paymentDay);
+      if (Number.isNaN(parsedPaymentDay) || parsedPaymentDay < 1 || parsedPaymentDay > 31) {
+        throw new Error('Dia de pagamento inválido. Use um número entre 1 e 31.');
+      }
+
+      if (userAfterUpdate && userAfterUpdate.role === 'aluno') {
+        await this.studentProfileRepository.updatePaymentDay(id, parsedPaymentDay);
       }
     }
   }

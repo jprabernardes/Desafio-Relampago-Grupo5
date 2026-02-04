@@ -17,4 +17,14 @@ export class CheckInController {
             return res.status(400).json({ error: error.message });
         }
     };
+
+    getWeekdayStats = async (req: Request, res: Response): Promise<Response> => {
+        try {
+            const days = req.query.days ? Number(req.query.days) : 30;
+            const data = await this.checkInService.getWeekdayStats(days);
+            return res.status(200).json({ days: Math.max(1, Math.min(365, Math.floor(days || 30))), data });
+        } catch (error: any) {
+            return res.status(400).json({ error: error.message });
+        }
+    };
 }

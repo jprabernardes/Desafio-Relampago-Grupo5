@@ -9,8 +9,8 @@ const gymClassController = new GymClassController();
 
 router.use(authMiddleware);
 
-// Criar aula (apenas instrutor)
-router.post('/', instructorOnly, gymClassController.create);
+// Criar aula (instrutor, recepcionista, administrador)
+router.post('/', roleMiddleware(['instrutor', 'recepcionista', 'administrador']), gymClassController.create);
 
 // Listar todas as aulas
 router.get('/', gymClassController.findAll);
@@ -21,14 +21,17 @@ router.get('/dashboard', roleMiddleware(['administrador', 'recepcionista']), gym
 // Buscar aula por ID
 router.get('/:id', gymClassController.findById);
 
-// Atualizar aula (apenas instrutor)
-router.put('/:id', instructorOnly, gymClassController.update);
+// Atualizar aula (instrutor, recepcionista, administrador)
+router.put('/:id', roleMiddleware(['instrutor', 'recepcionista', 'administrador']), gymClassController.update);
 
-// Deletar aula (apenas instrutor)
-router.delete('/:id', instructorOnly, gymClassController.delete);
+// Deletar aula (instrutor, recepcionista, administrador)
+router.delete('/:id', roleMiddleware(['instrutor', 'recepcionista', 'administrador']), gymClassController.delete);
 
-// Listar alunos inscritos (instrutor)
-router.get('/:id/students', instructorOnly, gymClassController.getEnrolledStudents);
+// Criar aula recorrente (instrutor, recepcionista, administrador)
+router.post('/recurring', roleMiddleware(['instrutor', 'recepcionista', 'administrador']), gymClassController.createRecurring);
+
+// Listar alunos inscritos (instrutor, recepcionista, administrador)
+router.get('/:id/students', roleMiddleware(['instrutor', 'recepcionista', 'administrador']), gymClassController.getEnrolledStudents);
 
 // Inscrever-se em aula (apenas aluno)
 router.post('/:id/enroll', studentOnly, gymClassController.enroll);

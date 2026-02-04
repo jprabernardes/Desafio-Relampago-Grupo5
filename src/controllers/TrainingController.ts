@@ -26,7 +26,15 @@ export class TrainingController {
     try {
       const instructorId = (req as any).user.id;
       const trainings = await this.trainingService.findByInstructorId(instructorId);
-      return res.status(200).json(trainings);
+
+      const trainingsWithExercises = await Promise.all(
+        trainings.map(async (t) => {
+          const exercises = await this.exerciseService.findByTrainingId(t.id!);
+          return { ...t, exercises };
+        })
+      );
+
+      return res.status(200).json(trainingsWithExercises);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
     }
@@ -156,19 +164,19 @@ export class TrainingController {
   findTrainingsByStudentForInstructor = async (req: Request, res: Response): Promise<Response> => {
     try {
       const studentId = Number(req.params.studentId);
-      
+
       const trainings = await this.trainingService.findByUserId(studentId);
-      
+
       const trainingsWithExercises = await Promise.all(
         trainings.map(async (t) => {
           const exercises = await this.exerciseService.findByTrainingId(t.id!);
-          return { 
-            ...t, 
+          return {
+            ...t,
             exercises
           };
         })
       );
-      
+
       return res.status(200).json(trainingsWithExercises);
     } catch (error: any) {
       console.error('[TrainingController] Erro ao buscar treinos:', error);

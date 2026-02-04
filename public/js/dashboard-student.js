@@ -56,9 +56,10 @@ function confirmAction() {
 
 let currentUserId = null;
 let allWorkouts = []; // Cache para os treinos do aluno
+let currentUserData = null; // Armazena dados completos do usuário
 
 const GYM_INFO = {
-  name: "💪 FITMANAGER ACADEMIA",
+  name: "FITMANAGER ACADEMIA",
   address: "Rua Exemplo, 123",
   phone: "(11) 99999-9999",
 };
@@ -110,6 +111,7 @@ async function loadUserInfo() {
 
     const data = await response.json();
     currentUserId = data.id;
+    currentUserData = data; // Armazenar dados completos
     document.getElementById("userName").textContent = data.name || data.nome;
     document.getElementById("userAvatar").textContent = (
       data.name ||
@@ -156,30 +158,36 @@ async function loadWorkouts() {
       .map(
         (workout) => `
             <div class="workout-card">
-              <div>
-                <h3 class="card-title">${workout.name}</h3>
-                <p class="card-subtitle">
-                  👤 <strong>Instrutor:</strong> ${workout.instructor_name || workout.instructor_id}
-                </p>
-                <div class="exercises-list">
-                  ${Array.isArray(workout.exercises)
+              <div class="workout-header">
+                <h3 class="workout-name">${workout.name}</h3>
+                <div class="workout-instructor">
+                  <span class="material-symbols-outlined">person</span>
+                  <span class="instructor-label">Instrutor:</span>
+                  <span class="instructor-name">${workout.instructor_name || workout.instructor_id}</span>
+                </div>
+              </div>
+              <div class="exercise-rows">
+                ${Array.isArray(workout.exercises)
             ? workout.exercises
               .map(
                 (ex) => `
-                      <div class="workout-exercise-item">
-                        <strong>${ex.name}</strong><br>
-                        ${ex.series}x${ex.repetitions} ${ex.weight ? `• ${ex.weight}KG` : ""}
+                      <div class="exercise-row">
+                        <span class="exercise-name">${ex.name}</span>
+                        <div class="exercise-badge">
+                          <span class="badge-series">${ex.series} x ${ex.repetitions}</span>
+                          ${ex.weight ? `<span class="badge-weight">${ex.weight}kg</span>` : ""}
+                        </div>
                       </div>
                     `,
               )
               .join("")
-            : `<pre>${workout.exercises}</pre>`
+            : `<div class="p-4 text-center text-gray">Sem exercícios cadastrados</div>`
           }
-                </div>
               </div>
-              <div class="workout-actions">
-                <button class="btn btn-primary btn-full" onclick="printWorkout(${workout.id})">
-                  🖨️ Imprimir Treino
+              <div class="workout-footer">
+                <button class="btn-print" onclick="printWorkout(${workout.id})">
+                  <span class="material-symbols-outlined">print</span>
+                  Imprimir Treino
                 </button>
               </div>
             </div>
@@ -337,53 +345,178 @@ async function loadAvailableClasses() {
   }
 }
 
+// Keep track of active category across re-renders
+let currentActiveCategoryName = null;
+
+// Função para renderizar as categorias de aulas
 function renderAvailableClasses() {
-  const container = document.getElementById("classesList");
-  if (allAvailableClasses.length === 0) {
-    container.innerHTML = "<p>Nenhuma aula disponível no momento.</p>";
+  const categoriesContainer = document.getElementById("classCategoriesContainer");
+  const sessionsContainer = document.getElementById("classSessionsContainer");
+  const sessionsTitle = document.getElementById("sessionsTitle");
+
+  // Limpar containers
+  categoriesContainer.innerHTML = "";
+  // IMPORTANT: Do *not* clear sessionsContainer yet if we are going to restore state
+  // But we need to rebuild categories anyway.
+
+  // Filtrar aulas: do dia atual até os próximos 15 dias
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const maxDate = new Date(today);
+  maxDate.setDate(today.getDate() + 15);
+
+  const filteredClasses = allAvailableClasses.filter((cls) => {
+    try {
+      const classDate = parseDateBR(cls.date);
+      classDate.setHours(0, 0, 0, 0);
+      return classDate >= today && classDate <= maxDate;
+    } catch (e) {
+      console.warn("Erro ao processar data da aula:", cls, e);
+      return false;
+    }
+  });
+
+  if (filteredClasses.length === 0) {
+    categoriesContainer.innerHTML = "<p>Nenhuma aula disponível nos próximos 15 dias.</p>";
     return;
   }
 
-  container.innerHTML = allAvailableClasses
-    .map((cls) => {
-      const isInscrito = myEnrollmentIds.includes(cls.id);
-      const isFull = cls.current_participants >= cls.max_participants;
+  // Agrupar por nome (Case Insensitive)
+  // Agrupar por nome (Case Insensitive) e Forçar Capitalização no Display
+  const grouped = {};
+  filteredClasses.forEach(cls => {
+    const rawName = (cls.title || cls.name || "Aula").trim();
+    const key = rawName.toLowerCase();
 
-      let statusText = "";
-      let statusClass = "";
+    if (!grouped[key]) {
+      // Formatar nome para exibição: Primeira letra maiúscula, resto como está na chave (minúsculo)
+      // Isso unifica "Yoga", "yoga", "YOGA" em "Yoga"
+      const displayName = key.charAt(0).toUpperCase() + key.slice(1);
 
-      if (isInscrito) {
-        statusText = "Inscrito";
-        statusClass = "status-enrolled";
-      } else if (isFull) {
-        statusText = "Sem vagas";
-        statusClass = "status-full";
-      } else {
-        statusText = `${cls.current_participants || 0} / ${cls.max_participants}`;
-        statusClass = "status-available";
-      }
+      grouped[key] = {
+        name: displayName,
+        key: key,
+        classes: []
+      };
+    }
+    grouped[key].classes.push(cls);
+  });
 
-      const date = parseDateBR(cls.date);
-      // Extrair horário da string original se contiver 'T'
-      let timeStr = "--:--";
-      if (cls.date && cls.date.includes('T')) {
-        const timePart = cls.date.split('T')[1];
-        timeStr = timePart ? timePart.substring(0, 5) : "--:--";
-      }
-      const dateStr = date.toLocaleDateString("pt-BR");
+  // Renderizar Cards de Categoria
+  Object.values(grouped).forEach(group => {
+    const card = document.createElement("div");
+    card.className = "category-card";
 
-      return `
+    // Restore active state if matches
+    if (currentActiveCategoryName === group.name) {
+      card.classList.add("active");
+    }
+
+    card.innerHTML = `
+      <div class="category-name">${group.name}</div>
+      <div class="category-count">${group.classes.length} sessões</div>
+    `;
+
+    card.onclick = () => {
+      // Update state
+      currentActiveCategoryName = group.name;
+
+      // Remover active de todos
+      document.querySelectorAll(".category-card").forEach(c => c.classList.remove("active"));
+      // Ativar atual
+      card.classList.add("active");
+
+      renderClassSessions(group.classes);
+    };
+
+    categoriesContainer.appendChild(card);
+  });
+
+  // If we have an active category in state, re-render its sessions
+  if (currentActiveCategoryName) {
+    const key = currentActiveCategoryName.toLowerCase();
+    if (grouped[key]) {
+      // If the category still exists (has classes)
+      renderClassSessions(grouped[key].classes);
+    } else {
+      // Reset if category no longer has classes
+      currentActiveCategoryName = null;
+      sessionsContainer.innerHTML = "";
+      sessionsTitle.style.display = "none";
+    }
+  } else {
+    // Ensure cleared if no active category
+    sessionsContainer.innerHTML = "";
+    sessionsTitle.style.display = "none";
+  }
+}
+
+// Renderizar as sessões específicas de uma categoria selecionada
+function renderClassSessions(classesList) {
+  const container = document.getElementById("classSessionsContainer");
+  const title = document.getElementById("sessionsTitle");
+
+  title.style.display = "block";
+  container.innerHTML = "";
+
+  // Ordenar por data
+  classesList.sort((a, b) => {
+    const da = parseDateBR(a.date);
+    const db = parseDateBR(b.date);
+    return da - db;
+  });
+
+  container.innerHTML = classesList.map((cls) => {
+    const isInscrito = myEnrollmentIds.includes(cls.id);
+    const isFull = cls.current_participants >= cls.max_participants;
+
+    let statusText = "";
+    let statusClass = "";
+
+    if (isInscrito) {
+      statusText = "Inscrito";
+      statusClass = "status-enrolled";
+    } else if (isFull) {
+      statusText = "Sem vagas";
+      statusClass = "status-full";
+    } else {
+      statusText = `${cls.current_participants || 0} / ${cls.max_participants}`;
+      statusClass = "status-available";
+    }
+
+    const date = parseDateBR(cls.date);
+    let timeStr = "--:--";
+    if (cls.date && cls.date.includes('T')) {
+      const timePart = cls.date.split('T')[1];
+      timeStr = timePart ? timePart.substring(0, 5) : "--:--";
+    }
+    const dateStr = date.toLocaleDateString("pt-BR");
+
+    return `
             <div class="class-card class-card-clickable" onclick="openClassModal(${cls.id})">
               <div>
                 <h3 class="card-title">${cls.title}</h3>
-                <p class="card-location">📍 ${cls.location || "Sala Principal"}</p>
-                <p class="card-date">📅 ${dateStr} • ⏰ ${timeStr}</p>
+                <p class="card-location">
+                  <span class="material-symbols-outlined">location_on</span>
+                  ${cls.location || "Sala Principal"}
+                </p>
+                <p class="card-date">
+                  <span class="material-symbols-outlined">calendar_today</span> ${dateStr} 
+                  <span class="material-symbols-outlined">schedule</span> ${timeStr}
+                </p>
+                <p class="card-subtitle" style="margin-top:0.5rem;">
+                   <span class="material-symbols-outlined" style="font-size: 1rem;">person</span>
+                   ${cls.instructor_name || "Instrutor"}
+                </p>
               </div>
               <span class="class-status ${statusClass}">${statusText}</span>
             </div>
           `;
-    })
-    .join("");
+  }).join("");
+
+  // Scroll suave até a sessão
+  title.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // Modal de Detalhes da Aula
@@ -521,15 +654,21 @@ async function loadMyClasses() {
           : '<span class="class-status status-enrolled">Confirmada</span>';
 
         let actionBtn = !isPast
-          ? `<button class="btn btn-danger btn-sm btn-full mt-6" onclick="cancelEnrollment(${cls.id})">Cancelar Inscrição</button>`
+          ? `<button class="btn btn-danger btn-compact" onclick="cancelEnrollment(${cls.id})">Cancelar Inscrição</button>`
           : "";
 
         return `
             <div class="class-card flex-col-full ${isPast ? "class-card-past" : "class-card-future"}">
               <div>
                 <h3 class="card-title">${cls.title}</h3>
-                <p class="card-subtitle">📍 ${cls.location || "Sala Principal"}</p>
-                <p class="card-date">📅 ${dateStr} • ⏰ ${timeStr}</p>
+                <p class="card-location">
+                  <span class="material-symbols-outlined">location_on</span>
+                  ${cls.location || "Sala Principal"}
+                </p>
+                <p class="card-date">
+                  <span class="material-symbols-outlined">calendar_today</span> ${dateStr} 
+                  <span class="material-symbols-outlined">schedule</span> ${timeStr}
+                </p>
               </div>
               <div class="mt-auto-pt-4">
                 ${statusLabel}
@@ -718,10 +857,10 @@ function renderCalendar(date) {
       markers.className = "day-markers";
 
       if (dayCheckins.length > 0) {
-        markers.innerHTML += `<span class="check-mark">✔</span>`; // Green checkmark
+        markers.innerHTML += `<span class="material-symbols-outlined check-mark" title="Check-in">check_circle</span>`;
       }
       if (dayClasses.length > 0) {
-        markers.innerHTML += `<span class="class-mark">●</span>`; // Dot for class
+        markers.innerHTML += `<span class="material-symbols-outlined class-mark" title="Aula">event</span>`;
       }
       div.appendChild(markers);
 
@@ -760,11 +899,8 @@ function openCalendarModal(date, workouts, classes) {
     workouts.forEach((w) => {
       const div = document.createElement("div");
       div.className = "modal-list-item workout";
-      const exercisesList = Array.isArray(w.exercises)
-        ? w.exercises.join(", ")
-        : w.exercises;
       div.innerHTML = `
-                <h4>💪 Check-in: ${w.name || "Treino"}</h4>
+                <h4><span class="material-symbols-outlined">check_circle</span> Check-in: ${w.name || "Treino"}</h4>
             `;
       body.appendChild(div);
     });
@@ -774,8 +910,8 @@ function openCalendarModal(date, workouts, classes) {
       const div = document.createElement("div");
       div.className = "modal-list-item class";
       div.innerHTML = `
-                <h4>🏋️ Aula: ${c.title}</h4>
-                <p>Horário: ${c.time}</p>
+                <h4><span class="material-symbols-outlined">event</span> Aula: ${c.title}</h4>
+                <p><span class="material-symbols-outlined" style="font-size: 1rem !important;">schedule</span> Horário: ${c.time}</p>
             `;
       body.appendChild(div);
     });
@@ -794,5 +930,162 @@ function openCloseMenu() {
     body.classList.remove("closed-menu");
   } else {
     body.classList.add("closed-menu");
+  }
+}
+
+// Funções do Modal de Informações do Aluno
+function openStudentInfoModal() {
+  if (!currentUserData) {
+    showAlert("Carregando informações...", "error");
+    return;
+  }
+
+  // Preencher informações do aluno
+  document.getElementById("studentInfoName").textContent = currentUserData.name || currentUserData.nome || "-";
+  document.getElementById("studentInfoEmail").textContent = currentUserData.email || "-";
+  document.getElementById("studentInfoPhone").textContent = currentUserData.phone || "-";
+  document.getElementById("studentInfoCpf").textContent = currentUserData.document || "-";
+
+  // Formatar tipo de plano
+  const planType = currentUserData.planType || currentUserData.plan_type || "mensal";
+  const planTypeMap = {
+    mensal: "Mensal",
+    trimestral: "Trimestral",
+    semestral: "Semestral",
+    anual: "Anual"
+  };
+  document.getElementById("studentInfoPlanType").textContent = planTypeMap[planType] || planType;
+
+  // Ocultar formulário de mudança de senha se estiver visível
+  document.getElementById("changePasswordSection").style.display = "none";
+
+  // Limpar mensagens e campos
+  document.getElementById("passwordMessage").textContent = "";
+  document.getElementById("currentPassword").value = "";
+  document.getElementById("newPassword").value = "";
+  document.getElementById("confirmPassword").value = "";
+
+  // Abrir modal
+  document.getElementById("studentInfoModal").classList.add("active");
+}
+
+function closeStudentInfoModal() {
+  document.getElementById("studentInfoModal").classList.remove("active");
+  // Ocultar formulário de mudança de senha
+  document.getElementById("changePasswordSection").style.display = "none";
+  // Limpar campos
+  document.getElementById("currentPassword").value = "";
+  document.getElementById("newPassword").value = "";
+  document.getElementById("confirmPassword").value = "";
+  document.getElementById("passwordMessage").textContent = "";
+}
+
+function handleStudentModalClick(event) {
+  // Fechar modal se clicar no backdrop (fora do modal-content)
+  if (event.target.id === "studentInfoModal") {
+    closeStudentInfoModal();
+  }
+}
+
+function toggleChangePasswordForm() {
+  const section = document.getElementById("changePasswordSection");
+  if (section.style.display === "none") {
+    section.style.display = "block";
+  } else {
+    section.style.display = "none";
+    // Limpar campos ao ocultar
+    document.getElementById("currentPassword").value = "";
+    document.getElementById("newPassword").value = "";
+    document.getElementById("confirmPassword").value = "";
+    document.getElementById("passwordMessage").textContent = "";
+  }
+}
+
+function cancelChangePassword() {
+  toggleChangePasswordForm();
+}
+
+// Validação de senha (mesmas regras do backend)
+function isValidPassword(password) {
+  if (!password || typeof password !== 'string') {
+    return false;
+  }
+  if (password.includes(' ')) {
+    return false;
+  }
+  return password.length >= 6;
+}
+
+async function changePassword() {
+  const currentPassword = document.getElementById("currentPassword").value;
+  const newPassword = document.getElementById("newPassword").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+  const messageEl = document.getElementById("passwordMessage");
+
+  // Limpar mensagem anterior
+  messageEl.textContent = "";
+  messageEl.className = "password-message";
+
+  // Validações
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    messageEl.textContent = "Por favor, preencha todos os campos.";
+    messageEl.classList.add("error");
+    return;
+  }
+
+  if (!isValidPassword(newPassword)) {
+    messageEl.textContent = "A nova senha deve ter no mínimo 6 caracteres e não pode conter espaços.";
+    messageEl.classList.add("error");
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    messageEl.textContent = "As senhas não coincidem.";
+    messageEl.classList.add("error");
+    return;
+  }
+
+  if (currentPassword === newPassword) {
+    messageEl.textContent = "A nova senha deve ser diferente da senha atual.";
+    messageEl.classList.add("error");
+    return;
+  }
+
+  try {
+    const response = await apiFetch("/auth/password", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        currentPassword,
+        newPassword,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || "Erro ao alterar senha");
+    }
+
+    // Sucesso
+    messageEl.textContent = "Senha alterada com sucesso!";
+    messageEl.classList.add("success");
+
+    // Limpar campos após 2 segundos
+    setTimeout(() => {
+      document.getElementById("currentPassword").value = "";
+      document.getElementById("newPassword").value = "";
+      document.getElementById("confirmPassword").value = "";
+      messageEl.textContent = "";
+      messageEl.className = "password-message";
+      // Ocultar formulário após sucesso
+      document.getElementById("changePasswordSection").style.display = "none";
+    }, 2000);
+  } catch (error) {
+    console.error("Erro ao alterar senha:", error);
+    messageEl.textContent = error.message || "Erro ao alterar senha. Tente novamente.";
+    messageEl.classList.add("error");
   }
 }

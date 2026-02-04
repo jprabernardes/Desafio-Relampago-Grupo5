@@ -1,56 +1,208 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard - Administrador</title>
-    <script src="./config.js"></script>
-    <script src="./js/base-path.js"></script>
-    <link rel="stylesheet" href="./css/dashboard-admin.css" />
-  </head>
-  <body class="closed-menu">
-    <div class="container">
-      <div class="sidebar">
-        <div class="logo">💪 FitManager</div>
-        <div class="nav-item active" id="navAlunos" onclick="loadTab('alunos')">
-          <i class="fas fa-user-graduate"></i> 👥 Alunos
-        </div>
-        <div
-          class="nav-item"
-          id="navFuncionarios"
-          onclick="loadTab('funcionarios')"
-        >
-          <i class="fas fa-user-tie"></i> 🏋️ Funcionários
-        </div>
-        <div style="flex: 1"></div>
-        <div class="logout-btn" onclick="logout()">🚪 Sair</div>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FitManager - Painel do Administrador</title>
+
+  <!-- Config -->
+  <script src="./config.js"></script>
+  <script src="./js/base-path.js"></script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lexend:wght@400;600;700&display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+    rel="stylesheet" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="./css/dashboard-admin.css" />
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <span class="material-symbols-outlined">fitness_center</span>
       </div>
+      <span class="logo-text">Fit<span class="logo-accent">Manager</span></span>
+    </div>
 
-      <div class="main-content">
-        <div class="header">
-          <h1>Dashboard - Administrador</h1>
-          <div class="user-info">
-            <span id="userName"></span>
-            <div class="user-avatar" id="userAvatar"></div>
-          </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" id="navHome" onclick="loadTab('home')">
+        <span class="material-symbols-outlined">home</span>
+        <span>Início</span>
+      </a>
+      <a class="nav-item active" id="navAlunos" onclick="loadTab('alunos')">
+        <span class="material-symbols-outlined">group</span>
+        <span>Alunos</span>
+      </a>
+      <a class="nav-item" id="navFuncionarios" onclick="loadTab('funcionarios')">
+        <span class="material-symbols-outlined">badge</span>
+        <span>Funcionários</span>
+      </a>
+      <a class="nav-item" id="navAulas" onclick="loadTab('classes')">
+        <span class="material-symbols-outlined">calendar_month</span>
+        <span>Aulas</span>
+      </a>
+      <a class="nav-item" id="navFinance" onclick="loadTab('financeiro')">
+        <span class="material-symbols-outlined">payments</span>
+        <span>Financeiro</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a class="logout-btn" onclick="logout()">
+        <span class="material-symbols-outlined">logout</span>
+        <span>Sair</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="header">
+      <h1 class="page-title">Painel do Administrador</h1>
+      <div class="user-info" id="userInfoWrapper" style="cursor: pointer;">
+        <div class="user-details">
+          <span class="user-name" id="userName">Carregando...</span>
+          <span class="user-role">Administrador</span>
         </div>
+        <div class="user-avatar" id="userAvatar">
+          <span class="material-symbols-outlined">person</span>
+        </div>
+      </div>
+    </header>
 
-        <div class="table-container">
-          <div class="table-header">
-            <h2 id="tableTitle">Usuários do Sistema</h2>
-            <div class="flex-center-gap">
-              <input
-                type="text"
-                id="searchInput"
-                placeholder="Pesquisar..."
-                class="search-input"
-                oninput="handleSearch()"
-              />
-              <button class="btn btn-primary" onclick="openAddModal()">
-                + Adicionar Conta
-              </button>
+    <div class="content-area">
+      <!-- Alert -->
+      <div class="alert hidden" id="alert"></div>
+
+      <!-- Home View (from Receptionist) -->
+      <div id="homeView" class="hidden">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="material-symbols-outlined metric-icon students-icon">group</span>
+              <span class="metric-label">Total de Alunos</span>
+            </div>
+            <div class="metric-body">
+              <h3 class="metric-value" id="metricTotalStudents">0</h3>
+              <span class="metric-trend positive">Ativos no sistema</span>
             </div>
           </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="material-symbols-outlined metric-icon staff-icon">badge</span>
+              <span class="metric-label">Total de Funcionários</span>
+            </div>
+            <div class="metric-body">
+              <h3 class="metric-value" id="metricTotalStaff">0</h3>
+              <span class="metric-trend">Equipe completa</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="material-symbols-outlined metric-icon checkin-icon">how_to_reg</span>
+              <span class="metric-label">Check-ins Hoje</span>
+            </div>
+            <div class="metric-body">
+              <h3 class="metric-value" id="metricCheckinsToday">0</h3>
+              <span class="metric-trend positive" id="metricCheckinsTrend">Frequência diária</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="material-symbols-outlined metric-icon finance-icon">trending_up</span>
+              <span class="metric-label">Financeiro (Simplificado)</span>
+            </div>
+            <div class="metric-body">
+              <div class="financial-metrics">
+                <div class="fin-item">
+                  <span class="fin-label">Adimplentes</span>
+                  <span class="fin-value positive" id="metricPaidPercent">--%</span>
+                </div>
+                <div class="fin-item">
+                  <span class="fin-label">Inadimplentes</span>
+                  <span class="fin-value negative" id="metricUnpaidPercent">--%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="metric-card metric-card-full">
+            <div class="metric-header">
+              <span class="material-symbols-outlined metric-icon"
+                style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9;">bar_chart</span>
+              <span class="metric-label">Dias mais movimentados (últimos 30 dias)</span>
+            </div>
+            <div class="metric-body">
+              <div id="weekdayChartHome" class="weekday-chart weekday-chart--vertical"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Finance View -->
+      <div id="financeView" class="hidden">
+        <div class="finance-summary-grid">
+          <div class="finance-summary-card">
+            <div class="finance-summary-label">Adimplentes</div>
+            <div class="finance-summary-value positive" id="financeAdimplentes">0</div>
+          </div>
+          <div class="finance-summary-card">
+            <div class="finance-summary-label">Inadimplentes</div>
+            <div class="finance-summary-value negative" id="financeInadimplentes">0</div>
+          </div>
+          <div class="finance-summary-card">
+            <div class="finance-summary-label">Total de alunos</div>
+            <div class="finance-summary-value" id="financeTotal">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="classesView" class="hidden" style="margin-top: 2rem;">
+        <div class="calendar-legend">
+          <span class="legend-item"><span class="legend-color own-class"></span>Minhas/Editáveis</span>
+          <span class="legend-item"><span class="legend-color other-class"></span>Outros</span>
+        </div>
+        <div class="calendar-search" style="margin-bottom: 1rem; display: flex; gap: 10px;">
+          <input type="text" id="calendarSearchInput" placeholder="Buscar por aula ou instrutor..." class="search-input"
+            style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+        <div class="calendar-controls">
+          <button class="btn btn-secondary" onclick="changeCalendarMonth(-1)">❮ Anterior</button>
+          <h3 id="currentMonthLabel"></h3>
+          <button class="btn btn-secondary" onclick="changeCalendarMonth(1)">Próximo ❯</button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </div>
+
+      <div class="table-container">
+        <div class="table-header">
+          <h2 id="tableTitle">Usuários do Sistema</h2>
+          <div class="table-actions">
+            <div class="search-wrapper">
+              <span class="material-symbols-outlined search-icon">search</span>
+              <input type="text" id="searchInput" placeholder="Pesquisar..." class="search-input"
+                oninput="handleSearch()" />
+            </div>
+            <button class="btn btn-primary" onclick="openAddModal()">
+              <span class="material-symbols-outlined">add</span>
+              Adicionar
+            </button>
+          </div>
+        </div>
+        <div class="table-wrapper">
           <table>
             <thead id="tableHead">
               <tr>
@@ -63,177 +215,370 @@
             </thead>
             <tbody id="usersTable"></tbody>
           </table>
-          <div id="paginationContainer"></div>
         </div>
+        <div id="paginationContainer"></div>
       </div>
     </div>
+  </main>
 
-    <!-- Modal Adicionar -->
-    <div class="modal" id="addModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 id="addModalTitle">Adicionar Conta</h2>
-          <button class="close-btn" onclick="closeAddModal()">&times;</button>
-        </div>
-        <div id="addAlertContainer"></div>
-        <form id="addForm">
-          <div class="form-group">
-            <label>Nome *</label>
-            <input type="text" id="addNome" required />
-          </div>
-          <div class="form-group">
-            <label>Email *</label>
-            <input type="email" id="addEmail" required />
-          </div>
-          <div class="form-group">
-            <label>Senha *</label>
-            <input type="password" id="addSenha" required minlength="6" />
-          </div>
-          <div class="form-group" id="addCpfGroup">
-            <label>CPF *</label>
-            <input
-              type="text"
-              id="addCpf"
-              required
-              maxlength="11"
-              placeholder="11 dígitos"
-            />
-          </div>
-          <div class="form-group">
-            <label>Telefone</label>
-            <input type="text" id="addTelefone" placeholder="(XX)9XXXXXXXX" />
-          </div>
-          <div class="form-group hidden" id="addRoleGroup">
-            <label>Função *</label>
-            <select id="addRole">
-              <option value="">Selecione...</option>
-              <option value="administrador">👑 Administrador</option>
-              <option value="recepcionista">📋 Recepcionista</option>
-              <option value="instrutor">💪 Instrutor</option>
-              <option value="aluno">🏃 Aluno</option>
-            </select>
-          </div>
-          <div class="form-group hidden" id="addTipoPlanoGroup">
-            <label>Tipo de Plano *</label>
-            <select id="addTipoPlano">
-              <option value="">Selecione...</option>
-              <option value="mensal">Mensal</option>
-              <option value="trimestral">Trimestral</option>
-              <option value="semestral">Semestral</option>
-              <option value="anual">Anual</option>
-            </select>
-          </div>
-          <div class="form-group hidden" id="addTipoFuncionarioGroup">
-            <label>Função *</label>
-            <select id="addTipoFuncionario">
-              <option value="">Selecione...</option>
-              <option value="administrador">👑 Administrador</option>
-              <option value="recepcionista">📋 Recepcionista</option>
-              <option value="instrutor">💪 Instrutor</option>
-            </select>
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn" onclick="closeAddModal()">
-              Cancelar
-            </button>
-            <button type="submit" class="btn btn-primary">Salvar</button>
-          </div>
-        </form>
+  <!-- Modal Adicionar -->
+  <div class="modal" id="addModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="addModalTitle">Adicionar Conta</h2>
+        <button class="close-btn" onclick="closeAddModal()">&times;</button>
       </div>
-    </div>
-
-    <!-- Modal Editar -->
-    <div class="modal" id="editModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 id="editModalTitle">Editar Conta</h2>
-          <button class="close-btn" onclick="closeEditModal()">&times;</button>
+      <div id="addAlertContainer"></div>
+      <form id="addForm">
+        <div class="form-group">
+          <label>Nome *</label>
+          <input type="text" id="addNome" required />
         </div>
-        <div id="editAlertContainer"></div>
-        <form id="editForm">
-          <input type="hidden" id="editUserId" />
-          <div class="form-group">
-            <label>Nome *</label>
-            <input type="text" id="editNome" required />
-          </div>
-          <div class="form-group">
-            <label>Email *</label>
-            <input type="email" id="editEmail" required />
-          </div>
-          <div class="form-group">
-            <label>Telefone</label>
-            <input type="text" id="editTelefone" placeholder="(XX)9XXXXXXXX" />
-          </div>
-          <div class="form-group hidden" id="editNovaSenhaGroup">
-            <label>Nova Senha (deixe em branco para não alterar)</label>
-            <input
-              type="password"
-              id="editNovaSenha"
-              minlength="6"
-              placeholder="Digite nova senha"
-            />
-          </div>
-          <div class="form-group" id="editCpfGroup">
-            <label>CPF *</label>
-            <input type="text" id="editCpf" required maxlength="11" />
-          </div>
-          <div class="form-group hidden" id="editRoleGroup">
-            <label>Função *</label>
-            <select id="editRole">
-              <option value="administrador">👑 Administrador</option>
-              <option value="recepcionista">📋 Recepcionista</option>
-              <option value="instrutor">💪 Instrutor</option>
-              <option value="aluno">🏃 Aluno</option>
-            </select>
-          </div>
-          <div class="form-group hidden" id="editTipoPlanoGroup">
-            <label>Tipo de Plano *</label>
-            <select id="editTipoPlano">
-              <option value="">Selecione...</option>
-              <option value="mensal">Mensal</option>
-              <option value="trimestral">Trimestral</option>
-              <option value="semestral">Semestral</option>
-              <option value="anual">Anual</option>
-            </select>
-          </div>
-          <div class="form-actions">
-            <button
-              type="button"
-              class="btn btn-danger"
-              onclick="confirmDeleteUser()"
-            >
-              Deletar Conta
-            </button>
-            <div style="flex: 1"></div>
-            <button type="button" class="btn" onclick="closeEditModal()">
-              Cancelar
-            </button>
-            <button type="submit" class="btn btn-primary">Salvar</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div class="modal" id="confirmModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Confirmação</h2>
-          <button class="close-btn" onclick="closeConfirmModal()">
-            &times;
-          </button>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="addEmail" required />
         </div>
-        <p id="confirmMessage" class="confirm-modal-message">Tem certeza?</p>
+        <div class="form-group">
+          <label>Senha *</label>
+          <input type="password" id="addSenha" required minlength="6" />
+        </div>
+        <div class="form-group" id="addCpfGroup">
+          <label>CPF *</label>
+          <input type="text" id="addCpf" required maxlength="11" placeholder="11 dígitos" />
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input type="text" id="addTelefone" placeholder="(XX)9XXXXXXXX" />
+        </div>
+        <div class="form-group hidden" id="addRoleGroup">
+          <label>Função *</label>
+          <select id="addRole">
+            <option value="">Selecione...</option>
+            <option value="administrador">👑 Administrador</option>
+            <option value="recepcionista">📋 Recepcionista</option>
+            <option value="instrutor">💪 Instrutor</option>
+            <option value="aluno">🏃 Aluno</option>
+          </select>
+        </div>
+        <div class="form-group hidden" id="addTipoPlanoGroup">
+          <label>Tipo de Plano *</label>
+          <select id="addTipoPlano">
+            <option value="">Selecione...</option>
+            <option value="mensal">Mensal</option>
+            <option value="trimestral">Trimestral</option>
+            <option value="semestral">Semestral</option>
+            <option value="anual">Anual</option>
+          </select>
+        </div>
+        <div class="form-group hidden" id="addTipoFuncionarioGroup">
+          <label>Função *</label>
+          <select id="addTipoFuncionario">
+            <option value="">Selecione...</option>
+            <option value="administrador">👑 Administrador</option>
+            <option value="recepcionista">📋 Recepcionista</option>
+            <option value="instrutor">💪 Instrutor</option>
+          </select>
+        </div>
         <div class="form-actions">
-          <button class="btn" onclick="closeConfirmModal()">Não</button>
-          <button class="btn btn-danger" onclick="confirmAction()">
-            Sim, tenho certeza
+          <button type="button" class="btn" onclick="closeAddModal()">
+            Cancelar
           </button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Editar -->
+  <div class="modal" id="editModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="editModalTitle">Editar Conta</h2>
+        <button class="close-btn" onclick="closeEditModal()">&times;</button>
+      </div>
+      <div id="editAlertContainer"></div>
+      <form id="editForm">
+        <input type="hidden" id="editUserId" />
+        <div class="form-group">
+          <label>Nome *</label>
+          <input type="text" id="editNome" required />
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="editEmail" required />
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input type="text" id="editTelefone" placeholder="(XX)9XXXXXXXX" />
+        </div>
+        <div class="form-group hidden" id="editNovaSenhaGroup">
+          <label>Nova Senha (deixe em branco para não alterar)</label>
+          <input type="password" id="editNovaSenha" minlength="6" placeholder="Digite nova senha" />
+        </div>
+        <div class="form-group" id="editCpfGroup">
+          <label>CPF *</label>
+          <input type="text" id="editCpf" required maxlength="11" />
+        </div>
+        <div class="form-group hidden" id="editRoleGroup">
+          <label>Função *</label>
+          <select id="editRole">
+            <option value="administrador">👑 Administrador</option>
+            <option value="recepcionista">📋 Recepcionista</option>
+            <option value="instrutor">💪 Instrutor</option>
+            <option value="aluno">🏃 Aluno</option>
+          </select>
+        </div>
+        <div class="form-group hidden" id="editTipoPlanoGroup">
+          <label>Tipo de Plano *</label>
+          <select id="editTipoPlano">
+            <option value="">Selecione...</option>
+            <option value="mensal">Mensal</option>
+            <option value="trimestral">Trimestral</option>
+            <option value="semestral">Semestral</option>
+            <option value="anual">Anual</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-danger" onclick="confirmDeleteUser()">
+            Deletar Conta
+          </button>
+          <div style="flex: 1"></div>
+          <button type="button" class="btn" onclick="closeEditModal()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="confirmModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Confirmação</h2>
+        <button class="close-btn" onclick="closeConfirmModal()">
+          &times;
+        </button>
+      </div>
+      <p id="confirmMessage" class="confirm-modal-message">Tem certeza?</p>
+      <div class="form-actions">
+        <button class="btn" onclick="closeConfirmModal()">Não</button>
+        <button class="btn btn-danger" onclick="confirmAction()">
+          Sim, tenho certeza
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- Modal de Perfil -->
+  <div class="modal" id="profileModal" onclick="window.ProfileModal.handleBackdropClick(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Meu Perfil</h2>
+        <button class="close-btn" onclick="window.ProfileModal.close()">
+          &times;
+        </button>
+      </div>
+
+      <div id="profileInfoBody">
+        <div class="profile-info-section">
+          <div class="info-row">
+            <span class="info-label">
+              <span class="material-symbols-outlined">person</span>
+              Nome:
+            </span>
+            <span class="info-value" id="profileInfoName">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">
+              <span class="material-symbols-outlined">email</span>
+              Email:
+            </span>
+            <span class="info-value" id="profileInfoEmail">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">
+              <span class="material-symbols-outlined">phone</span>
+              Telefone:
+            </span>
+            <span class="info-value" id="profileInfoPhone">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">
+              <span class="material-symbols-outlined">badge</span>
+              CPF:
+            </span>
+            <span class="info-value" id="profileInfoCpf">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">
+              <span class="material-symbols-outlined">verified_user</span>
+              Função:
+            </span>
+            <span class="info-value" id="profileInfoRole">-</span>
+          </div>
+        </div>
+
+        <div class="form-actions" style="margin-top: 1.5rem;">
+          <button class="btn btn-primary" id="profileTogglePasswordBtn"
+            onclick="window.ProfileModal.togglePasswordForm()">
+            <span class="material-symbols-outlined">lock</span>
+            Mudar Senha
+          </button>
+        </div>
+
+        <div id="profilePasswordSection" style="display: none; margin-top: 1.5rem;">
+          <div class="password-form-premium">
+            <div class="form-group">
+              <label for="profileCurrentPassword">Senha Atual</label>
+              <input type="password" id="profileCurrentPassword" class="form-input"
+                placeholder="Digite sua senha atual" />
+            </div>
+            <div class="form-group">
+              <label for="profileNewPassword">Nova Senha</label>
+              <input type="password" id="profileNewPassword" class="form-input"
+                placeholder="Digite a nova senha (mín. 6 caracteres)" />
+            </div>
+            <div class="form-group">
+              <label for="profileConfirmPassword">Repetir Nova Senha</label>
+              <input type="password" id="profileConfirmPassword" class="form-input" placeholder="Repita a nova senha" />
+            </div>
+            <div id="profilePasswordMessage" class="password-message"></div>
+            <div class="form-actions">
+              <button class="btn btn-primary" onclick="window.ProfileModal.submit()">
+                Confirmar
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <script src="./js/app-config.js"></script>
-    <script src="./js/api.js"></script>
-    <script src="./js/pagination.js"></script>
-    <script src="./js/dashboard-admin.js"></script>
-  </body>
+  </div>
+
+  <!-- Modal de Criação Recorrente de Aula -->
+  <div class="modal" id="createRecurringClassModal">
+    <div class="modal-content modal-content-large">
+      <div class="modal-header">
+        <h2>Criar Aula Recorrente</h2>
+        <button class="close-btn" onclick="closeCreateRecurringClassModal()">
+          &times;
+        </button>
+      </div>
+      <form id="createRecurringClassForm">
+        <div class="form-group">
+          <label for="recurringClassName">Nome da Aula</label>
+          <input type="text" id="recurringClassName" placeholder="Ex: Yoga Matinal" required />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="recurringClassTime">Hora</label>
+            <input type="time" id="recurringClassTime" required />
+          </div>
+          <div class="form-group">
+            <label for="recurringClassLimit">Limite de Vagas</label>
+            <input type="number" id="recurringClassLimit" placeholder="Ex: 20" required min="1" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Dias da Semana</label>
+          <div class="weekdays-selectors">
+            <button type="button" class="weekday-selector" data-day="0" id="day0"><span
+                class="weekday-initial">D</span></button>
+            <button type="button" class="weekday-selector" data-day="1" id="day1"><span
+                class="weekday-initial">S</span></button>
+            <button type="button" class="weekday-selector" data-day="2" id="day2"><span
+                class="weekday-initial">T</span></button>
+            <button type="button" class="weekday-selector" data-day="3" id="day3"><span
+                class="weekday-initial">Q</span></button>
+            <button type="button" class="weekday-selector" data-day="4" id="day4"><span
+                class="weekday-initial">Q</span></button>
+            <button type="button" class="weekday-selector" data-day="5" id="day5"><span
+                class="weekday-initial">S</span></button>
+            <button type="button" class="weekday-selector" data-day="6" id="day6"><span
+                class="weekday-initial">S</span></button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="recurringStartDate">Data Início</label>
+            <input type="date" id="recurringStartDate" required />
+          </div>
+          <div class="form-group">
+            <label for="recurringEndDate">Data Fim</label>
+            <input type="date" id="recurringEndDate" required />
+          </div>
+        </div>
+
+        <div id="recurringPreview" class="recurring-preview"></div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeCreateRecurringClassModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Criar Aulas</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Edição/Deleção Individual -->
+  <div class="modal" id="editClassModal">
+    <div class="modal-content modal-content-large">
+      <div class="modal-header">
+        <h2 id="editClassModalTitle">Editar Aula</h2>
+        <button class="close-btn" onclick="closeEditClassModal()">
+          &times;
+        </button>
+      </div>
+      <form id="editClassFormModal">
+        <input type="hidden" id="editClassId" />
+        <div class="form-group">
+          <label for="editClassName">Nome da Aula</label>
+          <input type="text" id="editClassName" required />
+        </div>
+        <div class="form-group">
+          <label for="editClassDate">Data</label>
+          <input type="date" id="editClassDate" required />
+        </div>
+        <div class="form-group">
+          <label for="editClassTime">Hora</label>
+          <input type="time" id="editClassTime" required />
+        </div>
+        <div class="form-group">
+          <label for="editClassLimit">Limite de Vagas</label>
+          <input type="number" id="editClassLimit" required min="1" />
+        </div>
+        <div class="form-group">
+          <label class="label-bold">Alunos Inscritos</label>
+          <div id="editEnrolledStudentsList" class="modal-scrollable-list">
+            <p class="text-gray">Carregando...</p>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-danger" onclick="deleteClassFromEditModal()">🗑️ Deletar Aula</button>
+          <div style="flex: 1"></div>
+          <button type="button" class="btn btn-secondary" onclick="closeEditClassModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script src="./js/app-config.js"></script>
+
+  <script src="./js/api.js"></script>
+  <script src="./js/calendar-module.js"></script>
+  <script src="./js/pagination.js"></script>
+  <script src="./js/profile-modal.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.ProfileModalInit) {
+        window.ProfileModalInit({
+          avatarId: 'userInfoWrapper',
+          modalId: 'profileModal'
+        });
+      }
+    });
+  </script>
+  <script src="./js/dashboard-admin.js"></script>
+</body>
+
 </html>

@@ -1,5 +1,18 @@
 const { resolveAppPath } = window.AppConfig;
 
+function togglePassword() {
+  const senhaInput = document.getElementById("senha");
+  const toggleIcon = document.querySelector(".toggle-password");
+  
+  if (senhaInput.type === "password") {
+    senhaInput.type = "text";
+    toggleIcon.textContent = "visibility";
+  } else {
+    senhaInput.type = "password";
+    toggleIcon.textContent = "visibility_off";
+  }
+}
+
 function forgotPassword() {
   const email = document.getElementById("email").value;
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
