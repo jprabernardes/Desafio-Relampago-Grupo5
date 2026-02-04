@@ -157,15 +157,19 @@
     font-size: 1rem;
     cursor: pointer;
     transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.6rem !important;
     font-weight: 500;
+    line-height: 1 !important;
+    vertical-align: middle;
   }
 
   .btn .material-symbols-outlined {
-    font-size: 20px;
+    font-size: 20px !important;
+    line-height: 1 !important;
+    display: inline-block !important;
   }
 
   .btn-primary {
