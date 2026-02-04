@@ -50,6 +50,11 @@ export const createApp = (): Application => {
       }
       next();
     });
+
+    // Redireciona da raiz para o appBasePath
+    app.get('/', (req, res) => {
+      res.redirect(config.appBasePath);
+    });
   }
 
   // IMPORTANTE: Configuração de ambiente para o frontend 
@@ -75,10 +80,10 @@ export const createApp = (): Application => {
   // Configuração das rotas da API
   // Suporta tanto /api quanto /server10/api baseado no APP_BASE_PATH
   const apiPath = `${config.appBasePath}/api`;
-  
+
   // Rate limiting para a API com prefixo correto
   app.use(apiPath, generalRateLimiter);
-  
+
   // Rotas da API
   app.use(apiPath, routes);
 

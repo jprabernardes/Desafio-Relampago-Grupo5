@@ -18,7 +18,7 @@ const { resolveAppPath } = window.AppConfig;
 let plansCache = []; // [{id, code, name, ...}]
 
 async function fetchPlans() {
-  const res = await fetch(`${API_URL}/plans`);
+  const res = await apiFetch("/plans");
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || data.error || "Erro ao buscar planos");
 

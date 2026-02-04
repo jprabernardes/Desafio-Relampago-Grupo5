@@ -153,16 +153,23 @@ export class UserService {
         password: hashedPassword
       });
 
-    if (newUser.role === 'aluno') {
-      await this.studentProfileRepository.create(
-        newUser.id!,
-        validatedPlanType || 'fit'
-      );
-    }
+      if (newUser.role === 'aluno') {
+        await this.studentProfileRepository.create(
+          newUser.id!,
+          validatedPlanType || 'fit'
+        );
+      }
 
-    // Enriquecer antes de retornar
-    const enrichedUser = await this.enrichUser(newUser);
-    return this.removePassword(enrichedUser);
+      await this.runDb('COMMIT');
+
+      // Enriquecer antes de retornar
+      const enrichedUser = await this.enrichUser(newUser);
+      return this.removePassword(enrichedUser);
+
+    } catch (error) {
+      await this.runDb('ROLLBACK');
+      throw error;
+    }
   }
 
   async findById(id: number) {
@@ -313,3 +320,4 @@ export class UserService {
     };
   }
 }
+
