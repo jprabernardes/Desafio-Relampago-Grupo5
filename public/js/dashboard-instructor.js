@@ -473,29 +473,49 @@ window.openExerciseDetailModal = (exerciseId, event) => {
   if (!content) return;
 
   content.innerHTML = `
-      <div class="modal-exercise-detail-container">
-        <h3 class="modal-exercise-title">${exercise.name}</h3>
+      <div class="exercise-detail-modern">
+        <div class="exercise-modern-header">
+          <h3 class="exercise-modern-title">${exercise.name}</h3>
+        </div>
         
-        <div class="modal-exercise-stats-grid mb-6">
-          <div class="modal-stat-box">
-            <p class="modal-stat-label">Séries</p>
-            <p class="modal-stat-value">${exercise.series || 0}</p>
+        <div class="exercise-info-cards">
+          <!-- Séries e Repetições -->
+          <div class="info-card-modern">
+            <div class="info-card-icon">
+              <span class="material-symbols-outlined">repeat</span>
+            </div>
+            <div class="info-card-content">
+              <span class="info-card-label">Séries e Repetições</span>
+              <span class="info-card-value">${exercise.series || 0} séries x ${exercise.repetitions || 0} reps</span>
+            </div>
           </div>
-          <div class="modal-stat-box">
-            <p class="modal-stat-label">Repetições</p>
-            <p class="modal-stat-value">${exercise.repetitions || 0}</p>
-          </div>
-          <div class="modal-stat-box highlight">
-            <p class="modal-stat-label">Peso</p>
-            <p class="modal-stat-value">${exercise.weight || 0} kg</p>
+
+          <!-- Carga Sugerida -->
+          <div class="info-card-modern">
+            <div class="info-card-icon">
+              <span class="material-symbols-outlined">fitness_center</span>
+            </div>
+            <div class="info-card-content">
+              <span class="info-card-label">Carga Sugerida</span>
+              <span class="info-card-value">${exercise.weight || 0} kg</span>
+            </div>
           </div>
         </div>
 
-        <div class="modal-exercise-section description-section">
-          <p class="modal-exercise-label">Descrição Completa</p>
-          <div class="modal-exercise-desc-box">
-            <p class="modal-exercise-desc">${exercise.description || "Sem descrição."}</p>
+        <div class="exercise-modern-description">
+          <span class="description-label">Descrição</span>
+          <div class="description-box-modern">
+            ${exercise.description || "Sem descrição disponível."}
           </div>
+        </div>
+
+        <div class="modern-modal-actions">
+          <button class="btn-modern btn-modern-primary" onclick="closeExerciseDetailModal(); editTemplate(${exercise.id})">
+            Editar Exercício
+          </button>
+          <button class="btn-modern btn-modern-secondary" onclick="closeExerciseDetailModal()">
+            Fechar
+          </button>
         </div>
       </div>
     `;
@@ -688,6 +708,9 @@ function renderStudents() {
 let currentStudentId = null;
 let studentTrainings = [];
 let allExercisesForTraining = [];
+let trainingTemplates = []; // Armazenar modelos de treino do instrutor
+let exerciseSearchFilter = "";
+let modelSearchFilter = ""; // Filtro para busca de modelos
 let selectedExercises = []; // Array de { exerciseId, series, repetitions, weight }
 window.selectedExercises = selectedExercises; // Tornar acessível globalmente
 let isEditingTraining = false;
@@ -707,10 +730,79 @@ async function openStudentDetailModal(studentId) {
   }
   modal.classList.add("active");
   await Promise.all([
-    loadStudentData(studentId),
+
     loadStudentTrainings(studentId),
     loadExercisesForTraining(),
   ]);
+
+  // Renderizar estrutura moderna do modal
+  /*
+  Estrutura esperada:
+  <div class="student-modal-structure">
+    <div class="student-modal-header-modern">
+      <div class="student-info-modern">
+        <h1 class="student-name-modern">
+          <span id="studentName">Nome do Aluno</span>
+          <span class="student-status-chip">Ativo</span>
+        </h1>
+        <p class="student-email-modern" id="studentEmail">email@exemplo.com</p>
+      </div>
+      <button class="close-btn" onclick="closeStudentDetailModal()">&times;</button>
+    </div>
+
+    <div class="trainings-section">
+      <div class="trainings-modern-header">
+        <h2 class="trainings-title-modern">Treinos</h2>
+        <button class="btn-create-training" onclick="openCreateTrainingModal()">
+          <span class="material-symbols-outlined">add</span>
+          Criar Treino
+        </button>
+      </div>
+      <div id="trainingsGrid" class="trainings-grid">
+        <!-- Cards serão inseridos aqui -->
+      </div>
+    </div>
+    
+    <div class="footer-brand">FITMANAGER PREMIUM DASHBOARD</div>
+  </div>
+  */
+
+  const modalContent = modal.querySelector('.modal-content');
+  if (modalContent) {
+    modalContent.innerHTML = `
+        <div class="student-modal-structure">
+            <div class="student-modal-header-modern">
+              <div class="student-info-modern">
+                <h1 class="student-name-modern">
+                  <span id="studentName">Carregando...</span>
+                  <span class="student-status-chip">Ativo</span>
+                </h1>
+                <p class="student-email-modern" id="studentEmail">Carregando...</p>
+              </div>
+              <button class="close-btn" onclick="closeStudentDetailModal()">&times;</button>
+            </div>
+
+            <div class="trainings-section">
+              <div class="trainings-modern-header">
+                <h2 class="trainings-title-modern">Treinos</h2>
+                <button class="btn-create-training" onclick="openCreateTrainingModal()">
+                  <span class="material-symbols-outlined">add</span>
+                  Criar Treino
+                </button>
+              </div>
+              <div id="trainingsGrid" class="trainings-grid">
+                <p>Carregando treinos...</p>
+              </div>
+            </div>
+            
+            <div class="footer-brand">FITMANAGER PREMIUM DASHBOARD</div>
+        </div>
+     `;
+
+    // Recarregar dados para preencher a nova estrutura
+    loadStudentData(studentId);
+    loadStudentTrainings(studentId); // Isso já vai renderizar os cards no #trainingsGrid novo
+  }
 }
 
 window.closeStudentDetailModal = function () {
@@ -781,21 +873,37 @@ function renderStudentTrainings() {
   const grid = document.getElementById("trainingsGrid");
   if (!grid) return;
 
-  if (!studentTrainings || studentTrainings.length === 0) {
-    grid.innerHTML = "<p>Nenhum treino cadastrado.</p>";
+  if (studentTrainings.length === 0) {
+    grid.innerHTML = "<p>Nenhum treino encontrado para este aluno.</p>";
     return;
   }
 
   grid.innerHTML = studentTrainings
     .map((t) => {
+      // Formatação moderna para o card de treino
       const exerciseCount = t.exercises ? t.exercises.length : 0;
+
       return `
-        <div class="training-card" onclick="openEditTrainingModal(${t.id})">
-          <h3>${t.name || "Treino"}</h3>
-          <p><span class="material-symbols-outlined inline-icon">list_alt</span>${exerciseCount} exercício${exerciseCount !== 1 ? "s" : ""}</p>
-          <p style="color: #999; font-size: 0.85rem;">Clique para editar</p>
+      <div class="training-card-modern" onclick="openEditTraining(${t.id})">
+        <div class="training-info-modern">
+          <div class="training-icon-modern">
+            <span class="material-symbols-outlined">assignment</span>
+          </div>
+          <div class="training-details-modern">
+            <h4>${t.name}</h4>
+            <div class="training-meta-modern">
+              <span class="material-symbols-outlined" style="font-size: 14px;">format_list_bulleted</span>
+              <span>${exerciseCount} exercícios</span>
+              <span class="meta-separator">•</span>
+              <span class="click-hint">CLIQUE PARA EDITAR</span>
+            </div>
+          </div>
         </div>
-      `;
+        <div class="training-arrow">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </div>
+      </div>
+    `;
     })
     .join("");
 }
@@ -1532,7 +1640,7 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // --- Modal Criar/Editar Treino (do aluno) ---
-let exerciseSearchFilter = "";
+// exerciseSearchFilter já declarado anteriormente
 
 function renderAvailableExercises() {
   const grid = document.getElementById("availableExercisesGrid");
@@ -1629,7 +1737,12 @@ window.toggleExerciseSelection = (exerciseId) => {
 
 function renderSelectedExercises() {
   const list = document.getElementById("selectedExercisesList");
+  const countEl = document.getElementById("selectedCount");
   if (!list) return;
+
+  if (countEl) {
+    countEl.textContent = selectedExercises.length;
+  }
 
   if (selectedExercises.length === 0) {
     list.innerHTML = "<p class='text-gray'>Nenhum exercício selecionado</p>";
@@ -2083,3 +2196,147 @@ window.loadCalendar = async function () {
   }
 };
 
+
+// Initialize Profile Modal
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.ProfileModalInit) {
+    window.ProfileModalInit({
+      avatarId: "userAvatar",
+      modalId: "profileModal",
+    });
+  }
+});
+
+// --- Função para alternar abas no modal de criar treino ---
+// --- Função para alternar abas no modal de criar treino ---
+window.switchTrainingTab = function (tabName) {
+  // Atualizar botões
+  document.querySelectorAll(".tab-btn").forEach((btn) => {
+    btn.classList.remove("active");
+  });
+  const activeBtn = document.getElementById(`tab-${tabName}`);
+  if (activeBtn) activeBtn.classList.add("active");
+
+  // Atualizar conteúdo
+  document.querySelectorAll(".tab-content").forEach((content) => {
+    content.classList.remove("active");
+  });
+  const activeContent = document.getElementById(`${tabName}TabContent`);
+  if (activeContent) activeContent.classList.add("active");
+
+  // Carregar dados se necessário
+  if (tabName === "models") {
+    loadTrainingTemplates();
+  }
+};
+
+// --- Carregar Modelos (Treinos do Instrutor) ---
+async function loadTrainingTemplates() {
+  const grid = document.getElementById("trainingTemplatesGrid");
+  if (!grid) return;
+
+  // Se já carregou e temos filtro vazio, apenas renderiza
+  if (trainingTemplates.length > 0 && (!modelSearchFilter || modelSearchFilter === "")) {
+    renderTrainingTemplates();
+    return;
+  }
+
+  // Mostrar loading apenas se não tiver dados
+  if (trainingTemplates.length === 0) {
+    grid.innerHTML = "<p>Carregando modelos...</p>";
+    try {
+      const res = await apiFetch("/instructor/trainings");
+      if (!res.ok) throw new Error("Erro ao carregar modelos");
+
+      trainingTemplates = await res.json();
+      renderTrainingTemplates();
+    } catch (error) {
+      console.error(error);
+      grid.innerHTML = "<p>Erro ao carregar modelos.</p>";
+    }
+  } else {
+    renderTrainingTemplates();
+  }
+}
+
+function renderTrainingTemplates() {
+  const grid = document.getElementById("trainingTemplatesGrid");
+  if (!grid) return;
+
+  const searchTerm = modelSearchFilter ? modelSearchFilter.toLowerCase() : "";
+  const filtered = trainingTemplates.filter(t =>
+    t.name.toLowerCase().includes(searchTerm)
+  );
+
+  if (filtered.length === 0) {
+    grid.innerHTML = "<p>Nenhum modelo encontrado.</p>";
+    return;
+  }
+
+  grid.innerHTML = filtered.map(t => {
+    const exerciseCount = t.exercises ? t.exercises.length : 0;
+    return `
+        <div class="template-card" onclick="importTemplate(${t.id})">
+            <div class="template-info">
+                <h4>${t.name}</h4>
+                <p>${exerciseCount} exercícios</p>
+            </div>
+            <button type="button" class="btn-sm btn-outline" style="pointer-events: none;">Usar</button>
+        </div>
+      `;
+  }).join('');
+}
+
+window.importTemplate = function (templateId) {
+  const template = trainingTemplates.find(t => t.id === templateId);
+  if (!template || !template.exercises) return;
+
+  // Adicionar exercícios à seleção atual
+  const newExercises = template.exercises.map(ex => {
+    // Tenta pegar dados da tabela pivô (TrainingExercise) ou fallback para defaults
+    const series = ex.TrainingExercise?.series || 3;
+    const repetitions = ex.TrainingExercise?.repetitions || 12;
+    const weight = ex.TrainingExercise?.weight || 0;
+
+    return {
+      id: ex.id,
+      name: ex.name,
+      imgUrl: ex.imgUrl,
+      series: series,
+      repetitions: repetitions,
+      weight: weight
+    };
+  });
+
+  // Mesclar com existentes (evitando duplicatas exatas? ou permitindo?)
+  // Vamos permitir adicionar, mas filtrar se o usuário já tiver o mesmo exerciseId pode ser confuso.
+  // Vamos adicionar todos. O usuário remove se quiser.
+
+  // Evitar adicionar se ID já está na lista?
+  const currentIds = new Set(selectedExercises.map(e => e.id));
+  const toAdd = newExercises.filter(e => !currentIds.has(e.id));
+
+  if (toAdd.length === 0) {
+    showAlert("Esses exercícios já estão selecionados.", "info");
+    return;
+  }
+
+  selectedExercises = [...selectedExercises, ...toAdd];
+  renderSelectedExercises();
+
+  // Voltar para aba de exercícios
+  switchTrainingTab('exercises');
+
+  showAlert(`${toAdd.length} exercícios adicionados do modelo.`, "success");
+};
+
+// Listener para filtro de modelos
+document.addEventListener("DOMContentLoaded", () => {
+  const modelInput = document.getElementById("modelSearchInput");
+  if (modelInput) {
+    modelInput.addEventListener("input", (e) => {
+      modelSearchFilter = e.target.value;
+      renderTrainingTemplates();
+    });
+  }
+});
