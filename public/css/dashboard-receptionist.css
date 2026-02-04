@@ -1103,7 +1103,9 @@ tbody tr:hover {
   .pagination-buttons {
     justify-content: center;
   }
-}.calendar-legend {
+}
+
+.calendar-legend {
   display: flex;
   gap: 1.5rem;
   margin-bottom: 1rem;
@@ -1437,7 +1439,7 @@ tbody tr:hover {
 .class-indicator:hover {
   transform: scale(1.02) !important;
   z-index: 10 !important;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
   filter: brightness(0.95);
   cursor: pointer !important;
 }
@@ -1480,3 +1482,86 @@ tbody tr:hover {
   border-color: #667eea !important;
 }
 
+
+/* High-Fidelity Profile Modal Refinement */
+.profile-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1rem 0;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  width: 100%;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.info-label .material-symbols-outlined {
+  font-size: 1.25rem !important;
+  color: #94a3b8;
+}
+
+.info-value {
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: right;
+}
+
+.password-form-premium {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  margin-top: 1rem;
+}
+
+.password-form-premium .form-group {
+  margin-bottom: 1.25rem;
+}
+
+.password-form-premium .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.password-form-premium label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+
+.password-form-premium .form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  background: white;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.password-form-premium .form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}

@@ -95,35 +95,6 @@ async function loadData() {
   }
 }
 
-// Open Profile Modal (Self-Edit)
-function openProfileModal() {
-  if (!currentUser) return;
-
-  // Ensure we have the latest data for the current user from allUsers if possible, 
-  // or fallback to currentUser. However, allUsers might be richer (enriched).
-  // If currentUser.id is not in allUsers (e.g. freshly loaded tab?), we might need to fetch or use currentUser.
-  // openEditModal expects the user to be in allUsers. 
-
-  const userInList = allUsers.find(u => u.id === currentUser.id);
-  if (userInList) {
-    openEditModal(userInList.id);
-  } else {
-    // If not in list (unlikely if /users returns all), add temp to list or fetch?
-    // Let's assume /users returns all. 
-    // If fails, we might need a fallback, but let's try standard path.
-    console.warn("User not found in list, trying to open with cached data");
-    // Manually push to allUsers if missing?
-    allUsers.push({
-      id: currentUser.id,
-      nome: currentUser.name || currentUser.nome,
-      email: currentUser.email,
-      role: currentUser.role,
-      phone: currentUser.phone,
-      cpf: currentUser.document || currentUser.cpf
-    });
-    openEditModal(currentUser.id);
-  }
-}
 
 
 function renderTablePage(pageItems) {

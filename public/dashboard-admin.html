@@ -69,7 +69,7 @@
   <main class="main-content">
     <header class="header">
       <h1 class="page-title">Painel do Administrador</h1>
-      <div class="user-info" onclick="openProfileModal()" style="cursor: pointer;">
+      <div class="user-info" id="userInfoWrapper" style="cursor: pointer;">
         <div class="user-details">
           <span class="user-name" id="userName">Carregando...</span>
           <span class="user-role">Administrador</span>
@@ -369,6 +369,90 @@
       </div>
     </div>
   </div>
+  <!-- Modal de Perfil -->
+  <div class="modal" id="profileModal" onclick="window.ProfileModal.handleBackdropClick(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Meu Perfil</h2>
+        <button class="close-btn" onclick="window.ProfileModal.close()">
+          &times;
+        </button>
+      </div>
+
+      <div id="profileInfoBody">
+        <div class="profile-info-section">
+          <div class="info-row">
+            <span class="info-label">
+              <span class="material-symbols-outlined">person</span>
+              Nome:
+            </span>
+            <span class="info-value" id="profileInfoName">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">
+              <span class="material-symbols-outlined">email</span>
+              Email:
+            </span>
+            <span class="info-value" id="profileInfoEmail">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">
+              <span class="material-symbols-outlined">phone</span>
+              Telefone:
+            </span>
+            <span class="info-value" id="profileInfoPhone">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">
+              <span class="material-symbols-outlined">badge</span>
+              CPF:
+            </span>
+            <span class="info-value" id="profileInfoCpf">-</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">
+              <span class="material-symbols-outlined">verified_user</span>
+              Função:
+            </span>
+            <span class="info-value" id="profileInfoRole">-</span>
+          </div>
+        </div>
+
+        <div class="form-actions" style="margin-top: 1.5rem;">
+          <button class="btn btn-primary" id="profileTogglePasswordBtn"
+            onclick="window.ProfileModal.togglePasswordForm()">
+            <span class="material-symbols-outlined">lock</span>
+            Mudar Senha
+          </button>
+        </div>
+
+        <div id="profilePasswordSection" style="display: none; margin-top: 1.5rem;">
+          <div class="password-form-premium">
+            <div class="form-group">
+              <label for="profileCurrentPassword">Senha Atual</label>
+              <input type="password" id="profileCurrentPassword" class="form-input"
+                placeholder="Digite sua senha atual" />
+            </div>
+            <div class="form-group">
+              <label for="profileNewPassword">Nova Senha</label>
+              <input type="password" id="profileNewPassword" class="form-input"
+                placeholder="Digite a nova senha (mín. 6 caracteres)" />
+            </div>
+            <div class="form-group">
+              <label for="profileConfirmPassword">Repetir Nova Senha</label>
+              <input type="password" id="profileConfirmPassword" class="form-input" placeholder="Repita a nova senha" />
+            </div>
+            <div id="profilePasswordMessage" class="password-message"></div>
+            <div class="form-actions">
+              <button class="btn btn-primary" onclick="window.ProfileModal.submit()">
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal de Criação Recorrente de Aula -->
   <div class="modal" id="createRecurringClassModal">
@@ -483,6 +567,17 @@
   <script src="./js/api.js"></script>
   <script src="./js/calendar-module.js"></script>
   <script src="./js/pagination.js"></script>
+  <script src="./js/profile-modal.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.ProfileModalInit) {
+        window.ProfileModalInit({
+          avatarId: 'userInfoWrapper',
+          modalId: 'profileModal'
+        });
+      }
+    });
+  </script>
   <script src="./js/dashboard-admin.js"></script>
 </body>
 

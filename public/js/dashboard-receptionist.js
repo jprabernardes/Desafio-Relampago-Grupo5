@@ -20,28 +20,6 @@ async function loadUserInfo() {
   return data;
 }
 
-// Open Profile Modal (Self-Edit)
-function openProfileModal() {
-  if (!currentUser) return;
-
-  const userInList = allUsers.find(u => u.id === currentUser.id);
-  if (userInList) {
-    openEditModal(userInList.id);
-  } else {
-    // If not in list, construct it
-    const tempUser = {
-      id: currentUser.id,
-      nome: currentUser.name || currentUser.nome,
-      email: currentUser.email,
-      role: currentUser.role,
-      phone: currentUser.phone,
-      cpf: currentUser.document || currentUser.cpf,
-      plan: currentUser.planType || "mensal"
-    };
-    allUsers.push(tempUser);
-    openEditModal(currentUser.id);
-  }
-}
 
 // --- Modal Logic ---
 let pendingConfirmAction = null;

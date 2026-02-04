@@ -53,7 +53,10 @@
     const modal = getEl(state.modalId);
     if (!modal) return;
 
-    clearPasswordFields();
+    const section = getEl('profilePasswordSection');
+    if (section) section.style.display = 'none';
+    const btn = getEl('profileTogglePasswordBtn');
+    if (btn) btn.innerHTML = '<span class="material-symbols-outlined">lock</span> Mudar Senha';
 
     try {
       const me = await getMe();
@@ -98,6 +101,21 @@
     if (!state.modalId) return;
     if (event && event.target && event.target.id === state.modalId) {
       close();
+    }
+  }
+
+  function togglePasswordForm() {
+    const section = getEl('profilePasswordSection');
+    const btn = getEl('profileTogglePasswordBtn');
+    if (!section) return;
+
+    if (section.style.display === 'none') {
+      section.style.display = 'block';
+      if (btn) btn.innerHTML = '<span class="material-symbols-outlined">close</span> Cancelar';
+    } else {
+      section.style.display = 'none';
+      if (btn) btn.innerHTML = '<span class="material-symbols-outlined">lock</span> Mudar Senha';
+      clearPasswordFields();
     }
   }
 
@@ -167,6 +185,7 @@
       close,
       submit,
       handleBackdropClick,
+      togglePasswordForm,
     };
   }
 
