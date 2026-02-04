@@ -1,4 +1,4 @@
-@layer legacy, base;
+@layer base, legacy;
 @import url("./dashboard-receptionist.css") layer(base);
 
 @layer legacy {
@@ -145,7 +145,7 @@
 
   .form-group textarea {
     min-height: 100px;
-    padding: 1rem;
+    padding: 1rem !important;
     line-height: 1.5;
     resize: vertical;
   }
