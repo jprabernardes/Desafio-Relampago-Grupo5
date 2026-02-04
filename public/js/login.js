@@ -85,3 +85,25 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     showAlert("Erro ao conectar com o servidor");
   }
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  const panel = document.querySelector('.marketing-panel');
+  const blur = document.querySelector('.blur-white');
+
+  panel.addEventListener('mousemove', (e) => {
+    // posição relativa ao container
+    const rect = panel.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // centraliza o blur no ponto do mouse
+    blur.style.left = `${x - blur.offsetWidth / 2}px`;
+    blur.style.top = `${y - blur.offsetHeight / 2}px`;
+  });
+
+  // opcional: esconder quando o mouse sai
+  panel.addEventListener('mouseleave', () => {
+    blur.style.left = `-100%`; // manda pra fora
+  });
+
+});

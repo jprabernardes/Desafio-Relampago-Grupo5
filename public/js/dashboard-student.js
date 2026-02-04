@@ -156,8 +156,8 @@ async function loadWorkouts() {
 
     container.innerHTML = workouts
       .map(
-        (workout) => `
-            <div class="workout-card">
+        (workout, index) => `
+            <div class="workout-card fade-up" style="animation-delay: ${index * 0.1}s">
               <div class="workout-header">
                 <h3 class="workout-name">${workout.name}</h3>
                 <div class="workout-instructor">
@@ -404,9 +404,10 @@ function renderAvailableClasses() {
   });
 
   // Renderizar Cards de Categoria
-  Object.values(grouped).forEach(group => {
+  Object.values(grouped).forEach((group, index) => {
     const card = document.createElement("div");
-    card.className = "category-card";
+    card.className = "category-card pop-up";
+    card.style.animationDelay = `${index * 0.03}s`;
 
     // Restore active state if matches
     if (currentActiveCategoryName === group.name) {
