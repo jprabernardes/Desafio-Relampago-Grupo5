@@ -897,11 +897,8 @@ function openCalendarModal(date, workouts, classes) {
     workouts.forEach((w) => {
       const div = document.createElement("div");
       div.className = "modal-list-item workout";
-      const exercisesList = Array.isArray(w.exercises)
-        ? w.exercises.join(", ")
-        : w.exercises;
       div.innerHTML = `
-                <h4>Check-in: ${w.name || "Treino"}</h4>
+                <h4><span class="material-symbols-outlined">check_circle</span> Check-in: ${w.name || "Treino"}</h4>
             `;
       body.appendChild(div);
     });
@@ -911,8 +908,8 @@ function openCalendarModal(date, workouts, classes) {
       const div = document.createElement("div");
       div.className = "modal-list-item class";
       div.innerHTML = `
-                <h4><span class="material-symbols-outlined">fitness_center</span> Aula: ${c.title}</h4>
-                <p>Horário: ${c.time}</p>
+                <h4><span class="material-symbols-outlined">event</span> Aula: ${c.title}</h4>
+                <p><span class="material-symbols-outlined" style="font-size: 1rem !important;">schedule</span> Horário: ${c.time}</p>
             `;
       body.appendChild(div);
     });

@@ -735,11 +735,14 @@
 
   /* Modal List Styles */
   .modal-list-item {
-    padding: 1rem;
-    background: #f8f9fa;
-    border-radius: 8px;
-    margin-bottom: 0.75rem;
+    padding: 1.25rem;
+    background: #f8fafc;
+    /* Matches snippet bg */
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    border: 1px solid #edf2f7;
     border-left: 4px solid #cbd5e0;
+    transition: all 0.2s;
   }
 
   .modal-list-item.workout {
@@ -751,13 +754,27 @@
   }
 
   .modal-list-item h4 {
-    margin-bottom: 0.25rem;
-    color: #2d3748;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    color: #1a202c;
+    font-weight: 700;
+  }
+
+  .modal-list-item h4 .material-symbols-outlined {
+    font-size: 1.25rem !important;
+    color: inherit;
   }
 
   .modal-list-item p {
     font-size: 0.9rem;
-    color: #718096;
+    color: #4a5568;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: 2rem;
+    /* Indent under the title (which has icon) */
   }
 
   .modal-location-text {
