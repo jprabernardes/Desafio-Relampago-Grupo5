@@ -113,22 +113,44 @@ body {
 }
 
 .sidebar-footer {
+  margin-top: auto;
   padding: 1.5rem;
   border-top: 1px solid var(--border-dark);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .logout-btn {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-top: 0;
+  border: none;
+  border-radius: 8px;
   color: var(--text-light-gray);
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-sizing: border-box;
+}
+
+.logout-btn .material-symbols-outlined {
+  font-size: 20px;
 }
 
 .logout-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
   color: #ef4444;
+  transform: translateX(2px);
+}
+
+.logout-btn:active {
+  transform: translateX(0);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* ============================================
