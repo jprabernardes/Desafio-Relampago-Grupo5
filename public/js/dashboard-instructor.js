@@ -884,7 +884,7 @@ function renderStudentTrainings() {
       const exerciseCount = t.exercises ? t.exercises.length : 0;
 
       return `
-      <div class="training-card-modern" onclick="openEditTraining(${t.id})">
+      <div class="training-card-modern" onclick="openEditTrainingModal(${t.id})">
         <div class="training-info-modern">
           <div class="training-icon-modern">
             <span class="material-symbols-outlined">assignment</span>
@@ -1757,44 +1757,56 @@ function renderSelectedExercises() {
       if (!exercise) return "";
 
       return `
-        <div class="exercise-item">
-          <div class="exercise-item-info">
-            <h4>${exercise.name}</h4>
-          </div>
-          <div class="exercise-item-params">
-            <div class="param-group">
-              <label>Séries</label>
-              <input
-                type="number"
-                min="1"
-                max="20"
-                value="${sel.series}"
-                oninput="const val = sanitizeNumberInput(this.value, { max: 20, min: 1 }); this.value = val; updateExerciseParam(${idx}, 'series', val)"
-              />
-            </div>
-            <div class="param-group">
-              <label>Repetições</label>
-              <input
-                type="number"
-                min="1"
-                max="100"
-                value="${sel.repetitions}"
-                oninput="const val = sanitizeNumberInput(this.value, { max: 100, min: 1 }); this.value = val; updateExerciseParam(${idx}, 'repetitions', val)"
-              />
-            </div>
-            <div class="param-group">
-              <label>Carga (kg)</label>
-              <select onchange="updateExerciseParam(${idx}, 'weight', this.value)">
-                ${generateWeightOptions(sel.weight)}
-              </select>
+        <div class="exercise-selected-card">
+          <div class="selected-card-header">
+            <div class="selected-card-info">
+              <h4>${exercise.name}</h4>
+              <span class="exercise-badge">Exercício ${idx + 1}</span>
             </div>
             <button
               type="button"
-              class="remove-exercise-btn"
+              class="btn-remove-selected"
               onclick="removeExerciseFromSelection(${idx})"
+              title="Remover exercício"
             >
-              Remover
+              <span class="material-symbols-outlined">close</span>
             </button>
+          </div>
+
+          <div class="selected-card-params">
+            <div class="param-input-group">
+              <label>Séries</label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value="${sel.series}"
+                  oninput="const val = sanitizeNumberInput(this.value, { max: 20, min: 1 }); this.value = val; updateExerciseParam(${idx}, 'series', val)"
+                />
+              </div>
+            </div>
+            <div class="param-input-group">
+              <label>Reps</label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value="${sel.repetitions}"
+                  oninput="const val = sanitizeNumberInput(this.value, { max: 100, min: 1 }); this.value = val; updateExerciseParam(${idx}, 'repetitions', val)"
+                />
+              </div>
+            </div>
+            <div class="param-input-group">
+              <label>Carga (kg)</label>
+              <div class="input-wrapper">
+                <select onchange="updateExerciseParam(${idx}, 'weight', this.value)">
+                  ${generateWeightOptions(sel.weight)}
+                </select>
+                <span class="material-symbols-outlined select-arrow">expand_more</span>
+              </div>
+            </div>
           </div>
         </div>
       `;
@@ -2276,12 +2288,19 @@ function renderTrainingTemplates() {
   grid.innerHTML = filtered.map(t => {
     const exerciseCount = t.exercises ? t.exercises.length : 0;
     return `
-        <div class="template-card" onclick="importTemplate(${t.id})">
-            <div class="template-info">
-                <h4>${t.name}</h4>
-                <p>${exerciseCount} exercícios</p>
+        <div class="model-template-card">
+          <div class="model-card-info">
+            <div class="model-icon">
+              <span class="material-symbols-outlined">description</span>
             </div>
-            <button type="button" class="btn-sm btn-outline" style="pointer-events: none;">Usar</button>
+            <div class="model-text">
+              <h4>${t.name}</h4>
+              <span class="model-stats">${exerciseCount} exercícios</span>
+            </div>
+          </div>
+          <button type="button" class="btn-use-model" onclick="importTemplate(${t.id})">
+            Usar Modelo
+          </button>
         </div>
       `;
   }).join('');
@@ -2299,25 +2318,19 @@ window.importTemplate = function (templateId) {
     const weight = ex.TrainingExercise?.weight || 0;
 
     return {
-      id: ex.id,
-      name: ex.name,
-      imgUrl: ex.imgUrl,
+      exerciseId: ex.id, // Corrigido: deve ser exerciseId para bater com renderSelectedExercises
       series: series,
       repetitions: repetitions,
       weight: weight
     };
   });
 
-  // Mesclar com existentes (evitando duplicatas exatas? ou permitindo?)
-  // Vamos permitir adicionar, mas filtrar se o usuário já tiver o mesmo exerciseId pode ser confuso.
-  // Vamos adicionar todos. O usuário remove se quiser.
-
-  // Evitar adicionar se ID já está na lista?
-  const currentIds = new Set(selectedExercises.map(e => e.id));
-  const toAdd = newExercises.filter(e => !currentIds.has(e.id));
+  // Evitar adicionar se exerciseId já está na lista
+  const currentIds = new Set(selectedExercises.map(e => e.exerciseId));
+  const toAdd = newExercises.filter(e => !currentIds.has(e.exerciseId));
 
   if (toAdd.length === 0) {
-    showAlert("Esses exercícios já estão selecionados.", "info");
+    showAlert("Estes exercícios já estão selecionados.", "info");
     return;
   }
 
