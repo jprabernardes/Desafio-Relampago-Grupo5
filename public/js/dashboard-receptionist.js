@@ -12,6 +12,61 @@ const weekdayChartCache = {};
 
 const { resolveAppPath } = window.AppConfig;
 
+// --------------------
+// Plans
+// --------------------
+let plansCache = []; // [{id, code, name, ...}]
+
+async function fetchPlans() {
+  const res = await fetch(`${API_URL}/plans`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || data.error || "Erro ao buscar planos");
+
+  // garante array e somente ativos
+  const list = Array.isArray(data) ? data : [];
+  plansCache = list.filter((p) => p && p.active); // active pode ser true/1/"1"
+  return plansCache;
+}
+
+function getPlanNameByCode(code) {
+  const found = plansCache.find((p) => p.code === code);
+  return found ? found.name : code; // fallback: mostra o code
+}
+
+function fillPlanSelect(selectId, selectedCode = "") {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+
+  // fallback se plansCache não carregou
+  const source =
+    plansCache.length > 0
+      ? plansCache
+      : [
+        { code: "fit", name: "Fit" },
+        { code: "fit_pro", name: "Fit Pro" },
+        { code: "fit_diamond", name: "Fit Diamond" },
+      ];
+
+  sel.innerHTML = `
+    <option value="">Selecione...</option>
+    ${source
+      .map((p) => {
+        const selected = p.code === selectedCode ? "selected" : "";
+        return `<option value="${p.code}" ${selected}>${p.name}</option>`;
+      })
+      .join("")}
+  `;
+}
+
+/**
+ * transforma code em classe CSS segura
+ * fit_pro -> fit-pro
+ */
+function toPlanClassFromCode(planCode) {
+  if (!planCode) return "unknown";
+  return planCode.toString().trim().toLowerCase().replace(/_/g, "-");
+}
+
 async function loadUserInfo() {
   const res = await apiFetch("/auth/me");
   const data = await res.json();
@@ -95,6 +150,30 @@ async function loadTab(tab) {
     document.getElementById("searchInput").value = "";
     document.getElementById("addBtn").classList.remove("hidden");
     document.getElementById("addBtn").textContent = "+ Adicionar Aluno";
+
+    // carregar planos uma vez
+    try {
+      if (!plansCache.length) await fetchPlans();
+    } catch (e) {
+      console.error("Falha ao carregar planos:", e);
+      // segue com fallback
+    }
+
+    // preencher selects
+    fillPlanSelect("addTipoPlano");
+    fillPlanSelect("editTipoPlano");
+
+    // carregar planos uma vez
+    try {
+      if (!plansCache.length) await fetchPlans();
+    } catch (e) {
+      console.error("Falha ao carregar planos:", e);
+      // segue com fallback
+    }
+
+    // preencher selects
+    fillPlanSelect("addTipoPlano");
+    fillPlanSelect("editTipoPlano");
 
     document.getElementById("usersTable").innerHTML =
       '<tr><td colspan="5" class="text-center-padded">Carregando...</td></tr>';
@@ -326,7 +405,6 @@ function updateTableHeaders(type) {
   }
 }
 
-// MODIFICADO: Load Users com Paginação
 async function loadUsers(type) {
   let endpoint = "";
   if (type === "students") endpoint = "/receptionist/students";
@@ -351,16 +429,6 @@ async function loadUsers(type) {
         planName: getPlanNameByCode(planCode),
       };
     });
-    // Normalize fields
-    allUsers = data.map((u) => ({
-      id: u.id,
-      nome: u.name || u.nome,
-      email: u.email,
-      cpf: u.document || u.cpf,
-      phone: u.phone,
-      plan: u.planType || u.plan_type || u.plan || "mensal",
-      paymentDay: u.paymentDay || u.payment_day || 10,
-    }));
 
     filteredUsers = [...allUsers];
 
@@ -504,23 +572,14 @@ function renderTablePage(pageItems) {
             <tr>
                 <td>${u.nome}</td>
                 <td>${u.email}</td>
-                <td><span class="plan-badge plan-${u.plan}">${u.plan}</span></td>
+                <td>${u.phone || "-"}</td>
+                <td>${u.cpf || "-"}</td>
+                <td>${u.paymentDay || 10}</td>
+                <td>${formatDateBR(u.paidUntil)}</td>
+                <td>${formatDateBR(u.nextDueDate)}</td>
+                <td>${renderPaymentBadge(u.situation)}</td>
                 <td>
-                    <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
-                </td>
-            </tr>
-        `,
-      )
-      .join("");
-  } else if (currentTab === "instructors") {
-    tbody.innerHTML = pageItems
-      .map(
-        (u) => `
-            <tr>
-                <td>${u.nome}</td>
-                <td>${u.email}</td>
-                <td>
-                    <button class="btn btn-primary" onclick="openEditModal(${u.id})">✏️ Editar</button>
+                  <button class="btn btn-secondary" onclick="registerPayment(${u.id})">Registrar pagamento</button>
                 </td>
             </tr>
         `,
@@ -599,8 +658,12 @@ function openAddModal() {
     document.getElementById("addTipoPlanoGroup").classList.add("hidden");
     document.getElementById("addPaymentDayGroup").classList.add("hidden");
   }
-  document.getElementById("addTipoPlano").required = isStudent;
-  document.getElementById("addPaymentDay").required = isStudent;
+
+  const addPlanSelect = document.getElementById("addTipoPlano");
+  if (addPlanSelect) {
+    addPlanSelect.required = isStudent;
+    if (isStudent) fillPlanSelect("addTipoPlano", "fit");
+  }
 }
 
 function closeAddModal() {
@@ -628,7 +691,6 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
       return;
     }
 
-    body.paymentDay = Number(document.getElementById("addPaymentDay").value || 10);
     endpoint = "/receptionist/students";
   } else {
     body.role = "instrutor";
@@ -677,12 +739,6 @@ async function openEditModal(id) {
   if (editGroup) {
     if (isStudent) editGroup.classList.remove("hidden");
     else editGroup.classList.add("hidden");
-  if (isStudent) {
-    document.getElementById("editTipoPlanoGroup").classList.remove("hidden");
-    document.getElementById("editPaymentDayGroup").classList.remove("hidden");
-  } else {
-    document.getElementById("editTipoPlanoGroup").classList.add("hidden");
-    document.getElementById("editPaymentDayGroup").classList.add("hidden");
   }
 
   if (isStudent) {
@@ -693,9 +749,6 @@ async function openEditModal(id) {
     }
     // seleciona pelo CODE
     fillPlanSelect("editTipoPlano", userToEdit.planCode || "fit");
-    document.getElementById("editTipoPlano").value =
-      userToEdit.plan.toLowerCase();
-    document.getElementById("editPaymentDay").value = String(userToEdit.paymentDay || 10);
   }
 
   document.getElementById("editModal").classList.add("active");
@@ -723,7 +776,6 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
       showEditAlert("Selecione um plano.", "error");
       return;
     }
-    body.paymentDay = Number(document.getElementById("editPaymentDay").value || 10);
   }
 
   try {
