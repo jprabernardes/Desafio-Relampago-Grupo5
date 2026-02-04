@@ -5,9 +5,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard - Instrutor</title>
-  <script src="/server10/config.js"></script>
-  <script src="/server10/js/base-path.js"></script>
-  <link rel="stylesheet" href="/server10/css/dashboard-instructor.css" />
+  <script src="./config.js"></script>
+  <script src="./js/base-path.js"></script>
+  <link rel="stylesheet" href="./css/dashboard-instructor.css" />
 </head>
 
 <body>
@@ -65,36 +65,39 @@
         <div id="studentsPagination" class="pagination"></div>
       </section>
 
-      <!-- Create Class -->
+      <!-- Calendar Section -->
       <section class="section" id="create-class">
-        <h2 id="classFormTitle">Criar Nova Aula</h2>
-        <form id="createClassForm">
-          <input type="hidden" id="classId" />
-          <!-- Used for editing -->
-          <div class="form-group">
-            <label for="className">Nome da Aula</label>
-            <input type="text" id="className" placeholder="Ex: Yoga Matinal" required />
-          </div>
-          <div class="form-group">
-            <label for="classDate">Data</label>
-            <input type="date" id="classDate" required />
-          </div>
-          <div class="form-group">
-            <label for="classTime">Hora</label>
-            <input type="time" id="classTime" required />
-          </div>
-          <div class="form-group">
-            <label for="classLimit">Limite de Vagas</label>
-            <input type="number" id="classLimit" placeholder="Ex: 20" required min="1" />
-          </div>
-          <button type="submit" class="btn btn-primary" id="saveClassBtn">
-            Agendar Aula
+        <h2>Calendário de Aulas</h2>
+
+        <div class="calendar-legend">
+          <span class="legend-item">
+            <span class="legend-color own-class"></span>
+            Suas aulas
+          </span>
+          <span class="legend-item">
+            <span class="legend-color other-class"></span>
+            Outros instrutores
+          </span>
+        </div>
+
+        <div class="calendar-search" style="margin-bottom: 1rem; display: flex; gap: 10px;">
+          <input type="text" id="calendarSearchInput" placeholder="Buscar por aula ou instrutor..." class="search-input"
+            style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+
+        <div class="calendar-controls">
+          <button class="btn btn-secondary" onclick="changeCalendarMonth(-1)">
+            ❮ Anterior
           </button>
-          <button type="button" class="btn btn-secondary" id="cancelClassEditBtn" class="btn btn-secondary hidden"
-            onclick="cancelClassEdit()">
-            Cancelar Edição
+          <h3 id="currentMonthLabel"></h3>
+          <button class="btn btn-secondary" onclick="changeCalendarMonth(1)">
+            Próximo ❯
           </button>
-        </form>
+        </div>
+
+        <div class="calendar-grid" id="calendarGrid">
+          <!-- Calendar will be populated by JS -->
+        </div>
       </section>
 
       <!-- My Classes -->
@@ -324,6 +327,132 @@
     </div>
   </div>
 
+  <!-- Modal de Criação Recorrente de Aula -->
+  <div class="modal" id="createRecurringClassModal">
+    <div class="modal-content modal-content-large">
+      <div class="modal-header">
+        <h2>Criar Aula Recorrente</h2>
+        <button class="close-btn" onclick="closeCreateRecurringClassModal()">
+          &times;
+        </button>
+      </div>
+      <form id="createRecurringClassForm">
+        <div class="form-group">
+          <label for="recurringClassName">Nome da Aula</label>
+          <input type="text" id="recurringClassName" placeholder="Ex: Yoga Matinal" required />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="recurringClassTime">Hora</label>
+            <input type="time" id="recurringClassTime" required />
+          </div>
+          <div class="form-group">
+            <label for="recurringClassLimit">Limite de Vagas</label>
+            <input type="number" id="recurringClassLimit" placeholder="Ex: 20" required min="1" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Dias da Semana</label>
+          <div class="weekdays-selectors">
+            <button type="button" class="weekday-selector" data-day="0" id="day0">
+              <span class="weekday-initial">D</span>
+            </button>
+            <button type="button" class="weekday-selector" data-day="1" id="day1">
+              <span class="weekday-initial">S</span>
+            </button>
+            <button type="button" class="weekday-selector" data-day="2" id="day2">
+              <span class="weekday-initial">T</span>
+            </button>
+            <button type="button" class="weekday-selector" data-day="3" id="day3">
+              <span class="weekday-initial">Q</span>
+            </button>
+            <button type="button" class="weekday-selector" data-day="4" id="day4">
+              <span class="weekday-initial">Q</span>
+            </button>
+            <button type="button" class="weekday-selector" data-day="5" id="day5">
+              <span class="weekday-initial">S</span>
+            </button>
+            <button type="button" class="weekday-selector" data-day="6" id="day6">
+              <span class="weekday-initial">S</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="recurringStartDate">Data Início</label>
+            <input type="date" id="recurringStartDate" required />
+          </div>
+          <div class="form-group">
+            <label for="recurringEndDate">Data Fim</label>
+            <input type="date" id="recurringEndDate" required />
+          </div>
+        </div>
+
+        <div id="recurringPreview" class="recurring-preview"></div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeCreateRecurringClassModal()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">
+            Criar Aulas
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Edição/Deleção Individual -->
+  <div class="modal" id="editClassModal">
+    <div class="modal-content modal-content-large">
+      <div class="modal-header">
+        <h2 id="editClassModalTitle">Editar Aula</h2>
+        <button class="close-btn" onclick="closeEditClassModal()">
+          &times;
+        </button>
+      </div>
+      <form id="editClassFormModal">
+        <input type="hidden" id="editClassId" />
+        <div class="form-group">
+          <label for="editClassName">Nome da Aula</label>
+          <input type="text" id="editClassName" required />
+        </div>
+        <div class="form-group">
+          <label for="editClassDate">Data</label>
+          <input type="date" id="editClassDate" required />
+        </div>
+        <div class="form-group">
+          <label for="editClassTime">Hora</label>
+          <input type="time" id="editClassTime" required />
+        </div>
+        <div class="form-group">
+          <label for="editClassLimit">Limite de Vagas</label>
+          <input type="number" id="editClassLimit" required min="1" />
+        </div>
+        <div class="form-group">
+          <label class="label-bold">Alunos Inscritos</label>
+          <div id="editEnrolledStudentsList" class="modal-scrollable-list">
+            <p class="text-gray">Carregando...</p>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-danger" onclick="deleteClassFromEditModal()">
+            🗑️ Deletar Aula
+          </button>
+          <div style="flex: 1"></div>
+          <button type="button" class="btn btn-secondary" onclick="closeEditClassModal()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">
+            💾 Salvar Alterações
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Modal de Confirmação -->
   <div class="modal" id="confirmModal">
     <div class="modal-content">
@@ -342,10 +471,11 @@
       </div>
     </div>
   </div>
-  <script src="/server10/js/app-config.js"></script>
-  <script src="/server10/js/api.js"></script>
-  <script src="/server10/js/pagination.js"></script>
-  <script src="/server10/js/dashboard-instructor.js"></script>
+  <script src="./js/app-config.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/pagination.js"></script>
+  <script src="./js/calendar-module.js"></script>
+  <script src="./js/dashboard-instructor.js"></script>
 </body>
 
 </html>

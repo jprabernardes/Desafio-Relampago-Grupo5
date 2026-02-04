@@ -1,6 +1,7 @@
 // src/services/AuthService.ts
 import jwt from 'jsonwebtoken';
 import { UserRepository } from '../repositories/UserRepository';
+import { StudentProfileRepository } from '../repositories/StudentProfileRepository';
 import { User, LoginResponse } from '../models';
 import { comparePassword, hashPassword } from '../utils/hash';
 import { isValidEmail, isValidPassword, isNotEmpty } from '../utils/validators';
@@ -12,9 +13,11 @@ import { config } from '../config/env';
  */
 export class AuthService {
   private userRepository: UserRepository;
+  private studentProfileRepository: StudentProfileRepository;
 
   constructor() {
     this.userRepository = new UserRepository();
+    this.studentProfileRepository = new StudentProfileRepository();
   }
 
   /**
@@ -95,14 +98,26 @@ export class AuthService {
 
   /**
    * Retorna informações do usuário sem a senha
+   * Se for aluno, enriquece com planType do student_profile
    */
-  async getUserById(userId: number): Promise<Omit<User, 'password'>> {
+  async getUserById(userId: number): Promise<Omit<User, 'password'> & { planType?: string }> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new Error('Usuário não encontrado.');
     }
 
     const { password: _, ...userWithoutPassword } = user;
+
+    // Se for aluno, enriquecer com planType
+    if (user.role === 'aluno') {
+      const profile: any = await this.studentProfileRepository.findByUserId(userId);
+      const planType = profile?.plan_type || 'mensal';
+      return {
+        ...userWithoutPassword,
+        planType
+      };
+    }
+
     return userWithoutPassword;
   }
 }

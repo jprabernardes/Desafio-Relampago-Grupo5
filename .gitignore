@@ -11,3 +11,13 @@ npm-debug.log
 .idea/
 .agent/
 .env.test
+AGENTS.md
+
+# local artifacts
+reports/
+academia.db.bak
+academia.db.bak-*
+
+# fake scenario scripts (keep local)
+scripts/populate_fake_scenario.sql
+scripts/run_populate_fake.ps1

@@ -304,10 +304,15 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     if (sectionId === "create-exercise") loadTemplates();
     if (sectionId === "students") loadStudents();
     if (sectionId === "classes") loadClasses();
+    if (sectionId === "create-class") {
+      loadCalendarAttempts = 0;
+      setTimeout(() => {
+        loadCalendar();
+      }, 100);
+    }
 
     // Reset edits when switching tabs
     if (sectionId !== "create-exercise") cancelEdit();
-    if (sectionId !== "create-class") cancelClassEdit();
   });
 });
 
@@ -323,11 +328,16 @@ async function logout() {
   window.location.href = resolveAppPath("/");
 }
 
+let currentInstructorId = null;
+
 async function loadUserInfo() {
   const res = await apiFetch("/auth/me");
   const data = await res.json();
   document.getElementById("userName").textContent =
     data.name || data.nome || "Instrutor";
+
+  // Armazenar ID do instrutor atual
+  currentInstructorId = data.id;
 
   if (data.error) {
     document.cookie = "";
@@ -1147,12 +1157,10 @@ async function renderClasses() {
 }
 
 window.openCreateClassTab = () => {
-  document.querySelector('[data-section="create-class"]').click();
-
-  // Setar data mínima como hoje
-  const today = new Date().toISOString().split("T")[0];
-  document.getElementById("classDate").setAttribute("min", today);
-  document.getElementById("classDate").value = today;
+  const navItem = document.querySelector('[data-section="create-class"]');
+  if (navItem) {
+    navItem.click();
+  }
 };
 
 // Função para validar data e mostrar mensagem customizada em português
@@ -1198,10 +1206,11 @@ document.getElementById("classDate")?.addEventListener("change", (e) => {
   }
 });
 
-// Create/Edit Class Form
-document
-  .getElementById("createClassForm")
-  .addEventListener("submit", async (e) => {
+// Create/Edit Class Form (código antigo - removido, agora usamos calendário)
+// Verificar se o formulário existe antes de adicionar listener
+const createClassForm = document.getElementById("createClassForm");
+if (createClassForm) {
+  createClassForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     // Validação
@@ -1214,8 +1223,14 @@ document
 
     clearValidationErrors();
 
-    const id = document.getElementById("classId").value;
+    const idEl = document.getElementById("classId");
     const dateInput = document.getElementById("classDate");
+    if (!idEl || !dateInput) {
+      console.error("Elementos do formulário não encontrados");
+      return;
+    }
+
+    const id = idEl.value;
     const dateValue = dateInput.value;
 
     // VALIDAÇÃO: Não permitir datas passadas
@@ -1225,11 +1240,20 @@ document
       return;
     }
 
+    const nameEl = document.getElementById("className");
+    const timeEl = document.getElementById("classTime");
+    const limitEl = document.getElementById("classLimit");
+
+    if (!nameEl || !timeEl || !limitEl) {
+      console.error("Elementos do formulário não encontrados");
+      return;
+    }
+
     const data = {
-      name: document.getElementById("className").value,
+      name: nameEl.value,
       date: convertDateForBackend(dateValue), // Converte YYYY-MM-DD para DD-MM-YYYY
-      time: document.getElementById("classTime").value,
-      slots_limit: parseInt(document.getElementById("classLimit").value),
+      time: timeEl.value,
+      slots_limit: parseInt(limitEl.value),
     };
 
     try {
@@ -1251,9 +1275,11 @@ document
         if (id) {
           cancelClassEdit();
         } else {
-          document.getElementById("createClassForm").reset();
+          const form = document.getElementById("createClassForm");
+          if (form) form.reset();
         }
         loadClasses();
+        loadCalendar(); // Atualizar calendário também
       } else {
         const err = await res.json();
         showAlert(err.error || "Erro ao salvar", "error");
@@ -1262,35 +1288,19 @@ document
       showAlert("Erro de conexão", "error");
     }
   });
+}
 
 window.editClass = (id) => {
-  const c = myClasses.find((x) => x.id === id);
-  if (!c) return;
-
-  // Populate Create Tab
-  document.getElementById("classId").value = c.id;
-  document.getElementById("className").value = c.name || c.nome_aula;
-  document.getElementById("classDate").value = convertDateFromBackend(c.date || c.data);
-  document.getElementById("classTime").value = c.time || c.hora;
-  document.getElementById("classLimit").value = c.slots_limit || c.limite_vagas;
-
-  // Switch to Create Tab
-  document.querySelector('[data-section="create-class"]').click();
-
-  // Modify UI for Edit
-  document.getElementById("classFormTitle").textContent = "Editar Aula";
-  document.getElementById("saveClassBtn").textContent = "Salvar Alterações";
-  document.getElementById("cancelClassEditBtn").style.display = "inline-block";
-
-  document.querySelector(".main-content").scrollTop = 0;
+  // Usar o modal de edição do calendário
+  openEditClassModal(id);
 };
 
 window.cancelClassEdit = () => {
-  document.getElementById("createClassForm").reset();
-  document.getElementById("classId").value = "";
-  document.getElementById("classFormTitle").textContent = "Criar Nova Aula";
-  document.getElementById("saveClassBtn").textContent = "Agendar Aula";
-  document.getElementById("cancelClassEditBtn").style.display = "none";
+  // Função mantida para compatibilidade, mas não faz nada já que usamos calendário
+  const form = document.getElementById("createClassForm");
+  if (form) {
+    form.reset();
+  }
 };
 
 window.deleteClass = async (id) => {
@@ -1302,6 +1312,7 @@ window.deleteClass = async (id) => {
       if (res.ok) {
         showAlert("Aula cancelada!");
         loadClasses();
+        await loadCalendar(); // Atualizar calendário imediatamente
       } else {
         const err = await res.json();
         showAlert(err.error || "Erro ao cancelar", "error");
@@ -1442,22 +1453,38 @@ loadTemplates();
 // Setar data mínima e adicionar validação customizada ao carregar a página
 window.addEventListener("DOMContentLoaded", () => {
   const today = new Date().toISOString().split("T")[0];
-  document.getElementById("classDate").setAttribute("min", today);
 
-  // Adicionar listeners para validação customizada nos campos de data
+  // Verificar se os elementos existem antes de usar (formulário antigo pode não existir)
   const classDateInput = document.getElementById("classDate");
-  const detailsClassDateInput = document.getElementById("detailsClassDate");
-
   if (classDateInput) {
+    classDateInput.setAttribute("min", today);
     classDateInput.addEventListener("input", function () {
       validateDate(this);
     });
   }
 
+  const detailsClassDateInput = document.getElementById("detailsClassDate");
   if (detailsClassDateInput) {
+    detailsClassDateInput.setAttribute("min", today);
     detailsClassDateInput.addEventListener("input", function () {
       validateDate(this);
     });
+  }
+
+  // Configurar data mínima para campos do modal de edição
+  const editClassDateInput = document.getElementById("editClassDate");
+  if (editClassDateInput) {
+    editClassDateInput.setAttribute("min", today);
+  }
+
+  // Configurar data mínima para campos do modal de criação recorrente
+  const recurringStartDate = document.getElementById("recurringStartDate");
+  const recurringEndDate = document.getElementById("recurringEndDate");
+  if (recurringStartDate) {
+    recurringStartDate.setAttribute("min", today);
+  }
+  if (recurringEndDate) {
+    recurringEndDate.setAttribute("min", today);
   }
 });
 
@@ -1920,6 +1947,95 @@ document
     }
   });
 
+// ========== CALENDÁRIO DE AULAS ==========
+// Declarar variáveis do calendário ANTES de serem usadas
+let calendarCurrentDate = new Date();
+let calendarClasses = [];
+
 loadUserInfo();
 loadTemplates();
 loadStudents();
+
+// Função auxiliar para converter data DD-MM-YYYY para Date
+function parseDateBR(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return new Date();
+  if (dateStr.includes('T')) {
+    dateStr = dateStr.split('T')[0];
+  }
+  if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split("-");
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split("/");
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split("-");
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+  const parsed = new Date(dateStr);
+  return isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
+// Formatar data para YYYY-MM-DD (input date)
+function formatDateForInput(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// Converter YYYY-MM-DD para DD-MM-YYYY (backend)
+function convertDateForBackend(dateStr) {
+  if (!dateStr) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split("-");
+    return `${day}-${month}-${year}`;
+  }
+  return dateStr;
+}
+
+// Converter DD-MM-YYYY para YYYY-MM-DD (input)
+function convertDateFromBackend(dateStr) {
+  if (!dateStr) return "";
+  if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split("-");
+    return `${year}-${month}-${day}`;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return dateStr;
+  }
+  return dateStr;
+}
+
+// ===========================================
+// CALENDAR LOGIC (Delegated to CalendarModule)
+// ===========================================
+
+// Initialize Shared Calendar Module
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const res = await apiFetch("/auth/me");
+    if (res.ok) {
+      const user = await res.json();
+      if (window.CalendarModule) {
+        console.log("Initializing Shared Calendar for Instructor");
+        window.CalendarModule.init(user.id, user.role);
+        window.CalendarModule.loadCalendar();
+      } else {
+        console.error("CalendarModule not found");
+      }
+    }
+  } catch (e) {
+    console.error("Error initializing calendar:", e);
+  }
+});
+
+// Helper for other parts of dashboard if they try to call loadCalendar
+window.loadCalendar = async function () {
+  if (window.CalendarModule) {
+    await window.CalendarModule.loadCalendar();
+  }
+};
+

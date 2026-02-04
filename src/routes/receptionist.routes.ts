@@ -1,10 +1,14 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/UserController';
+import { FinanceController } from '../controllers/FinanceController';
+import { CheckInController } from '../controllers/CheckInController';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { adminOrReceptionist } from '../middlewares/role.middleware';
 
 const router = Router();
 const userController = new UserController();
+const financeController = new FinanceController();
+const checkInController = new CheckInController();
 
 router.use(authMiddleware);
 router.use(adminOrReceptionist);
@@ -35,5 +39,13 @@ router.get('/instructors', (req, res, next) => {
 
 // Métricas
 router.get('/metrics', userController.getDashboard);
+
+// Check-ins insights
+router.get('/checkins/weekday', checkInController.getWeekdayStats);
+
+// Financeiro
+router.get('/finance/summary', financeController.getSummary);
+router.get('/finance/students', financeController.listStudents);
+router.post('/finance/students/:id/pay', financeController.registerPayment);
 
 export default router;

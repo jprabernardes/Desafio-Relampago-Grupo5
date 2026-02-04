@@ -61,9 +61,21 @@ export class UserService {
   private async enrichUser(user: any): Promise<any> {
     if (user?.role === 'aluno') {
       const profile: any = await this.studentProfileRepository.findByUserId(user.id);
+      const plan = profile?.plan_type || 'fit';
+      const paymentDay = profile?.payment_day ?? 10;
+      const paidUntil = profile?.paid_until ?? null;
+      const lastPaymentAt = profile?.last_payment_at ?? null;
+
       return {
         ...user,
-        planType: profile?.plan_type || 'fit'
+        planType: profile?.plan_type || 'fit',
+        plan_type: plan,
+        paymentDay,
+        payment_day: paymentDay,
+        paidUntil,
+        paid_until: paidUntil,
+        lastPaymentAt,
+        last_payment_at: lastPaymentAt
       };
     }
     return user;
@@ -78,8 +90,13 @@ export class UserService {
   async create(
     user: User,
     creatorRole: string,
-    planType?: string
-  ): Promise<any> {
+    planType?: string,
+    paymentDay?: number
+  ) {
+    if (creatorRole === 'instrutor' || creatorRole === 'aluno') {
+      throw new Error('Você não tem permissão para criar usuários.');
+    }
+
     // Validação de campos obrigatórios
     if (
       !isNotEmpty(user.name) ||
@@ -136,22 +153,11 @@ export class UserService {
         password: hashedPassword
       });
 
-      // Se for aluno, criar profile
-      if (newUser.role === 'aluno') {
-        await this.studentProfileRepository.create(
-          newUser.id!,
-          validatedPlanType || 'fit'
-        );
-      }
-
-      await this.runDb('COMMIT');
-    } catch (error) {
-      try {
-        await this.runDb('ROLLBACK');
-      } catch {
-        // ignore rollback error
-      }
-      throw error;
+    if (newUser.role === 'aluno') {
+      await this.studentProfileRepository.create(
+        newUser.id!,
+        validatedPlanType || 'fit'
+      );
     }
 
     // Enriquecer antes de retornar
@@ -170,6 +176,7 @@ export class UserService {
   async findAll(role?: string) {
     const users = await this.userRepository.findAll(role);
 
+    // Enriquecer cada usuário
     const enrichedUsers = await Promise.all(
       users.map(async (user) => {
         const enriched = await this.enrichUser(user);
@@ -190,6 +197,7 @@ export class UserService {
 
     const users = await this.userRepository.search(query);
 
+    // Enriquecer cada usuário
     const enrichedUsers = await Promise.all(
       users.map(async (user) => {
         const enriched = await this.enrichUser(user);
@@ -208,8 +216,10 @@ export class UserService {
     id: number,
     data: Partial<User>,
     updaterRole: string,
-    planType?: string
+    planType?: string,
+    paymentDay?: number
   ): Promise<void> {
+
     // Verificar se usuário existe
     const existingUser = await this.userRepository.findById(id);
     if (!existingUser) {
@@ -253,12 +263,24 @@ export class UserService {
 
     await this.userRepository.update(id, data);
 
-    // Atualizar plan_type do aluno
+    const userAfterUpdate = await this.userRepository.findById(id);
+
     if (planType) {
       const user = await this.userRepository.findById(id);
       if (user && user.role === 'aluno') {
         const validatedPlanType = await this.validatePlanType(planType);
         await this.studentProfileRepository.updatePlanType(id, validatedPlanType);
+      }
+    }
+
+    if (paymentDay !== undefined) {
+      const parsedPaymentDay = Number(paymentDay);
+      if (Number.isNaN(parsedPaymentDay) || parsedPaymentDay < 1 || parsedPaymentDay > 31) {
+        throw new Error('Dia de pagamento inválido. Use um número entre 1 e 31.');
+      }
+
+      if (userAfterUpdate && userAfterUpdate.role === 'aluno') {
+        await this.studentProfileRepository.updatePaymentDay(id, parsedPaymentDay);
       }
     }
   }

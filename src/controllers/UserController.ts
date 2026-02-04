@@ -14,8 +14,8 @@ export class UserController {
   create = async (req: Request, res: Response): Promise<Response> => {
     try {
       const creatorRole = (req as any).user.role;
-      const { planType, ...userData } = req.body; 
-      const user = await this.userService.create(userData, creatorRole, planType); 
+      const { planType, paymentDay, ...userData } = req.body;
+      const user = await this.userService.create(userData, creatorRole, planType, paymentDay);
       return res.status(201).json(user);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -61,10 +61,10 @@ export class UserController {
     try {
       const updaterRole = (req as any).user.role;
       const userId = Number(req.params.id);
-      const { planType, ...userData } = req.body;
-      
-      await this.userService.update(userId, userData, updaterRole, planType);
-      
+      const { planType, paymentDay, ...userData } = req.body;
+
+      await this.userService.update(userId, userData, updaterRole, planType, paymentDay);
+
       // Buscar e retornar usuário atualizado
       const updatedUser = await this.userService.findById(userId);
       return res.status(200).json(updatedUser);
